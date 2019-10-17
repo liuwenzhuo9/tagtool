@@ -4,43 +4,33 @@
             <img src="../assets/NAV.png" alt="title">
         </div>
         <div class="nav_bar">
-                <el-row class="tac">
-                    <el-col :span="12">
-                        <el-menu default-active="2" class="el-menu-vertical-demo">
-                            <el-menu-item index="1">
-                                <i class="el-icon-list"></i>
-                                <span slot="title">导航二</span>
-                            </el-menu-item>
-      
-                            <el-menu-item index="2">
-                                <i class="el-icon-menu"></i>
-                                <span slot="title">导航二</span>
-                            </el-menu-item>
-     
-                            <el-menu-item index="3">
-                                <i class="el-icon-setting"></i>
-                               <span slot="title">导航四</span>
-                            </el-menu-item>
-                        </el-menu>
-                    </el-col>
-                </el-row> 
+            <!-- <el-tabs v-model="activeName" >
+                <el-tab-pane v-for="(item,$index) in section" :key="(item,$index)" label="item" name="$index" @click="showFunc($index)">
+                </el-tab-pane>
+            </el-tabs> -->
+            <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" >
+                <el-menu-item v-for="(item,$index) in section" :key="(item,$index)" @click="showFunc($index)">{{item}}</el-menu-item>
+            </el-menu>
         </div>
     </div>
 </template>
 
 
 <script>
+// import allSentences from './allSentences.vue'
   export default {
       
     name:'navbar',
     data(){
         return {
-            section: ['所有句子','标注标签','导出结果']
+            section: ['所有句子','标注标签','导出结果'],
+            sectionUrl: ['allSentences','tagEntity','tagResult'],
+            activeIndex:'1'
         }       
     },
     methods: {
-      showFunc:function(index){
-          let url = '/'+ this.secition[index]
+      showFunc(index){
+          let url = '/'+ this.sectionUrl[index]
           this.$router.push(url)
       }
     }
@@ -49,6 +39,9 @@
 </script>
 
 <style scoped>
+#navbar {
+    min-height: 80px;
+}
 .nav_title {
     width: 74%;
     margin: 0 auto;
@@ -59,12 +52,6 @@
 .nav_title img {
     display: inline-block;
     height: 100%;
+    margin: auto;
 }
-/* .nav_bar {
-    width: 100%;
-    height: 50px;
-    margin: 15px auto 30px auto;
-    background: #4f71b1;
-    min-width: 1700px;
-} */
 </style>

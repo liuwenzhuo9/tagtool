@@ -1,10 +1,11 @@
 <template>
-  <div class="index-wrap">
-    <navbar/>
-    <router-view></router-view>
-    
+  <div>
+    <div class="index-wrap">
+      <navbar/>
+      <router-view></router-view>
+    </div>
     <bottom/>
-  </div>
+</div>
 </template>
 
 <script>
@@ -23,13 +24,13 @@ export default {
 
 <style>
 .index-wrap {
-    min-width: 1700px;
+    max-width: 1300px;
+    margin: auto;
+    min-height: 850px;
 }
 .el-menu-item, .el-submenu__title {
     color: #4f71b1!important;
     font-size: 16px!important;
-}
-.el-menu-item-group .el-menu-item  {
-    font-size: 14px!important;
+    /* border-bottom:#4f71b1 */
 }
 </style>

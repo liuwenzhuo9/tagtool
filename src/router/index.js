@@ -12,22 +12,22 @@ export default new Router({
         {
             path:'/',
             name:'allSentences',
-            component:allSentences,
+            component: allSentences,
         },
         {
             path:'/allSentences',
             name:'allSentences',
-            component:allSentences,
+            component: allSentences,
         },
         {
             path:'/tagEntity',
             name:'tagEntity',
-            component:tagEntity,
+            component: tagEntity,
         },
         {
             path:'/tagResult',
             name:'tagResult',
-            component:tagResult,
+            component: tagResult,
         },
     ]
 })
