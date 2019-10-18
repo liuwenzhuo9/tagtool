@@ -38,7 +38,7 @@
         </div>
         <hr/>
         <div class="show_bottom">
-        共80页 跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange" :min="1" :max="10" label="描述文字" size="small"></el-input-number>
+        共80页 跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange()" :min="1" :max="10" label="描述文字" size="small"></el-input-number>
         &nbsp;页&nbsp;
         <el-button size="small">跳转</el-button>&nbsp;
         当前是第1页
@@ -55,33 +55,53 @@
 </template>>
 
 <script>
+import {getAllSentences, insertSentence} from '../unit/fetch';
 export default {
     data () {
         return {
             textarea: '',
-            sentences:[
-                '1.自然语言处理是计算机科学领域与人工智能领域中的一个重要方向。',
-                '2.它研究能实现人与计算机之间用自然语言进行有效通信的各种理论和方法。',
-                '3.自然语言处理（NLP）是计算机科学，人工智能，语言学关注计算机和人类（自然）语言之间的相互作用的领域。',
-                '4.用自然语言与计算机进行通信，这是人们长期以来所追求的。',
-                '5.实现人机间自然语言通信意味着要使计算机既能理解自然语言文本的意义，也能以自然语言文本来表达给定的意图、思想等。'
-            ]
+            sentences:[],
+            splitSentence:[],
+            num:0
         }
     },
+    mounted(){
+        this.init();
+    },
     methods:{
+        async init() {
+            this.showAllSentences();
+        },
+        async showAllSentences(){
+            const lastSentences = this.sentences;
+                try{
+                    this.sentences = []; 
+                    const info = await getAllSentences();
+                    this.sentences = info.data.content;
+                    window.console.log(info.data)
+                }catch(e){
+                    this.sentences = [...lastSentences];
+                    this.$message.error((e && e.message) ? e.message : '获取句子错误，请稍后重试');
+                }
+        },
         handleClick(){
-            this.sentences.push(this.textarea)
+            this.textarea = this.textarea.toString()
+            this.splitSentence = this.textarea.split('\n')
+            this.splitSentence.map((item) => {
+                insertSentence(item)
+                this.sentences.push(item)
+            })
             this.textarea=''
         },
-        handleSuccess(response, file, fileList){
-            window.console.log(file,fileList)
+        handleSuccess(response, file){
+            // window.console.log(file,fileList)
             // const file = e.file.originFileObj;
             const reader = new FileReader();
             reader.readAsText(file.raw, "UTF-8");
             reader.onload = e => {
                 const fileString = e.target.result;
                 this.textarea = fileString
-                window.console.log(fileString)
+                // window.console.log(fileString)
             };
         },
         beforeRemove(file) {
