@@ -10,7 +10,6 @@ export function insertSentence(info) {
         }
     });
 }
-
 export function deleteSentence(info) {
     let url = `${hostname}/deleteSentence${objToQueryString(info)}`;
     return executeFetch(url,{
@@ -22,6 +21,24 @@ export function deleteSentence(info) {
 }
 export function findSentenceById(info) {
     let url = `${hostname}/findSentenceById${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function findIdBySentence(info) {
+    let url = `${hostname}/findIdBySentence${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function updateSentenceContentById(info){
+    let url = `${hostname}/updateSentenceContentById${objToQueryString(info)}`;
     return executeFetch(url,{
         method:'GET',
         headers: {

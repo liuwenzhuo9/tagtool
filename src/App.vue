@@ -11,7 +11,6 @@
 <script>
 import navbar from './components/nav'
 import bottom from './components/bottom'
-// import HelloWorld from './components/HelloWorld.vue'
 
 export default {
   name: 'app',
