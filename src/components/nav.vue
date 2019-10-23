@@ -4,10 +4,6 @@
             <img src="../assets/NAV.png" alt="title">
         </div>
         <div class="nav_bar">
-            <!-- <el-tabs v-model="activeName" >
-                <el-tab-pane v-for="(item,$index) in section" :key="(item,$index)" label="item" name="$index" @click="showFunc($index)">
-                </el-tab-pane>
-            </el-tabs> -->
             <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" >
                 <el-menu-item v-for="(item,$index) in section" :key="(item,$index)" @click="showFunc($index)">{{item}}</el-menu-item>
             </el-menu>
@@ -17,7 +13,6 @@
 
 
 <script>
-// import allSentences from './allSentences.vue'
   export default {
       
     name:'navbar',

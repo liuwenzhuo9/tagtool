@@ -15,16 +15,16 @@
             </div>
         </div>
         <div class="show_sentences">
-            <el-table :data="this.sentences" style="width: 100%" >
+            <el-table :data="this.sentencesCurrent" style="width: 100%" >
                 <el-table-column label="句子" width="1000" >
                     <template slot-scope="scope">
-                        <p>{{ scope.$index + 1}}. &nbsp;&nbsp;{{ scope.row }}</p>
+                        <p>{{ scope.$index + (pageNumNow-1)*maxShowLength +1}}. &nbsp;&nbsp;{{ scope.row }}</p>
                     </template>
                 </el-table-column>
             <el-table-column label="操作" >
                 <template slot-scope="scope">
                     <el-button size="mini"  @click="handleTag(scope.$index, scope.row)">标记</el-button>
-                    <el-button size="mini"  @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+                    <el-button size="mini"  @click="handleEdit(scope.$index, scope.row)" >编辑</el-button>
                     <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
                 </template>
             </el-table-column>
@@ -32,25 +32,18 @@
         </div>
         <hr/>
         <div class="show_bottom">
-        共 {{this.pageNumTotal}}页 跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange()" :min="1" :max="10" label="描述文字" size="small"></el-input-number>
+        共{{this.pageNumTotal}}页 跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange(num)" :min="1" :max="1000" label="描述文字" size="mini"></el-input-number>
         &nbsp;页&nbsp;
-        <el-button size="small">跳转</el-button>&nbsp;
+                <el-button size="mini" @click="handleChange(num)">跳转</el-button>&nbsp;
         当前是第{{this.pageNumNow}}页
         <br>
-            <div class=buttons1>
-                <el-button-group>
-                    <el-button type="primary" icon="el-icon-arrow-left" size="small">上一页</el-button>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <el-button type="primary" size="small">下一页<i class="el-icon-arrow-right el-icon--right"></i></el-button>
-                </el-button-group>
-            </div>
+            
         </div>
     </div>
 </template>>
 
 <script>
 import {getAllSentences, insertSentence, deleteSentence, findIdBySentence, updateSentenceContentById} from '../unit/fetch';
-import bus from "../bus"
 export default {
     data () {
         return {
@@ -58,14 +51,15 @@ export default {
             isEdit:false,
             editSentenceId:'',
             editSentenceIndex:'',
-            sentences:[],
-            splitSentence:[],
-            num:0,
-            maxShowLength:10,
-            pageNumTotal:'',
-            markedIndex:[],
-            pageNumNow:1,
-            // indexControl:false
+            sentences:[],//数据库中所有句子的内容
+            // sentencesId:[],//数据库中所有句子的ID 好像没啥用
+            markedId:[],//数据库中所有句子的编辑状态
+            sentencesCurrent:[],//当前页面显示的句子内容
+            splitSentence:[],//根据txt文档中回车得到的句子
+            num:0,//加减跳转按钮的数字
+            maxShowLength:10,//每页显示的条数
+            pageNumTotal:'',//总页数
+            pageNumNow:1,//当前页数
         }
     },
     mounted(){
@@ -84,21 +78,21 @@ export default {
                     const count = []
                     info.data.map((item) => {
                             count.push(item.content)
-                            // if(item.is_marked == 1){
-                                // window.console.log(this.markedIndex)
-                                // this.markedIndex.push(count.index)
-                            // }
-                            
                         })
                     this.sentences = count
                 }catch(e){
                     this.sentences = [...lastSentences];
                     this.$message.error((e && e.message) ? e.message : '获取句子错误，请稍后重试');
                 }
-            // if ((this.sentences.$index < (this.pageNumNow * 10) )&&(this.sentences.$index > ((this.pageNumNow -1) * 10)) ){
-            //     this.indexControl = true
-            // }
-            // this.pageNumTotal = Math.ceil(this.sentences.length / this.maxShowLength );
+                this.pageNumTotal = Math.ceil(this.sentences.length/this.maxShowLength);
+                this.showCurrentPage(1);
+        },
+        // 控制每页显示的句子个数（10）
+        showCurrentPage(page){
+            this.sentencesCurrent = []
+            for(var index=(page - 1) * this.maxShowLength; index < (page * this.maxShowLength) && index < this.sentences.length ;index++){
+                    this.sentencesCurrent.push(this.sentences[index]);
+                }
         },
         // 确认添加
         handleClick(){
@@ -116,13 +110,15 @@ export default {
                 type: 'warning'
                 });
             }
-            
+            this.showCurrentPage(this.pageNumTotal)
+            this.pageNumNow = this.pageNumTotal
+            this.num = this.pageNumTotal
         },
         // 确认编辑
         handleClickEdit(){
             updateSentenceContentById({id:this.editSentenceId,content:this.textarea})
             this.isEdit = false
-            this.sentences.splice(this.editSentenceIndex,1,this.textarea)
+            this.sentencesCurrent.splice(this.editSentenceIndex,1,this.textarea)
             this.textarea = ''
         },
         // 取消添加或编辑
@@ -130,7 +126,7 @@ export default {
             this.textarea = ''
             this.isEdit = false
         },
-        // 上传到文本框
+        // 上传文件，读取内容到文本框
         handleSuccess(response, file){
             const reader = new FileReader();
             reader.readAsText(file.raw, "UTF-8");
@@ -145,8 +141,11 @@ export default {
         },
         // 选中句子进行标记
         handleTag(index,row){
-            bus.$emit("sentenceContent",row)
-            bus.$emit("sentencesIndex",index)
+            this.$store.commit('setCurrentTextarea', row)
+            window.console.log(this.$store.state.content)
+            this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
+            // location.href="./tagEntity"
+            this.$router.push("./tagEntity")
         },
         // 编辑句子
         async handleEdit(index, row) {
@@ -177,8 +176,12 @@ export default {
                     message: '已取消删除'
                 });          
             });
-           
-       }
+        },
+        // 页面跳转
+        handleChange(page){
+            this.pageNumNow = page;
+            this.showCurrentPage(page);
+        }
     }
     
 }
@@ -221,9 +224,5 @@ export default {
 } */
 .show_bottom {
     float: right;
-}
-.buttons1 {
-    float: right;
-    margin: 5px;
 }
 </style>

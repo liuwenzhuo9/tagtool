@@ -21,11 +21,18 @@
             </el-button>
         </div>
 
+        <div class=button2>
+                <el-button-group>
+                    <el-button type="primary" icon="el-icon-arrow-left" size="small">上一页</el-button>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <el-button type="primary" size="small">下一页<i class="el-icon-arrow-right el-icon--right"></i></el-button>
+                </el-button-group>
+            </div>
+
     </div>
 </template>
 
 <script>
-import bus from "../bus"
 export default {
     data() {
         return {
@@ -36,16 +43,13 @@ export default {
             inputValue: ''
         }
     },
-    created() {
-        bus.$on("sentenceContent",propMsg=> {
-              this.textarea = propMsg
-              window.console.log(this.textarea)
-          })
-        bus.$on("sentencesIndex",propMsg=> {
-             
-          })
+    mounted(){
+        this.setTextarea();
     },
     methods: {
+      async setTextarea(){
+          this.textarea = this.$store.state.content
+      },
       handleClose(tag) {
         this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
       },
@@ -64,7 +68,6 @@ export default {
         this.inputValue = '';
       }
     }
-    
 }
 </script>
 
@@ -104,5 +107,9 @@ export default {
     margin-left: 10px;
     vertical-align: bottom;
     font-size: 17px
+}
+.button2 {
+    float: right;
+    margin: 5px;
 }
 </style>

@@ -14,11 +14,11 @@ export default {
 
 .bottom-body {
     margin-top: 30px;
-    width: 74%;
-    margin: 0 auto;
+    width: 85%;
+    margin: 100px;
+    font-weight: 300;
     color: #3560af;
     font-size: 14px;
-    font-weight:400;
     text-align: center;
 }
 </style>
