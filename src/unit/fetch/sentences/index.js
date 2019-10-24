@@ -64,3 +64,30 @@ export function getAllSentences() {
         }
     });
 }
+export function getLastSentence(info) {
+    let url = `${hostname}/getLastSentence${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function getNextSentence(info) {
+    let url = `${hostname}/getNextSentence${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function getFirstUnmarkedSentence() {
+    let url = `${hostname}/getFirstUnmarkedSentence`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}

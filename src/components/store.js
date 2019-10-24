@@ -16,7 +16,7 @@ const state = {
         },
         setCurrentIndex(state,index) {
             state.index = index
-        },
+        }
     }
   });
   

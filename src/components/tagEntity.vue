@@ -22,10 +22,11 @@
         </div>
 
         <div class=button2>
+            <!-- <p>当前是第{{textIndex}}条</p> -->
                 <el-button-group>
-                    <el-button type="primary" icon="el-icon-arrow-left" size="small">上一页</el-button>
+                    <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnToLast()">上一句</el-button>
                     &nbsp;&nbsp;&nbsp;&nbsp;
-                    <el-button type="primary" size="small">下一页<i class="el-icon-arrow-right el-icon--right"></i></el-button>
+                    <el-button type="primary" size="small" @click="turnToNext()">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
                 </el-button-group>
             </div>
 
@@ -33,14 +34,16 @@
 </template>
 
 <script>
+import {findIdBySentence, getLastSentence, getNextSentence, getFirstUnmarkedSentence} from "../unit/fetch";
 export default {
     data() {
         return {
+            textareaId:'',
             dynamicTags: ['标签一', '标签二', '标签三'],
             inputVisible: false,
             textarea:'',
-            sentencesIndex:'',
-            inputValue: ''
+            inputValue: '',
+            // textIndex:''
         }
     },
     mounted(){
@@ -48,7 +51,17 @@ export default {
     },
     methods: {
       async setTextarea(){
-          this.textarea = this.$store.state.content
+          if(this.$store.state.content){
+              this.textarea = this.$store.state.content;
+              this.textIndex = this.$store.state.index;
+              const info = await findIdBySentence({content:this.textarea});
+              this.textareaId = info.data;
+          }else{
+              const info = await getFirstUnmarkedSentence();
+              this.textarea = info.data[0].content;
+              this.textareaId = info.data[0].id;
+          }
+          
       },
       handleClose(tag) {
         this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
@@ -66,6 +79,18 @@ export default {
         }
         this.inputVisible = false;
         this.inputValue = '';
+      },
+      async turnToLast() {
+          const info = await getLastSentence({id : this.textareaId});
+          const count = info.data[0];
+          this.textarea = count.content;
+          this.textareaId = count.id;
+      },
+      async turnToNext() {
+          const info = await getNextSentence({id : this.textareaId});
+          const count = info.data[0];
+          this.textarea = count.content;
+          this.textareaId = count.id;
       }
     }
 }
