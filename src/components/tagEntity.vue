@@ -1,7 +1,8 @@
 <template>
     <div class="tagEntity">
         <div class = "inputarea">
-            <el-input type="textarea" :rows="2" placeholder="请输入内容" v-model="textarea"></el-input>
+            <input type="text" id="txt" value="abcdefghijklmn" @click="getSelectPosition(this)">点击文本框内容触发事件<br/>
+            <!-- <el-input type="textarea"  placeholder="请输入内容" v-model="textarea" @select="getSelectPosition(this)"></el-input> -->
             &nbsp;&nbsp;
             <div class = "button1">
                 <el-button type="primary">添加标签</el-button>
@@ -62,6 +63,39 @@ export default {
               this.textareaId = info.data[0].id;
           }
           
+      },
+      getSelectPosition(oTxt) {
+            var nullvalue = -1;
+            var selectStart ;//选中开始位置
+			var selectEnd ;//选中结束位置
+			var position;//焦点位置
+			var selectText;//选中内容
+            if(oTxt.setSelectionRange){//非IE浏览器
+                selectStart= oTxt.selectionStart;
+				selectEnd = oTxt.selectionEnd;
+				if(selectStart == selectEnd){
+					position = oTxt.selectionStart;
+					selectStart = nullvalue;
+					selectEnd = nullvalue;
+				}else{
+					position = 	nullvalue;
+				}
+                selectText = oTxt.value.substring(selectStart,selectEnd);
+            }else{//IE
+                var range = document.selection.createRange();
+				selectText=range.text;
+                range.moveStart("character",-oTxt.value.length);
+				position = range.text.length;
+				selectStart = position - (selectText.length);
+				selectEnd = selectStart + (selectText.length);
+				if(selectStart != selectEnd){
+					position = nullvalue;
+				}else{
+					selectStart = nullvalue;
+					selectEnd = nullvalue;
+				}
+            }
+            window.console.log(selectStart)
       },
       handleClose(tag) {
         this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);

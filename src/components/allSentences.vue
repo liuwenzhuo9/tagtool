@@ -25,9 +25,9 @@
                 </el-table-column>
             <el-table-column label="操作" >
                 <template slot-scope="scope">
-                    <el-button size="mini"  v-if="!scope.row.is_marked" @click="handleTag(scope.$index, scope.row.content)">标记</el-button>
-                    <el-button size="mini"  @click="handleEdit(scope.$index, scope.row.content)" >编辑</el-button>
                     <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row.content)">删除</el-button>
+                    <el-button size="mini"  v-if="!scope.row.is_marked" @click="handleTag(scope.$index, scope.row.content)">标记</el-button>
+                    <el-button size="mini"  v-if="!scope.row.is_marked" @click="handleEdit(scope.$index, scope.row.content)" >编辑</el-button>  
                 </template>
             </el-table-column>
         </el-table>
@@ -56,7 +56,6 @@ export default {
             editSentenceIndex:'',
             sentences:[],//数据库中所有句子的内容
             markedId:[],//数据库中所有句子的编辑状态
-            // currentMarkedIndex:[],//当前页面句子编辑状态
             sentencesCurrent:[],//当前页面显示的句子
             splitSentence:[],//根据txt文档中回车得到的句子
             num:0,//加减跳转按钮的数字
@@ -229,11 +228,6 @@ export default {
 .content {
     word-spacing:nowrap;
 }
-/* .button3 {
-    float: right;
-    height: 33px;
-    width:55px;
-} */
 .show_bottom {
     float: right;
 }
