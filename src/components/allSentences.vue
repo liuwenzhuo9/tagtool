@@ -175,6 +175,7 @@ export default {
                 })
             .then(async () => {
                 await deleteSentence({content:row}),
+                // this.sentences.splice(this.sentences.indexOf(row) ,1),
                 this.sentences.splice(index + (this.pageNumNow-1) * this.maxShowLength ,1),
                 this.showCurrentPage(this.pageNumNow);
                 this.$message({

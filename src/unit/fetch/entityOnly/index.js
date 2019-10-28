@@ -38,3 +38,12 @@ export function findIdByEntity(info) {
         }
     });
 }
+export function updateLengthByEntityId(info) {
+    let url = `${hostname}/updateLengthByEntityId${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}

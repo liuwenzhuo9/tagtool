@@ -1,54 +1,45 @@
 <template>
     <div class="tagEntity">
-        <div class = "inputarea">
-            <input type="text" id="txt" value="abcdefghijklmn" @click="getSelectPosition(this)">点击文本框内容触发事件<br/>
-            <!-- <el-input type="textarea"  placeholder="请输入内容" v-model="textarea" @select="getSelectPosition(this)"></el-input> -->
+        <div class = "inputarea">{{textarea}}</div>
             &nbsp;&nbsp;
             <div class = "button1">
-                <el-button type="primary">添加标签</el-button>
-                <el-button type="success">保存标记</el-button>
+                <el-button type="primary" v-if="isMarked" @click="addTag()" size="mini">添加标签</el-button>
+                <el-button type="success" v-if="isMarked" @click="saveTag()" size="mini">保存标记</el-button>
             </div>
-        </div>
-
+        
         <div class = "tagarea">
-            <el-tag :key="tag" v-for="tag in dynamicTags" closable :disable-transitions="false" @close="handleClose(tag)">
-                {{tag}}
+            <el-tag :key="index" v-for="(tag,index) in dynamicTags" closable :disable-transitions="false" @close="handleClose(tag)">
+                {{tag.content}}&nbsp;{{tag.index}}
             </el-tag>
-            <el-input class="input-new-tag" v-if="inputVisible" v-model="inputValue" ref="saveTagInput" size="small" 
-            @keyup.enter.native="handleInputConfirm" @blur="handleInputConfirm">
-            </el-input>
-            <el-button v-else class="button-new-tag" size="small" @click="showInput">
-                + New Tag
-            </el-button>
         </div>
 
         <div class=button2>
-            <!-- <p>当前是第{{textIndex}}条</p> -->
-                <el-button-group>
-                    <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnToLast()">上一句</el-button>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <el-button type="primary" size="small" @click="turnToNext()">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
-                </el-button-group>
-            </div>
+            <el-button-group>
+                <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnToLast()">上一句</el-button>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <el-button type="primary" size="small" @click="turnToNext()">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
+            </el-button-group>
+        </div>
 
     </div>
 </template>
 
 <script>
-import {findIdBySentence, getLastSentence, getNextSentence, getFirstUnmarkedSentence} from "../unit/fetch";
+import {findIdBySentence, getLastSentence, getNextSentence, getFirstUnmarkedSentence, deleteEntity, insertEntityIndex, findIdByEntity, insertEntity, deleteEntityByEntityId, updateSentenceMarkById} from "../unit/fetch";
 export default {
     data() {
         return {
             textareaId:'',
-            dynamicTags: ['标签一', '标签二', '标签三'],
+            dynamicTags: [],
             inputVisible: false,
             textarea:'',
             inputValue: '',
-            // textIndex:''
+            isMarked:true
         }
     },
     mounted(){
         this.setTextarea();
+        this.preTag();
     },
     methods: {
       async setTextarea(){
@@ -62,57 +53,80 @@ export default {
               this.textarea = info.data[0].content;
               this.textareaId = info.data[0].id;
           }
-          
       },
-      getSelectPosition(oTxt) {
-            var nullvalue = -1;
-            var selectStart ;//选中开始位置
-			var selectEnd ;//选中结束位置
-			var position;//焦点位置
-			var selectText;//选中内容
-            if(oTxt.setSelectionRange){//非IE浏览器
-                selectStart= oTxt.selectionStart;
-				selectEnd = oTxt.selectionEnd;
-				if(selectStart == selectEnd){
-					position = oTxt.selectionStart;
-					selectStart = nullvalue;
-					selectEnd = nullvalue;
-				}else{
-					position = 	nullvalue;
-				}
-                selectText = oTxt.value.substring(selectStart,selectEnd);
-            }else{//IE
-                var range = document.selection.createRange();
-				selectText=range.text;
-                range.moveStart("character",-oTxt.value.length);
-				position = range.text.length;
-				selectStart = position - (selectText.length);
-				selectEnd = selectStart + (selectText.length);
-				if(selectStart != selectEnd){
-					position = nullvalue;
-				}else{
-					selectStart = nullvalue;
-					selectEnd = nullvalue;
-				}
+    //   async preTag() {
+
+    //   },
+      async addTag() {
+          //不同浏览器兼容问题，获取选中的内容及坐标
+          if (window.getSelection) {
+            var selectTxt = window.getSelection();
+            } else if (window.document.getSelection) {
+                selectTxt = window.document.getSelection();
+            } else if (window.document.selection) {
+                selectTxt = window.document.selection.createRange().text;
             }
-            window.console.log(selectStart)
+            var selection = selectTxt.toString();
+            var startIndex = selectTxt.anchorOffset;
+            var endIndex = selectTxt.focusOffset;
+            var entityLength = endIndex-startIndex;
+            // 将信息显示在标签中
+            var tagContent = '';
+            tagContent = {content:selection,index:'(' + startIndex + ',' + endIndex + ')'};
+            this.dynamicTags.push (tagContent);
+            // 将标签内容添加到数据库中
+            const info = await insertEntity({content:selection,length:entityLength});//问题：重复实体不能插入！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+            if(info.data){
+                var entityId = info.data;
+            }else{
+                entityId = await findIdByEntity({content:selection});
+            }
+            await insertEntityIndex({id_sentence:this.textareaId, id_entity:entityId, start_index:startIndex, end_index:endIndex})
       },
+    //   删除标签
       handleClose(tag) {
-        this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
+        this.$confirm('此操作将永久删除该标签, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+                })
+            .then(async () => {
+                const info = await deleteEntity({content:tag.content});
+                const entityId = info.data;
+                await deleteEntityByEntityId({id_entity:entityId});
+                this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
+                this.$message({
+                    type: 'success',
+                    message: '删除成功!'
+                });
+            })
+            .catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });          
+            });
       },
-      showInput() {
-        this.inputVisible = true;
-        this.$nextTick(() => {
-          this.$refs.saveTagInput.$refs.input.focus();
-        });
-      },
-      handleInputConfirm() {
-        let inputValue = this.inputValue;
-        if (inputValue) {
-          this.dynamicTags.push(inputValue);
-        }
-        this.inputVisible = false;
-        this.inputValue = '';
+      saveTag(){
+          this.$confirm('此操作将保存已有标签, 且不能再添加新标签，确定要保存标记？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+                })
+            .then(async () => {
+                updateSentenceMarkById({id:this.textareaId,is_marked:1});
+                this.isMarked = false;
+                this.$message({
+                    type: 'success',
+                    message: '保存成功!'
+                });
+            })
+            .catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消保存'
+                });          
+            });
       },
       async turnToLast() {
           const info = await getLastSentence({id : this.textareaId});
@@ -138,6 +152,9 @@ export default {
     display: flex;
     width: 92%;
     margin: 5px;
+}
+#txt{
+    width: 700px;
 }
 .button1{
     display: flex;
