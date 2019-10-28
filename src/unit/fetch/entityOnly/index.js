@@ -47,3 +47,12 @@ export function updateLengthByEntityId(info) {
         }
     });
 }
+export function getAllEntity() {
+    let url = `${hostname}/getAllEntity`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}

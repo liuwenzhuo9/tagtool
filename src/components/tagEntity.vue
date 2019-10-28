@@ -25,21 +25,19 @@
 </template>
 
 <script>
-import {findIdBySentence, getLastSentence, getNextSentence, getFirstUnmarkedSentence, deleteEntity, insertEntityIndex, findIdByEntity, insertEntity, deleteEntityByEntityId, updateSentenceMarkById} from "../unit/fetch";
+import {findIdBySentence, getLastSentence, getNextSentence, getFirstUnmarkedSentence, deleteEntity, insertEntityIndex, insertEntity, deleteEntityByEntityId, updateSentenceMarkById, getAllEntity} from "../unit/fetch";
 export default {
     data() {
         return {
             textareaId:'',
             dynamicTags: [],
-            inputVisible: false,
             textarea:'',
-            inputValue: '',
-            isMarked:true
+            isMarked:true,
+            allEntity:[],//实体{id content length}的数组
         }
     },
     mounted(){
         this.setTextarea();
-        this.preTag();
     },
     methods: {
       async setTextarea(){
@@ -53,10 +51,29 @@ export default {
               this.textarea = info.data[0].content;
               this.textareaId = info.data[0].id;
           }
+          this.preTag();
       },
-    //   async preTag() {
-
-    //   },
+      async preTag() {
+          const lastEntity = this.allEntity;
+          try{
+                const info = await getAllEntity();
+                info.data.map(async (item) =>{
+                this.allEntity.push(item)
+                    for(var index = 0; this.textarea.indexOf(item.content,index) != -1;){
+                        const startIndex = this.textarea.indexOf(item.content);
+                        const endIndex = startIndex + item.length;
+                        index = endIndex;
+                        var tagContent = '';
+                        tagContent = {content:item.content,index:'(' + startIndex + ',' + endIndex + ')'};
+                        this.dynamicTags.push (tagContent);
+                        await insertEntityIndex({id_sentence:this.textareaId, id_entity:item.id, start_index:startIndex, end_index:endIndex})
+                    }
+                })
+          }catch(e){
+              this.allEntity = [...lastEntity];
+              this.$message.error((e && e.message) ? e.message : '获取实体错误，请稍后重试');
+          }
+      },
       async addTag() {
           //不同浏览器兼容问题，获取选中的内容及坐标
           if (window.getSelection) {
@@ -75,12 +92,8 @@ export default {
             tagContent = {content:selection,index:'(' + startIndex + ',' + endIndex + ')'};
             this.dynamicTags.push (tagContent);
             // 将标签内容添加到数据库中
-            const info = await insertEntity({content:selection,length:entityLength});//问题：重复实体不能插入！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
-            if(info.data){
-                var entityId = info.data;
-            }else{
-                entityId = await findIdByEntity({content:selection});
-            }
+            const info = await insertEntity({content:selection,length:entityLength});
+            var entityId = info.data;
             await insertEntityIndex({id_sentence:this.textareaId, id_entity:entityId, start_index:startIndex, end_index:endIndex})
       },
     //   删除标签
@@ -120,6 +133,9 @@ export default {
                     type: 'success',
                     message: '保存成功!'
                 });
+                this.turnToNext();
+                this.dynamicTags = [];
+                this.isMarked = true;
             })
             .catch(() => {
                 this.$message({
@@ -133,12 +149,14 @@ export default {
           const count = info.data[0];
           this.textarea = count.content;
           this.textareaId = count.id;
+          this.preTag();
       },
       async turnToNext() {
           const info = await getNextSentence({id : this.textareaId});
           const count = info.data[0];
           this.textarea = count.content;
           this.textareaId = count.id;
+          this.preTag();
       }
     }
 }
