@@ -25,7 +25,7 @@ export default {
 .index-wrap {
     max-width: 1300px;
     margin: auto;
-    min-height: 850px;
+    min-height: 870px;
 }
 .el-menu-item, .el-submenu__title {
     color: #4f71b1!important;

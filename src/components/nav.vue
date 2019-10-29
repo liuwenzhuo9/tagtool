@@ -18,9 +18,9 @@
     name:'navbar',
     data(){
         return {
+            activeIndex: '1',
             section: ['所有句子','标注标签','导出结果'],
             sectionUrl: ['allSentences','tagEntity','tagResult'],
-            activeIndex:'1'
         }       
     },
     methods: {

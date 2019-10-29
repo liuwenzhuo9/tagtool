@@ -34,7 +34,7 @@
         </div>
         <hr/>
         <div class="show_bottom">
-        共{{this.pageNumTotal}}页 跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange(num)" :min="1" :max="1000" label="描述文字" size="mini"></el-input-number>
+        共{{this.pageNumTotal}}页 跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange(num)" :min="1" :max="this.pageNumTotal" label="描述文字" size="mini"></el-input-number>
         &nbsp;页&nbsp;
                 <el-button size="mini" @click="handleChange(num)">跳转</el-button>&nbsp;
         当前是第{{this.pageNumNow}}页
@@ -59,8 +59,8 @@ export default {
             sentencesCurrent:[],//当前页面显示的句子
             splitSentence:[],//根据txt文档中回车得到的句子
             num:0,//加减跳转按钮的数字
-            maxShowLength:10,//每页显示的条数
-            pageNumTotal:'',//总页数
+            maxShowLength:20,//每页显示的条数
+            pageNumTotal:1,//总页数
             pageNumNow:1,//当前页数
         }
     },
@@ -90,7 +90,7 @@ export default {
                     this.showCurrentPage(this.pageNumNow);
                 }
         },
-        // 控制每页显示的句子个数（10）
+        // 控制每页显示的句子个数
         showCurrentPage(page){
             this.sentencesCurrent = [];
             // this.currentMarkedIndex = [];

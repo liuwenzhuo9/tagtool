@@ -91,3 +91,12 @@ export function getFirstUnmarkedSentence() {
         }
     });
 }
+export function findIndexBySentenceId(info) {
+    let url = `${hostname}/findIndexBySentenceId${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
