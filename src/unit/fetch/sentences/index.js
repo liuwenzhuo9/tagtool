@@ -100,3 +100,13 @@ export function findIndexBySentenceId(info) {
         }
     });
 }
+
+export function findSentenceFromOffset(info) {
+    let url = `${hostname}/findSentenceFromOffset${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}

@@ -9,7 +9,7 @@
                 <el-button type="primary" size="small" @click="turnTo(2)">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
             </div>
         <div class = "tagarea">
-            <el-tag :key="index" v-for="(tag,index) in dynamicTags" closable :disable-transitions="false" @close="handleClose(tag.content)">
+            <el-tag :key="index" v-for="(tag,index) in dynamicTags" closable :disable-transitions="false" @close="handleClose(tag.content,index)">
                 {{tag.content}}&nbsp;({{tag.startIdx}},{{tag.endIdx}})
             </el-tag>
         </div>
@@ -18,8 +18,7 @@
 </template>
 
 <script>
-import {findIdBySentence, findIdByEntity, getLastSentence, getNextSentence, getFirstUnmarkedSentence, deleteEntity, insertEntityIndex, insertEntity, deleteEntityByEntityId, updateSentenceMarkById, findIndexBySentenceId} from "../unit/fetch";
-import {getAllEntity} from "../unit/fetch";
+import {findIdBySentence, getAllEntity, findIdByEntity, getLastSentence, getNextSentence, getFirstUnmarkedSentence, deleteEntity, insertEntityIndex, insertEntity, deleteEntityByEntityId, updateSentenceMarkById, findIndexBySentenceId} from "../unit/fetch";
 export default {
     data() {
         return {
@@ -29,8 +28,7 @@ export default {
             dynamicTagsPre: [],
             dynamicTagsNow: [],
             textarea:'',
-            isMarked:true,
-            // allEntity:[],//实体{id content length}的数组
+            isMarked:true
         }
     },
     mounted(){
@@ -60,7 +58,8 @@ export default {
                         let startIndex = this.textarea.indexOf(item.content,index);
                         let endIndex = startIndex + item.length;
                         index = endIndex + 1;
-                        let tagContent = {content:item.content, startIdx: startIndex, endIdx: endIndex, id:item.id};
+                        let tagContent = [];
+                        tagContent = {content:item.content, startIdx: startIndex, endIdx: endIndex, id:item.id};
                         this.dynamicTagsPre.push (tagContent);
                     }
             })
@@ -117,7 +116,7 @@ export default {
             }
       },
     //   删除标签
-      handleClose(tag) {
+      handleClose(tag,index) {
         this.$confirm('此操作将永久删除该标签, 是否继续?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
@@ -127,7 +126,7 @@ export default {
                 const info = await deleteEntity({content:tag});
                 const entityId = info.data;
                 await deleteEntityByEntityId({id_entity:entityId});
-                this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
+                this.dynamicTags.splice(index, 1);
                 this.$message({
                     type: 'success',
                     message: '删除成功!'
