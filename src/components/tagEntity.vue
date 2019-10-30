@@ -5,8 +5,8 @@
             <div class = "button">
                 <el-button type="primary" v-if="isMarked" @click="addTag()" size="small">添加标签</el-button>
                 <el-button type="success" v-if="isMarked" @click="saveTag()" size="small">保存标记</el-button>
-                <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnToLast()">上一句</el-button>
-                <el-button type="primary" size="small" @click="turnToNext()">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
+                <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnTo(1)">上一句</el-button>
+                <el-button type="primary" size="small" @click="turnTo(2)">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
             </div>
         <div class = "tagarea">
             <el-tag :key="index" v-for="(tag,index) in dynamicTags" closable :disable-transitions="false" @close="handleClose(tag.content)">
@@ -18,7 +18,8 @@
 </template>
 
 <script>
-import {findIdBySentence, getLastSentence, getNextSentence, getFirstUnmarkedSentence, deleteEntity, insertEntityIndex, insertEntity, deleteEntityByEntityId, updateSentenceMarkById, getAllEntity, findIndexBySentenceId} from "../unit/fetch";
+import {findIdBySentence, findIdByEntity, getLastSentence, getNextSentence, getFirstUnmarkedSentence, deleteEntity, insertEntityIndex, insertEntity, deleteEntityByEntityId, updateSentenceMarkById, findIndexBySentenceId} from "../unit/fetch";
+import {getAllEntity} from "../unit/fetch";
 export default {
     data() {
         return {
@@ -29,7 +30,7 @@ export default {
             dynamicTagsNow: [],
             textarea:'',
             isMarked:true,
-            allEntity:[],//实体{id content length}的数组
+            // allEntity:[],//实体{id content length}的数组
         }
     },
     mounted(){
@@ -49,30 +50,21 @@ export default {
           }
           const infoIndex = await findIndexBySentenceId({id:this.textareaId});
           this.textIndex = infoIndex.data;
-          this.preTag();
+          await this.preTag();
       },
-    //   预标记的标签内容存在dynamicTags数组中，没有插入entityIndex表中，保存标记时才将所有实体信息保存在entityIndex中。
+    //   预标记的标签内容存在dynamicTagsPre数组中。还没有插入entityIndex表中，保存标记时才将所有实体信息保存在entityIndex中。
       async preTag() {
-          this.dynamicTags = [];
-          const lastEntity = this.allEntity;
-          try{
-                const info = await getAllEntity();
-                info.data.map((item) =>{
-                    this.allEntity.push(item)
-                        for(var index = 0; this.textarea.indexOf(item.content,index) != -1;){
-                            const startIndex = this.textarea.indexOf(item.content);
-                            const endIndex = startIndex + item.length;
-                            index = endIndex;
-                            var tagContent = '';
-                            tagContent = {content:item.content, startIdx: startIndex, endIdx: endIndex, id:item.id};
-                            this.dynamicTags.push (tagContent);
-                            this.dynamicTagsPre = this.dynamicTags;//存储预标记的内容
-                        }
-                })
-          }catch(e){
-              this.allEntity = [...lastEntity];
-              this.$message.error((e && e.message) ? e.message : '获取实体错误，请稍后重试');
-          }
+            const info = await getAllEntity();
+            info.data.map( (item) =>{
+                for(let index = 0; this.textarea.indexOf(item.content,index) != -1;){
+                        let startIndex = this.textarea.indexOf(item.content,index);
+                        let endIndex = startIndex + item.length;
+                        index = endIndex + 1;
+                        let tagContent = {content:item.content, startIdx: startIndex, endIdx: endIndex, id:item.id};
+                        this.dynamicTagsPre.push (tagContent);
+                    }
+            })
+            this.dynamicTags = this.dynamicTags.concat(this.dynamicTagsPre);//存储预标记的内容
       },
       async addTag() {
           //不同浏览器兼容问题，获取选中的内容及坐标
@@ -87,32 +79,42 @@ export default {
             var startIndex = selectTxt.anchorOffset;
             var endIndex = selectTxt.focusOffset;
             var entityLength = endIndex-startIndex;
-            // 添加标签之前先判断是否被预标记过
             var infoPre = [];
-            this.dynamicTagsPre.map((item) =>{
-                infoPre.push(item.content);//存放预标记dynamicTags中已有的标签内容
-            })
             var infoNow = [];
-            this.dynamicTagsNow.map((item) =>{
-                infoNow.push(item.content);//存放新加的标签
-            })
+
+            // 添加标签之前先判断是否被预标记过
+            if(this.dynamicTagsPre.length != 0){
+                this.dynamicTagsPre.map(async (item) =>{
+                await infoPre.push(item.content);//存放预标记dynamicTagsPre中已有的标签内容
+                });
+            }
+            
+            if(this.dynamicTagsNow.length != 0){
+                this.dynamicTagsNow.map(async (item) =>{
+                await infoNow.push(item.content);//存放新加的标签 (预标记之后通过add添加的)
+                })
+            }
+            
+            var tagContent = [];
             if(infoPre.indexOf(selection) == -1){//预标记中不含有选中内容
-                if(infoNow.indexOf(selection) == -1){//新加的标签中不含选中内容
+                if( infoNow.indexOf(selection) == -1){//新加的标签中不含选中内容
                     // 将标签内容添加到数据库中
                     const info =  await insertEntity({content:selection,length:entityLength});
                     var entityId = info.data;
                 }else{//新加的标签中已有该内容，则不用加入entityONly表中
                     // 将信息显示在标签中
-                    var tagContent = {content:selection, startIdx:startIndex, endIdx: endIndex, id:entityId};
-                    this.dynamicTagsNow.push (tagContent);
-                }   
+                    const info = await findIdByEntity({content:selection})
+                    entityId = info.data;
+                }
+                tagContent = {content:selection, startIdx:startIndex, endIdx: endIndex, id:entityId};
+                this.dynamicTagsNow.push (tagContent);
+                this.dynamicTags.push (tagContent);
             }else{
                 this.$message({
                     type: 'info',
                     message: '该实体已被预标记，请勿重复标记'
                     });
             }
-            this.dynamicTags.concat(this.dynamicTagsNow);
       },
     //   删除标签
       handleClose(tag) {
@@ -154,7 +156,7 @@ export default {
                     type: 'success',
                     message: '保存成功!'
                 });
-                this.turnToNext();
+                this.turnTo(2);
                 this.dynamicTags = [];
                 this.isMarked = true;
             })
@@ -165,22 +167,21 @@ export default {
                 });          
             });
       },
-      async turnToLast() {
-          const info = await getLastSentence({id : this.textareaId});
+      async turnTo(msg) {
+          var info = [];
+          if(msg == 1){
+              info = await getLastSentence({id : this.textareaId});
+          }else if(msg == 2){
+              info = await getNextSentence({id : this.textareaId});
+          }
           const count = info.data[0];
           this.textarea = count.content;
           this.textareaId = count.id;
           const infoIndex = await findIndexBySentenceId({id:this.textareaId});
           this.textIndex = infoIndex.data;
-          this.preTag();
-      },
-      async turnToNext() {
-          const info = await getNextSentence({id : this.textareaId});
-          const count = info.data[0];
-          this.textarea = count.content;
-          this.textareaId = count.id;
-          const infoIndex = await findIndexBySentenceId({id:this.textareaId});
-          this.textIndex = infoIndex.data;
+          this.dynamicTags = [];
+          this.dynamicTagsPre = [];
+          this.dynamicTagsNow = [];
           this.preTag();
       }
     }

@@ -45,7 +45,7 @@
 </template>>
 
 <script>
-import {getAllSentences, insertSentence, deleteSentence, findIdBySentence, updateSentenceContentById} from '../unit/fetch';
+import {getAllSentences, insertSentence, deleteSentence, findIdBySentence, updateSentenceContentById, deleteEntityBySentenceId} from '../unit/fetch';
 export default {
     data () {
         return {
@@ -174,9 +174,9 @@ export default {
                 type: 'warning'
                 })
             .then(async () => {
-                await deleteSentence({content:row}),
-                // this.sentences.splice(this.sentences.indexOf(row) ,1),
-                this.sentences.splice(index + (this.pageNumNow-1) * this.maxShowLength ,1),
+                const info = await deleteSentence({content:row});
+                await deleteEntityBySentenceId({id_sentence:info.data});
+                this.sentences.splice(index + (this.pageNumNow-1) * this.maxShowLength ,1);
                 this.showCurrentPage(this.pageNumNow);
                 this.$message({
                     type: 'success',
