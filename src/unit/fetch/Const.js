@@ -13,5 +13,6 @@ export function executeFetch(...args) {
     });
 }
 
-// export const hostname = 'http://localhost:8080';
-export const hostname ='';
+export const hostname = 'http://localhost:8080';
+// export const hostname = 'http://39.105.206.148:1239';
+// export const hostname ='';

@@ -109,18 +109,18 @@ export default {
             this.textarea = '';
         },
         findMinStartAfterEndIndex(a,b){//a是endIndex，b是存放实体起始位置的数组，找到b中比a大的最小值
-        var arr =[]; 
-            for(var index = 0;index < b.length;index++){
-                if(b[index] >= a){
-                    arr.push(b[index]);
+            var arr =[]; 
+                for(var index = 0;index < b.length;index++){
+                    if(b[index] >= a){
+                        arr.push(b[index]);
+                    }
                 }
-            }
-            if(arr.length != 0){
-                var nextStart = Math.min.apply(null,arr);
-                return nextStart;
-            }else{
-                return -1;
-            }
+                if(arr.length != 0){
+                    var nextStart = Math.min.apply(null,arr);
+                    return nextStart;
+                }else{
+                    return -1;
+                }
             
         },
         findShortestEndIndex(startNum,start,end){//a是实体起始位置，需要找到从该点开始的最短实体

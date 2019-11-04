@@ -26,6 +26,7 @@
             <el-table-column label="操作" >
                 <template slot-scope="scope">
                     <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row.content)">删除</el-button>
+                    <!-- <el-button size="mini"  v-if="scope.row.is_marked" @click="handleShow(scope.$index, scope.row.content)">查看</el-button> -->
                     <el-button size="mini"  v-if="!scope.row.is_marked" @click="handleTag(scope.$index, scope.row.content)">标记</el-button>
                     <el-button size="mini"  v-if="!scope.row.is_marked" @click="handleEdit(scope.$index, scope.row.content)" >编辑</el-button>  
                 </template>

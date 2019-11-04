@@ -5,8 +5,8 @@
             <div class = "button">
                 <el-button type="primary" v-if="isMarked" @click="addTag()" size="small">添加标签</el-button>
                 <el-button type="success" v-if="isMarked" @click="saveTag()" size="small">保存标记</el-button>
-                <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnTo(1)">上一句</el-button>
-                <el-button type="primary" size="small" @click="turnTo(2)">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
+                <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnTo(1)" v-if="isFirst">上一句</el-button>
+                <el-button type="primary" size="small" @click="turnTo(2)" v-if="isLast">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
             </div>
         <div class = "tagarea">
             <el-tag :key="index" v-for="(tag,index) in dynamicTags" closable :disable-transitions="false" @close="handleClose(tag.content,index)">
@@ -28,7 +28,10 @@ export default {
             dynamicTagsPre: [],
             dynamicTagsNow: [],
             textarea:'',
-            isMarked:true
+            isMarked:true,
+            isFirst:true,
+            isLast:true,
+            isTurn:true
         }
     },
     mounted(){
@@ -55,13 +58,13 @@ export default {
             const info = await getAllEntity();
             info.data.map( (item) =>{
                 for(let index = 0; this.textarea.indexOf(item.content,index) != -1;){
-                        let startIndex = this.textarea.indexOf(item.content,index);
-                        let endIndex = startIndex + item.length;
-                        index = endIndex + 1;
-                        let tagContent = [];
-                        tagContent = {content:item.content, startIdx: startIndex, endIdx: endIndex, id:item.id};
-                        this.dynamicTagsPre.push (tagContent);
-                    }
+                    let startIndex = this.textarea.indexOf(item.content,index);
+                    let endIndex = startIndex + item.length;
+                    index = endIndex + 1;
+                    let tagContent = [];
+                    tagContent = {content:item.content, startIdx: startIndex, endIdx: endIndex, id:item.id};
+                    this.dynamicTagsPre.push (tagContent);
+                }
             })
             this.dynamicTags = this.dynamicTags.concat(this.dynamicTagsPre);//存储预标记的内容
       },
@@ -75,11 +78,12 @@ export default {
                 selectTxt = window.document.selection.createRange().text;
             }
             var selection = selectTxt.toString();
-            var startIndex = selectTxt.anchorOffset;
-            var endIndex = selectTxt.focusOffset;
+            var startIndex = Math.min(selectTxt.anchorOffset,selectTxt.focusOffset);
+            var endIndex = Math.max(selectTxt.anchorOffset,selectTxt.focusOffset);//防止标记顺序从右到左时，记录错误
             var entityLength = endIndex-startIndex;
             var infoPre = [];
             var infoNow = [];
+            // var infoNowStart = [];
 
             // 添加标签之前先判断是否被预标记过
             if(this.dynamicTagsPre.length != 0){
@@ -151,13 +155,21 @@ export default {
                 })
                 updateSentenceMarkById({id:this.textareaId,is_marked:1});
                 this.isMarked = false;
-                this.$message({
+                if(this.isLast){
+                    this.$message({
                     type: 'success',
-                    message: '保存成功!'
-                });
-                this.turnTo(2);
-                this.dynamicTags = [];
-                this.isMarked = true;
+                    message: '保存成功！'
+                    });
+                    this.turnTo(2);
+                    this.dynamicTags = [];
+                    this.isMarked = true;
+                }else{
+                    this.$message({
+                    type: 'success',
+                    message: '保存成功！已是最后一句！'
+                    });
+                }
+                
             })
             .catch(() => {
                 this.$message({
@@ -173,15 +185,24 @@ export default {
           }else if(msg == 2){
               info = await getNextSentence({id : this.textareaId});
           }
-          const count = info.data[0];
-          this.textarea = count.content;
-          this.textareaId = count.id;
-          const infoIndex = await findIndexBySentenceId({id:this.textareaId});
-          this.textIndex = infoIndex.data;
-          this.dynamicTags = [];
-          this.dynamicTagsPre = [];
-          this.dynamicTagsNow = [];
-          this.preTag();
+          if(info.data.length == 0){
+              if(msg == 1){
+                  this.isFirst = false;
+              }else{
+                  this.isLast = false;
+              }
+          }else{
+                const count = info.data[0];
+                this.textarea = count.content;
+                this.textareaId = count.id;
+                const infoIndex = await findIndexBySentenceId({id:this.textareaId});
+                this.textIndex = infoIndex.data;
+                this.dynamicTags = [];
+                this.dynamicTagsPre = [];
+                this.dynamicTagsNow = [];
+                this.preTag();
+          }
+          
       }
     }
 }
