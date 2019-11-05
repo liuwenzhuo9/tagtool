@@ -26,7 +26,7 @@
             <el-table-column label="操作" >
                 <template slot-scope="scope">
                     <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row.content)">删除</el-button>
-                    <!-- <el-button size="mini"  v-if="scope.row.is_marked" @click="handleShow(scope.$index, scope.row.content)">查看</el-button> -->
+                    <el-button size="mini"  v-if="scope.row.is_marked" @click="handleShow(scope.$index, scope.row.content)">查看</el-button>
                     <el-button size="mini"  v-if="!scope.row.is_marked" @click="handleTag(scope.$index, scope.row.content)">标记</el-button>
                     <el-button size="mini"  v-if="!scope.row.is_marked" @click="handleEdit(scope.$index, scope.row.content)" >编辑</el-button>  
                 </template>
@@ -35,7 +35,12 @@
         </div>
         <hr/>
         <div class="show_bottom">
-        共{{this.pageNumTotal}}页 跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange(num)" :min="1" :max="this.pageNumTotal" label="描述文字" size="mini"></el-input-number>
+        <el-pagination
+            @size-change="handleSizeChange"
+            :page-sizes="[10, 20, 30, 40]"
+            layout="sizes,  pager">
+        </el-pagination> 
+        &nbsp;&nbsp;共{{this.pageNumTotal}}页 跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange(num)" :min="1" :max="this.pageNumTotal" label="描述文字" size="mini"></el-input-number>
         &nbsp;页&nbsp;
                 <el-button size="mini" @click="handleChange(num)">跳转</el-button>&nbsp;
         当前是第{{this.pageNumNow}}页
@@ -56,11 +61,10 @@ export default {
             editSentenceId:'',
             editSentenceIndex:'',
             sentences:[],//数据库中所有句子的内容
-            markedId:[],//数据库中所有句子的编辑状态
             sentencesCurrent:[],//当前页面显示的句子
             splitSentence:[],//根据txt文档中回车得到的句子
             num:0,//加减跳转按钮的数字
-            maxShowLength:20,//每页显示的条数
+            maxShowLength:10,//每页显示的条数
             pageNumTotal:1,//总页数
             pageNumNow:1,//当前页数
         }
@@ -80,25 +84,27 @@ export default {
                     const info = await getAllSentences();
                     info.data.map((item) => {
                             this.sentences.push(item)
-                            // this.markedId.push(item.is_marked)
                         })
                 }catch(e){
                     this.sentences = [...lastSentences];
                     this.$message.error((e && e.message) ? e.message : '获取句子错误，请稍后重试');
                 }
-                this.pageNumTotal = Math.ceil(this.sentences.length/this.maxShowLength);
-                if(this.isInitial){
-                    this.showCurrentPage(this.pageNumNow);
-                }
+            this.pageNumTotal = Math.ceil(this.sentences.length/this.maxShowLength);
+            if(this.isInitial){
+                this.showCurrentPage(this.pageNumNow);
+            }
         },
         // 控制每页显示的句子个数
         showCurrentPage(page){
             this.sentencesCurrent = [];
-            // this.currentMarkedIndex = [];
             for(var index=(page - 1) * this.maxShowLength; index < (page * this.maxShowLength) && index < this.sentences.length ;index++){
                     this.sentencesCurrent.push(this.sentences[index]);
-                    // this.currentMarkedIndex.push(this.markedId[index]);
                 }
+        },
+        handleSizeChange(max){
+            this.maxShowLength = max;
+            this.pageNumTotal = Math.ceil(this.sentences.length/this.maxShowLength);
+            this.showCurrentPage(1);
         },
         // 确认添加
         async handleClick(){
@@ -122,10 +128,12 @@ export default {
         },
         async spiltByENTER(){
             await Promise.all(this.splitSentence.map(async (item) => {
-                await insertSentence({content:item})
+                window.console.log(item)
+                if(item != null && item != '' && item != undefined ){//输入不能为空
+                    await insertSentence({content:item}
+                    )}
                 }))
         },
-        
         // 编辑句子
         async handleEdit(index, row) {
             this.isEdit = true
@@ -159,6 +167,13 @@ export default {
         },
         beforeRemove(file) {
         return this.$confirm(`确定移除 ${ file.name }？`);
+        },
+        //查看已标记的句子结果
+        handleShow(index,row){
+            this.$store.commit('setCurrentTextarea', row)
+            this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
+            this.$store.commit('setIsMarked')
+            this.$router.push("./tagEntity")
         },
         // 选中句子进行标记
         handleTag(index,row){

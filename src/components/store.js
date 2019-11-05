@@ -5,7 +5,8 @@ Vue.use(Vuex);
 
 const state = {
     content: '',
-    index:''
+    index:'',
+    isMarked:''
   }
 
   export default new Vuex.Store({
@@ -16,6 +17,9 @@ const state = {
         },
         setCurrentIndex(state,index) {
             state.index = index
+        },
+        setIsMarked() {
+            state.isMarked = true
         }
     }
   });
