@@ -1,29 +1,44 @@
 <template>
     <div class="tagEntity">
         <div class = "chooseToShowAllOrPart"> 
-             <el-dropdown @command="handleCommand">
+             <el-dropdown @command="handleCommandShow">
                 <span class="el-dropdown-link">
                     选择显示内容<i class="el-icon-arrow-down el-icon--right"></i>
                 </span>
                 <el-dropdown-menu slot="dropdown">
                     <el-dropdown-item command="1">显示全部句子</el-dropdown-item>
                     <el-dropdown-item command="0">显示未标记句子</el-dropdown-item>
-                    <el-dropdown-item command="d" disabled>默认显示未标记句子</el-dropdown-item>
+                    <el-dropdown-item  disabled>默认显示未标记句子</el-dropdown-item>
                 </el-dropdown-menu>
              </el-dropdown>
+             <p v-if="isShowAll">当前：显示全部句子</p>
+             <p v-if="!isShowAll">当前：显示未标记句子</p>
+             <el-dropdown @command="handleCommandDelete">
+                <span class="el-dropdown-link">
+                    选择删除标签的方式<i class="el-icon-arrow-down el-icon--right"></i>
+                </span>
+                <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item command="0">仅在该句中删除标签</el-dropdown-item>
+                    <el-dropdown-item command="1">在所有句子中删除该标签</el-dropdown-item>
+                    <el-dropdown-item  disabled>默认在所有句子中删除该标签</el-dropdown-item>
+                </el-dropdown-menu>
+             </el-dropdown>
+             <p v-if="isDeleteinAll">当前：在所有句子中删除该标签</p>
+             <p v-if="!isDeleteinAll">当前：仅在该句中删除标签</p>
         </div>
         第{{textIndex}}句：
         <div class = "inputarea">{{textarea}}</div>
             <div class = "button">
-                <el-button type="primary" v-if="!isMarked" @click="addTag()" size="small">添加标签</el-button>
-                <el-button type="success" v-if="!isMarked" @click="saveTag()" size="small">保存标记</el-button>
-                <el-button type="success" v-if="isMarked" @click="editTag()" size="small">修改标记</el-button>
-                <el-button type="success" v-if="isQuitEdit" @click="quitEditTag()" size="small">取消修改</el-button>
+                <el-button type="primary" v-if="!isEdit" @click="addTag()" size="small">添加标签</el-button>
+                <el-button type="success" v-if="!isEdit" @click="saveTag()" size="small">保存标记</el-button>
+                <el-button type="success" v-if="isEdit" @click="editTag()" size="small">修改标记</el-button>
+                <el-button type="warning" v-if="isQuitEdit" @click="quitEditTag()" size="small">取消修改</el-button>
+                <el-button type="danger" v-if="!isEdit && dynamicTags.length != 0" @click="deleteAllTag()" size="small">删除所有标签</el-button>
                 <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnTo(1,isShowAll)" :disabled="isFirst">上一句</el-button>
                 <el-button type="primary" size="small" @click="turnTo(2,isShowAll)" :disabled="isLast">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
             </div>
         <div class = "tagarea">
-            <el-tag :key="index" v-for="(tag,index) in dynamicTags" :closable="!isMarked" :disable-transitions="false" @close="handleClose(tag.content,index)">
+            <el-tag :key="index" v-for="(tag,index) in dynamicTags" :closable="!isEdit" :disable-transitions="false" @close="handleClose(tag.content,index)">
                 {{tag.content}}&nbsp;({{tag.startIdx}},{{tag.endIdx}})
             </el-tag>
         </div>
@@ -32,21 +47,21 @@
 </template>
 
 <script>
-import {findIdBySentence, getAllEntity, findIdByEntity, getLastSentence, getNextSentence, getFirstUnmarkedSentence, deleteEntity, insertEntityIndex, insertEntity, deleteEntityByEntityId, updateSentenceMarkById, findIndexBySentenceId} from "../unit/fetch";
+import {findIdBySentence, getAllEntity, findIdByEntity, getLastSentence, getNextSentence, getFirstUnmarkedSentence, deleteEntity, insertEntityIndex, insertEntity, deleteEntityByEntityId, deleteEntityBySentenceId, updateSentenceMarkById, findIndexBySentenceId} from "../unit/fetch";
 export default {
     data() {
         return {
             textIndex:'',
             textareaId:'',
+            textarea:'',
             dynamicTags: [],
             dynamicTagsPre: [],
             dynamicTagsNow: [],
-            textarea:'',
-            isMarked:false,
+            isEdit:false,//该句子是否可被修改
             isFirst:false,
             isLast:false,
-            isTurn:true,
-            isShowAll:0,
+            isShowAll:0,//显示未标记句子
+            isDeleteinAll:1,//在所有句子中删除该标签
             isQuitEdit:false
         }
     },
@@ -60,8 +75,8 @@ export default {
               this.textIndex = this.$store.state.index;
               const info = await findIdBySentence({content:this.textarea});
               this.textareaId = info.data;
-              if(this.$store.state.isMarked){
-                  this.isMarked = this.$store.state.isMarked
+              if(this.$store.state.isEdit){
+                  this.isEdit = this.$store.state.isEdit
               }
           }else{
               const info = await getFirstUnmarkedSentence();
@@ -74,8 +89,8 @@ export default {
           this.judgeFirstandLast();
       },
       async judgeFirstandLast(){// 显示是否为第一条or最后一条
-          const infoL =  await getLastSentence({id : this.textareaId, is_marked : 1});
-          const infoN =  await getNextSentence({id : this.textareaId, is_marked : 1});
+          const infoL =  await getLastSentence({id : this.textareaId, is_marked : this.isShowAll});
+          const infoN =  await getNextSentence({id : this.textareaId, is_marked : this.isShowAll});
           if(infoL.data == 0){ //已是第一条
             this.isFirst = true
           }else{
@@ -166,21 +181,51 @@ export default {
             }
       },
     //   删除标签
-      handleClose(tag,index) {
+      handleClose(item,index) {
         this.$confirm('此操作将永久删除该标签, 是否继续?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
                 })
             .then(async () => {
-                const info = await deleteEntity({content:tag});
-                const entityId = info.data;
-                await deleteEntityByEntityId({id_entity:entityId});
-                this.dynamicTags.splice(index, 1);
+                if(this.isDeleteinAll == 1){//删除所有句子中的该标签
+                    const info = await deleteEntity({content:item});
+                    const entityId = info.data;
+                    await deleteEntityByEntityId({id_entity:entityId});
+                }
+                this.dynamicTags.splice(index, 1);//仅删除该句中的该标签
                 this.$message({
                     type: 'success',
                     message: '删除成功!'
                 });
+            })
+            .catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });          
+            });
+      },
+    //   删除该句子所有标签
+      deleteAllTag(){
+          this.$confirm('确定要删除该句子的所有标记？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+                })
+            .then(async () => {
+                await Promise.all(this.dynamicTags.map((tag) =>{
+                    if(this.isDeleteinAll == 1){//删除所有句子中的该标签
+                    const info = deleteEntity({content:tag.content});
+                    const entityId = info.data;
+                    deleteEntityByEntityId({id_entity:entityId});
+                    }
+                    deleteEntityBySentenceId({id_sentence:this.textareaId});
+                    this.dynamicTags = [];//仅删除该句中的该标签
+                    this.dynamicTagsPre = [];
+                    this.dynamicTagsNow = [];
+                }))
+                updateSentenceMarkById({id:this.textareaId,is_marked:0});//删除全部标签后改变句子的标记状态
             })
             .catch(() => {
                 this.$message({
@@ -196,26 +241,24 @@ export default {
                 type: 'warning'
                 })
             .then(async () => {
+                await deleteEntityBySentenceId({id_sentence:this.textareaId})
                 this.dynamicTags.map((item) =>{
                     insertEntityIndex({id_sentence:this.textareaId, id_entity:item.id, start_index:item.startIdx, end_index:item.endIdx})
                 })
                 updateSentenceMarkById({id:this.textareaId,is_marked:1});
-                this.isMarked = true;
+                this.isQuitEdit = false;
+                this.isEdit = true;
                 if(!this.isLast){
                     this.$message({
                     type: 'success',
                     message: '保存成功！'
                     })
-                    this.turnTo(2);
-                    this.dynamicTags = [];
-                    this.isMarked = false;
                 }else{
                     this.$message({
                     type: 'success',
                     message: '保存成功！已是最后一句！'
                     });
                 }
-                
             })
             .catch(() => {
                 this.$message({
@@ -225,26 +268,35 @@ export default {
             });
       },
       async editTag(){
-          this.isMarked = false;
+          this.isEdit = false;
           this.isQuitEdit = true;
           await this.preTag();
           this.judgeFirstandLast();
       },
       quitEditTag(){
-          this.isMarked = true;
+          this.isEdit = true;
           this.isQuitEdit = false;
           this.$message({
             type: 'info',
             message: '已取消修改'
             });
       },
+      //选择删除全部/当前句子中的标签
+      handleCommandDelete(command){
+          if( command == 1){
+              this.isDeleteinAll = 1;//删除全部句子中的该标签
+          }else{
+              this.isDeleteinAll = 0;//删除当前句子中的该标签
+          }
+      },
       //选择显示全部还是未标记句子
-      handleCommand(command) {
+      handleCommandShow(command) {
         if( command == 1){
               this.isShowAll = 1;//查看全部句子
           }else{
               this.isShowAll = 0;//查看未标记句子
           }
+        this.judgeFirstandLast();
       },
       async turnTo(msg,type) {
           window.console.log(type)
@@ -256,9 +308,9 @@ export default {
           }
          const count = info.data[0];
          if(count.is_marked == 0){
-             this.isMarked = false;
+             this.isEdit = false;
          }else{
-             this.isMarked = true;
+             this.isEdit = true;
          }
          this.textarea = count.content;
          this.textareaId = count.id;

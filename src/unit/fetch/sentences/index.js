@@ -110,3 +110,13 @@ export function findSentenceFromOffset(info) {
         }
     });
 }
+
+export function deleteSentenceFromOffset(info) {
+    let url = `${hostname}/deleteSentenceFromOffset${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}

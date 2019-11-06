@@ -6,7 +6,7 @@ Vue.use(Vuex);
 const state = {
     content: '',
     index:'',
-    isMarked:''
+    isEdit:''
   }
 
   export default new Vuex.Store({
@@ -19,7 +19,7 @@ const state = {
             state.index = index
         },
         setIsMarked() {
-            state.isMarked = true
+            state.isEdit = true
         }
     }
   });

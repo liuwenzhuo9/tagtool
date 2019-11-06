@@ -28,7 +28,6 @@ export default {
             this.allSentences = [];
             await Promise.all(sentencesInfo.data.map(async (item)=>{
                 var splitSentence = item.content.split('');
-                // splitSentence.pop();
                 this.startIndex = [];
                 this.endIndex = [];
                 const indexInfo = await getEntityIndexBySentenceId({id_sentence:item.id});

@@ -26,15 +26,17 @@
             <el-table-column label="操作" >
                 <template slot-scope="scope">
                     <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row.content)">删除</el-button>
-                    <el-button size="mini"  v-if="scope.row.is_marked" @click="handleShow(scope.$index, scope.row.content)">查看</el-button>
-                    <el-button size="mini"  v-if="!scope.row.is_marked" @click="handleTag(scope.$index, scope.row.content)">标记</el-button>
-                    <el-button size="mini"  v-if="!scope.row.is_marked" @click="handleEdit(scope.$index, scope.row.content)" >编辑</el-button>  
+                    <el-button size="mini" type="success" v-if="scope.row.is_marked" @click="handleShow(scope.$index, scope.row.content)">查看</el-button>
+                    <el-button size="mini" type="warning" v-if="!scope.row.is_marked" @click="handleTag(scope.$index, scope.row.content)">标记</el-button>
+                    <el-button size="mini"  @click="handleEdit(scope.$index, scope.row.content,scope.row.is_marked)" >编辑</el-button>  
                 </template>
             </el-table-column>
         </el-table>
         </div>
         <hr/>
         <div class="show_bottom">
+            从第&nbsp;<el-input v-model="begin" size="mini"></el-input>&nbsp;句到第&nbsp;<el-input v-model="end" size="mini"></el-input>&nbsp;句
+            <el-button type="danger" icon="el-icon-delete" circle @click="deleteFromBeginToEnd(begin,end)"></el-button>
         <el-pagination
             @size-change="handleSizeChange"
             :page-sizes="[10, 20, 30, 40]"
@@ -51,15 +53,16 @@
 </template>>
 
 <script>
-import {getAllSentences, insertSentence, deleteSentence, findIdBySentence, updateSentenceContentById, deleteEntityBySentenceId} from '../unit/fetch';
+import {getAllSentences, insertSentence, deleteSentence, findIdBySentence, updateSentenceContentById, deleteEntityBySentenceId, deleteSentenceFromOffset} from '../unit/fetch';
 export default {
     data () {
         return {
             textarea: '',
             isInitial:true,
-            isEdit:false,
-            editSentenceId:'',
-            editSentenceIndex:'',
+            isEdit:false,//判断是否点击了编辑按钮
+            isMark:0,//保存handleEdit(scope.$index, scope.row.content,scope.row.is_marked)中的scope.row.is_marked状态
+            editSentenceId:'',//保存正在编辑的句子id，便于在数据表中修改句子内容
+            editSentenceIndex:'',//保存正在编辑的句子在该页的index值，便于修改显示内容
             sentences:[],//数据库中所有句子的内容
             sentencesCurrent:[],//当前页面显示的句子
             splitSentence:[],//根据txt文档中回车得到的句子
@@ -67,6 +70,8 @@ export default {
             maxShowLength:10,//每页显示的条数
             pageNumTotal:1,//总页数
             pageNumNow:1,//当前页数
+            begin:'',
+            end:''
         }
     },
     mounted(){
@@ -135,20 +140,43 @@ export default {
                 }))
         },
         // 编辑句子
-        async handleEdit(index, row) {
+        async handleEdit(index, row, msg) {
             this.isEdit = true
             this.textarea = row
             const info = await findIdBySentence({content:row})
             this.editSentenceId = info.data
             this.editSentenceIndex = index
+            if(msg == 1){
+                this.isMark = 1
+                this.$store.commit('setCurrentTextarea', row)
+                this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
+                this.$store.commit('setIsMarked')
+            }//已标记的句子进行编辑
         },
         // 确认编辑
         handleClickEdit(){
             updateSentenceContentById({id:this.editSentenceId,content:this.textarea})
             this.isEdit = false
             const editId = this.sentencesCurrent[this.editSentenceIndex]
-            this.sentencesCurrent.splice(this.editSentenceIndex,1,{id:editId,content:this.textarea,is_marked:0})
+            this.sentencesCurrent.splice(this.editSentenceIndex,1,{id:editId,content:this.textarea,is_marked:this.isMark})
             this.textarea = ''
+            if(this.isMark == 1){//判断该句子是否被标记过
+                this.$confirm('该句子已被标记，保存编辑后是否重新标记？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+                })
+                .then(async () => {
+                    this.isMark = 0;
+                    this.$router.push("./tagEntity")
+                })
+                .catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已保存编辑，已取消标记'
+                    });          
+                });
+            }
         },
         // 取消添加或编辑
         handleClickEditQuit(){
@@ -210,6 +238,28 @@ export default {
         handleChange(page){
             this.pageNumNow = page;
             this.showCurrentPage(page);
+        },
+        async deleteFromBeginToEnd(begin,end){
+            this.$confirm('此操作将永久删除这些句子, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+                })
+            .then(async () => {
+                await deleteSentenceFromOffset({offset:begin-1,count:end-begin+1});
+                this.sentences.splice(begin-1,end-begin+1);
+                this.showCurrentPage(this.pageNumNow);
+                this.$message({
+                    type: 'success',
+                    message: '删除成功!'
+                });
+            })
+            .catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });          
+            });
         }
     }
 }
