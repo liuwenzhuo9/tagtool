@@ -23,6 +23,9 @@
             sectionUrl: ['allSentences','tagEntity','tagResult'],
         }       
     },
+    mounted(){
+        this.handleSelect(0);
+    },
     methods: {
       handleSelect(key) {
           let url = '/'+ this.sectionUrl[key]
@@ -49,4 +52,7 @@
     height: 100%;
     margin: auto;
 }
+/* .el-menu{
+    background: rgb(224, 218, 209);
+} */
 </style>

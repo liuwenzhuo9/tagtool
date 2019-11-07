@@ -1,12 +1,18 @@
 <template>
-    <div class='output'>从第&nbsp;<el-input v-model="begin" size="mini"></el-input>&nbsp;句到第&nbsp;<el-input v-model="end" size="mini"></el-input>&nbsp;句 
-    <el-button type="success"  @click="outTxt(begin,end,1)" v-if="textarea ==''">大实体靠前导出</el-button>
-    <el-button type="success"  @click="outTxt(begin,end,0)" v-if="textarea ==''">小实体靠前导出</el-button>
-    <el-input type="textarea" :autosize="{ minRows: 6, maxRows: 20}"  v-model="textarea" v-if="showInput"></el-input>
-    <el-button type="success" @click="saveTxt('test.txt',textarea)" v-if="textarea!=''">确认保存为txt</el-button>
-    <el-button type="warning" @click="cancel()" v-if="textarea!=''">取消</el-button>
+    <div class='output'>
+        从第&nbsp;
+        <el-input v-model="begin" size="mini"></el-input>
+        &nbsp;句到第&nbsp;
+        <el-input v-model="end" size="mini"></el-input>
+        &nbsp;句 
+        <el-button type="success"  @click="outTxt(begin,end,1)" :disabled="!textarea ==''">大实体靠前导出</el-button>
+        <el-button type="success"  @click="outTxt(begin,end,0)" :disabled="!textarea ==''">小实体靠前导出</el-button>
+        <el-input type="textarea" :autosize="{ minRows: 8, maxRows: 10}"  v-model="textarea" ></el-input>
+        <br/>
+        <el-button type="success" @click="saveTxt('test.txt',textarea)" :disabled="textarea ==''">确认保存为txt</el-button>
+        <el-button type="warning" @click="cancel()" :disabled="textarea ==''">取消</el-button>
     </div>
-</template>>
+</template>
 
 <script>
 import {findSentenceFromOffset, getEntityIndexBySentenceId} from '../unit/fetch';
@@ -16,7 +22,7 @@ export default {
             textarea:'',
             begin:'',
             end:'',
-            showInput:false,
+            // showInput:false,
             startIndex:[],
             endIndex:[],
             allSentences:[]
@@ -28,6 +34,7 @@ export default {
             this.allSentences = [];
             await Promise.all(sentencesInfo.data.map(async (item)=>{
                 var splitSentence = item.content.split('');
+                splitSentence.pop();
                 this.startIndex = [];
                 this.endIndex = [];
                 const indexInfo = await getEntityIndexBySentenceId({id_sentence:item.id});
@@ -38,7 +45,7 @@ export default {
                 this.addBIO(splitSentence,this.startIndex,this.endIndex,type);
                 this.allSentences = this.allSentences.concat(splitSentence);
             }))
-            this.showInput = true;
+            // this.showInput = true;
             this.textarea = '';
             for(var index = 0;index < this.allSentences.length;index++ ){
                 this.textarea = this.textarea + this.allSentences[index] + '\n';
@@ -46,10 +53,10 @@ export default {
         },
 
         addBIO(all,start,end,type){
+            window.console.log(all)
             let lengthOfSentence = all.length;
             var minStart = 0, minEnd = 0;
             for(let i = 1; start.length != 0;i++){//判断该句子实体展示需要多少列
-            window.console.log(start)
                 var lineStartIndex =[];//存储当列展现的实体位置
                 var lineEndIndex =[];
                 minStart = Math.min.apply(null,start);
@@ -104,7 +111,7 @@ export default {
             save_link.dispatchEvent(ev);
         },
         cancel(){
-            this.showInput = false;
+            // this.showInput = false;
             this.textarea = '';
         },
         findMinStartAfterEndIndex(a,b){//a是endIndex，b是存放实体起始位置的数组，找到b中比a大的最小值
@@ -170,5 +177,6 @@ export default {
 }
 .el-textarea {
     margin: 10px;
+    width:800px;
 }
 </style>

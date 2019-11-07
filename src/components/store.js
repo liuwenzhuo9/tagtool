@@ -6,21 +6,25 @@ Vue.use(Vuex);
 const state = {
     content: '',
     index:'',
-    isEdit:''
+    isMark:'',
+    // activeIndex:''
   }
 
   export default new Vuex.Store({
     state:state,
     mutations: {
         setCurrentTextarea(state,item) {
-            state.content = item
+            state.content = item;
         },
         setCurrentIndex(state,index) {
-            state.index = index
+            state.index = index;
         },
-        setIsMarked() {
-            state.isEdit = true
-        }
+        setIsMarked(state,isMark) {
+            state.isMark = isMark;
+        },
+        // setActiveIndex(){
+        //     state.activeIndex = 1;
+        // }
     }
   });
   

@@ -34,6 +34,19 @@
         </el-table>
         </div>
         <div class="show_bottom">
+            <div class="shoe_bottom_pageNum">
+                <el-pagination
+                    @size-change="handleSizeChange"
+                    :page-sizes="[10, 20, 30, 50]"
+                    layout="sizes,  pager">
+                </el-pagination>
+                共{{this.pageNumTotal}}页 
+                跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange(num)" :min="1" :max="this.pageNumTotal" label="描述文字" size="mini"></el-input-number>
+                &nbsp;页&nbsp;
+                        <el-button type="success" size="mini" @click="handleChange(num)">跳转</el-button>&nbsp;
+                <el-divider direction="vertical"></el-divider>
+                当前是第{{this.pageNumNow}}页
+            </div>
             <div class="show_bottom_delete">
                 从第&nbsp;
                 <el-input class="deleteInput" v-model="begin" size="mini"></el-input>
@@ -41,19 +54,6 @@
                 <el-input class="deleteInput" v-model="end" size="mini"></el-input>
                 &nbsp;句
                 <el-button type="danger" size="mini" @click="deleteFromBeginToEnd(begin,end)">批量删除</el-button>
-            </div>
-            <div class = "show_bottom_changePage">
-                <el-pagination
-                    @size-change="handleSizeChange"
-                    :page-sizes="[10, 20, 30, 40]"
-                    layout="sizes,  pager">
-                </el-pagination>
-                跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange(num)" :min="1" :max="this.pageNumTotal" label="描述文字" size="mini"></el-input-number>
-                &nbsp;页&nbsp;
-                        <el-button type="success" size="mini" @click="handleChange(num)">跳转</el-button>&nbsp;
-            </div>
-            <div class="shoe_bottom_pageNumNow">
-                共{{this.pageNumTotal}}页 &nbsp;当前是第{{this.pageNumNow}}页
             </div>
         </div>
     </div>
@@ -159,7 +159,8 @@ export default {
                 this.isMark = 1
                 this.$store.commit('setCurrentTextarea', row)
                 this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
-                this.$store.commit('setIsMarked')
+                this.$store.commit('setIsMarked',true)
+                // this.$store.commit('setActiveIndex',1)
             }//已标记的句子进行编辑
         },
         // 确认编辑
@@ -209,13 +210,16 @@ export default {
         handleShow(index,row){
             this.$store.commit('setCurrentTextarea', row)
             this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
-            this.$store.commit('setIsMarked')
+            this.$store.commit('setIsMarked',true)
+            // this.$store.commit('setActiveIndex',1)
             this.$router.push("./tagEntity")
         },
         // 选中句子进行标记
         handleTag(index,row){
             this.$store.commit('setCurrentTextarea', row)
             this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
+            this.$store.commit('setIsMarked',false)
+            // this.$store.commit('setActiveIndex',1)
             this.$router.push("./tagEntity")
         },
         // 删除句子
@@ -315,21 +319,17 @@ export default {
     width: 100%;
 }
 .show_bottom_delete{
-    margin: 10px 0px 10px 830px;
+    margin: 10px 0px 10px 833px;
     width: 380px;
     .el-input {
         width:60px;
     }  
 }
-.show_bottom_changePage{
-    width: 50%;
-    margin: 0px 0px 0px 755px;
-}
 .el-pagination{
     display: inline-block;
     padding-right: 0px;
 }
-.shoe_bottom_pageNumNow{
-    margin: 10px 0 0 1030px;
+.shoe_bottom_pageNum{
+    margin: 10px 0 0 558px;
 }
 </style>

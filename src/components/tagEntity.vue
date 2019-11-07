@@ -1,48 +1,61 @@
 <template>
     <div class="tagEntity">
-        <div class = "chooseToShowAllOrPart"> 
-             <el-dropdown @command="handleCommandShow">
-                <span class="el-dropdown-link">
-                    选择显示内容<i class="el-icon-arrow-down el-icon--right"></i>
-                </span>
-                <el-dropdown-menu slot="dropdown">
-                    <el-dropdown-item command="1">显示全部句子</el-dropdown-item>
-                    <el-dropdown-item command="0">显示未标记句子</el-dropdown-item>
-                    <el-dropdown-item  disabled>默认显示未标记句子</el-dropdown-item>
-                </el-dropdown-menu>
-             </el-dropdown>
-             <p v-if="isShowAll">当前：显示全部句子</p>
-             <p v-if="!isShowAll">当前：显示未标记句子</p>
-             <el-dropdown @command="handleCommandDelete">
-                <span class="el-dropdown-link">
-                    选择删除标签的方式<i class="el-icon-arrow-down el-icon--right"></i>
-                </span>
-                <el-dropdown-menu slot="dropdown">
-                    <el-dropdown-item command="0">仅在该句中删除标签</el-dropdown-item>
-                    <el-dropdown-item command="1">在所有句子中删除该标签</el-dropdown-item>
-                    <el-dropdown-item  disabled>默认在所有句子中删除该标签</el-dropdown-item>
-                </el-dropdown-menu>
-             </el-dropdown>
-             <p v-if="isDeleteinAll">当前：在所有句子中删除该标签</p>
-             <p v-if="!isDeleteinAll">当前：仅在该句中删除标签</p>
+        <div class ="right">
+            <el-row>
+            <el-col :span="24">
+            <el-card shadow="always">
+                <el-dropdown @command="handleCommandShow">
+                    <span class="el-dropdown-link">
+                        选择显示内容<i class="el-icon-arrow-down el-icon--right"></i>
+                    </span>
+                    <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item command="1">显示全部句子</el-dropdown-item>
+                        <el-dropdown-item command="0">显示未标记句子</el-dropdown-item>
+                        <el-dropdown-item  disabled>默认显示未标记句子</el-dropdown-item>
+                    </el-dropdown-menu>
+                </el-dropdown>
+                <p v-if="isShowAll">当前：显示全部句子</p>
+                <p v-if="!isShowAll">当前：显示未标记句子</p>
+                <el-divider></el-divider>
+                <el-dropdown @command="handleCommandDelete">
+                    <span class="el-dropdown-link">
+                        选择删除标签的方式<i class="el-icon-arrow-down el-icon--right"></i>
+                    </span>
+                    <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item command="0">仅在该句中删除标签</el-dropdown-item>
+                        <el-dropdown-item command="1">在所有句子中删除该标签</el-dropdown-item>
+                        <el-dropdown-item  disabled>默认在所有句子中删除该标签</el-dropdown-item>
+                    </el-dropdown-menu>
+                </el-dropdown>
+                <p v-if="isDeleteinAll">当前：在所有句子中删除该标签</p>
+                <p v-if="!isDeleteinAll">当前：仅在该句中删除标签</p>
+            </el-card>
+            </el-col>
+            </el-row>
         </div>
-        第{{textIndex}}句：
-        <div class = "inputarea">{{textarea}}</div>
+        <div class = "left">
+            <el-card class="box-card">
+                <div slot="header" class="clearfix">
+                    <span>第{{textIndex}}句</span>
+                </div>
+                <div  class="text item">{{textarea}}</div>
+            </el-card>
+
             <div class = "button">
                 <el-button type="primary" v-if="!isEdit" @click="addTag()" size="small">添加标签</el-button>
                 <el-button type="success" v-if="!isEdit" @click="saveTag()" size="small">保存标记</el-button>
                 <el-button type="success" v-if="isEdit" @click="editTag()" size="small">修改标记</el-button>
-                <el-button type="warning" v-if="isQuitEdit" @click="quitEditTag()" size="small">取消修改</el-button>
                 <el-button type="danger" v-if="!isEdit && dynamicTags.length != 0" @click="deleteAllTag()" size="small">删除所有标签</el-button>
+                <el-button type="warning" v-if="isQuitEdit" @click="quitEditTag()" size="small">取消修改</el-button>
                 <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnTo(1,isShowAll)" :disabled="isFirst">上一句</el-button>
                 <el-button type="primary" size="small" @click="turnTo(2,isShowAll)" :disabled="isLast">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
             </div>
-        <div class = "tagarea">
-            <el-tag :key="index" v-for="(tag,index) in dynamicTags" :closable="!isEdit" :disable-transitions="false" @close="handleClose(tag.content,index)">
-                {{tag.content}}&nbsp;({{tag.startIdx}},{{tag.endIdx}})
-            </el-tag>
+            <div class = "tagarea">
+                <el-tag :key="index" v-for="(tag,index) in dynamicTags" :closable="!isEdit" :disable-transitions="false" @close="handleClose(tag.content,index)">
+                    {{tag.content}}&nbsp;({{tag.startIdx}},{{tag.endIdx}})
+                </el-tag>
+            </div>
         </div>
-
     </div>
 </template>
 
@@ -57,7 +70,7 @@ export default {
             dynamicTags: [],
             dynamicTagsPre: [],
             dynamicTagsNow: [],
-            isEdit:false,//该句子是否可被修改
+            isEdit:false,//是否显示“修改标签”按钮
             isFirst:false,
             isLast:false,
             isShowAll:0,//显示未标记句子
@@ -75,8 +88,8 @@ export default {
               this.textIndex = this.$store.state.index;
               const info = await findIdBySentence({content:this.textarea});
               this.textareaId = info.data;
-              if(this.$store.state.isEdit){
-                  this.isEdit = this.$store.state.isEdit
+              if(this.$store.state.isMark){
+                  this.isEdit = this.$store.state.isMark
               }
           }else{
               const info = await getFirstUnmarkedSentence();
@@ -136,49 +149,56 @@ export default {
             var infoPre = [];
             var infoNow = [];
             var infoNowStart = [];
-
-            // 添加标签之前先判断是否被预标记过
-            if(this.dynamicTagsPre.length != 0){
-                this.dynamicTagsPre.map((item) =>{
-                    infoPre.push(item.content);//存放预标记dynamicTagsPre中已有的标签内容
-                });
-            }
-            
-            if(this.dynamicTagsNow.length != 0){
-                this.dynamicTagsNow.map((item) =>{
-                    infoNow.push(item.content);//存放新加的标签 (预标记之后通过add添加的)
-                    infoNowStart.push(item.startIdx); 
-                })
-            }
-            
-            var tagContent = [];
-            if(infoPre.indexOf(selection) == -1){//预标记中不含有选中内容
-                var isInNow = infoNow.indexOf(selection)
-                var isSame = infoNowStart[isInNow]
-                if( isInNow == -1){//新加的标签中不含选中内容
-                    // 将标签内容添加到数据库中
-                    const info =  await insertEntity({content:selection,length:entityLength});
-                    tagContent = {content:selection, startIdx:startIndex, endIdx: endIndex, id:info.data};
-                    this.dynamicTagsNow.push (tagContent);
-                    this.dynamicTags.push (tagContent);
-                }else if( isSame != startIndex){//新加的标签中已有该内容，则不用加入entityONly表中。且在不同位置。
-                    // 将信息显示在标签中
-                    const info = await findIdByEntity({content:selection})
-                    tagContent = {content:selection, startIdx:startIndex, endIdx: endIndex, id:info.data};
-                    this.dynamicTagsNow.push (tagContent);
-                    this.dynamicTags.push (tagContent);
-                }else{//新加的标签中已有该内容，且在相同位置。不允许重复标记
-                    this.$message({
-                    type: 'info',
-                    message: '该实体已被标记，请勿重复标记'
-                    });
-                }
-            }else{
+            if(selection == ''||selection == null){
                 this.$message({
                     type: 'info',
-                    message: '该实体已被预标记，请勿重复标记'
+                    message: '选中内容为空！'
                     });
+            }else{
+                // 添加标签之前先判断是否被预标记过
+                if(this.dynamicTagsPre.length != 0){
+                    this.dynamicTagsPre.map((item) =>{
+                        infoPre.push(item.content);//存放预标记dynamicTagsPre中已有的标签内容
+                    });
+                }
+                
+                if(this.dynamicTagsNow.length != 0){
+                    this.dynamicTagsNow.map((item) =>{
+                        infoNow.push(item.content);//存放新加的标签 (预标记之后通过add添加的)
+                        infoNowStart.push(item.startIdx); 
+                    })
+                }
+                
+                var tagContent = [];
+                if(infoPre.indexOf(selection) == -1){//预标记中不含有选中内容
+                    var isInNow = infoNow.indexOf(selection)
+                    var isSame = infoNowStart[isInNow]
+                    if( isInNow == -1){//新加的标签中不含选中内容
+                        // 将标签内容添加到数据库中
+                        const info =  await insertEntity({content:selection,length:entityLength});
+                        tagContent = {content:selection, startIdx:startIndex, endIdx: endIndex, id:info.data};
+                        this.dynamicTagsNow.push (tagContent);
+                        this.dynamicTags.push (tagContent);
+                    }else if( isSame != startIndex){//新加的标签中已有该内容，则不用加入entityONly表中。且在不同位置。
+                        // 将信息显示在标签中
+                        const info = await findIdByEntity({content:selection})
+                        tagContent = {content:selection, startIdx:startIndex, endIdx: endIndex, id:info.data};
+                        this.dynamicTagsNow.push (tagContent);
+                        this.dynamicTags.push (tagContent);
+                    }else{//新加的标签中已有该内容，且在相同位置。不允许重复标记
+                        this.$message({
+                        type: 'info',
+                        message: '该实体已被标记，请勿重复标记'
+                        });
+                    }
+                }else{
+                    this.$message({
+                        type: 'info',
+                        message: '该实体已被预标记，请勿重复标记'
+                        });
+                }
             }
+            
       },
     //   删除标签
       handleClose(item,index) {
@@ -221,6 +241,7 @@ export default {
                     deleteEntityByEntityId({id_entity:entityId});
                     }
                     deleteEntityBySentenceId({id_sentence:this.textareaId});
+                    this.isEdit = false;
                     this.dynamicTags = [];//仅删除该句中的该标签
                     this.dynamicTagsPre = [];
                     this.dynamicTagsNow = [];
@@ -323,12 +344,39 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang='scss' scoped>
+.tagEntity{
+    width: 100%;
+    margin:10px;
+}
+.right{
+    width: 22%;
+    float: right;
+    .el-card{
+    background:#e1ebf5;
+    color:#909399;
+    font-size: 15px;
+    min-height: 240px;
+    }
+}
+.left{
+    width: 75%;
+    float: left;
+    .el-card{
+    background:#e1ebf5;
+    color:#5d5d5d;
+    font-size: 20px;
+    min-height: 240px;
+    }
+}
+.clearfix{
+    color:#8b8d90;
+}
 .el-dropdown-link {
     cursor: pointer;
-    color: #409EFF;
+    color: #606266;
   }
-  .el-icon-arrow-down {
+.el-icon-arrow-down {
     font-size: 12px;
   }
 .tagging{
@@ -343,7 +391,7 @@ export default {
     display: flex;
     width: 20%;
     height: 33px;
-    font-size: 14px;
+    font-size: 18px;
     margin: 30px 10px;
 }
 .tagarea{
