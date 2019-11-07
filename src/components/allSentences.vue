@@ -117,6 +117,8 @@ export default {
         handleSizeChange(max){
             this.maxShowLength = max;
             this.pageNumTotal = Math.ceil(this.sentences.length/this.maxShowLength);
+            this.num = 1;
+            this.pageNumNow = 1
             this.showCurrentPage(1);
         },
         // 确认添加
@@ -267,7 +269,9 @@ export default {
             .then(async () => {
                 await deleteSentenceFromOffset({offset:begin-1,count:end-begin+1});
                 this.sentences.splice(begin-1,end-begin+1);
-                this.showCurrentPage(this.pageNumNow);
+                this.pageNumTotal = Math.ceil(this.sentences.length/this.maxShowLength);
+                this.num = this.pageNumTotal;
+                this.showCurrentPage(this.pageNumTotal);
                 this.$message({
                     type: 'success',
                     message: '删除成功!'

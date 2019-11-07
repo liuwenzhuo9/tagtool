@@ -1,5 +1,28 @@
 <template>
     <div class="tagEntity">
+        <div class = "left">
+            <el-card class="box-card">
+                <div slot="header" class="clearfix">
+                    <span>第{{textIndex}}句</span>
+                </div>
+                <div  class="text item">{{textarea}}</div>
+            </el-card>
+
+            <div class = "button">
+                <el-button type="primary" v-if="!isEdit" @click="addTag()" size="small">添加标签</el-button>
+                <el-button type="success" v-if="!isEdit" @click="saveTag()" size="small">保存标记</el-button>
+                <el-button type="success" v-if="isEdit" @click="editTag()" size="small">修改标记</el-button>
+                <el-button type="danger" v-if="!isEdit && dynamicTags.length != 0" @click="deleteAllTag()" size="small">删除所有标签</el-button>
+                <el-button type="warning" v-if="isQuitEdit" @click="quitEditTag()" size="small">取消修改</el-button>
+                <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnTo(1,isShowAll)" :disabled="isFirst">上一句</el-button>
+                <el-button type="primary" size="small" @click="turnTo(2,isShowAll)" :disabled="isLast">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
+            </div>
+            <div class = "tagarea">
+                <el-tag :key="index" v-for="(tag,index) in dynamicTags" :closable="!isEdit" :disable-transitions="false" @close="handleClose(tag.content,index)">
+                    {{tag.content}}&nbsp;({{tag.startIdx}},{{tag.endIdx}})
+                </el-tag>
+            </div>
+        </div>
         <div class ="right">
             <el-row>
             <el-col :span="24">
@@ -32,29 +55,6 @@
             </el-card>
             </el-col>
             </el-row>
-        </div>
-        <div class = "left">
-            <el-card class="box-card">
-                <div slot="header" class="clearfix">
-                    <span>第{{textIndex}}句</span>
-                </div>
-                <div  class="text item">{{textarea}}</div>
-            </el-card>
-
-            <div class = "button">
-                <el-button type="primary" v-if="!isEdit" @click="addTag()" size="small">添加标签</el-button>
-                <el-button type="success" v-if="!isEdit" @click="saveTag()" size="small">保存标记</el-button>
-                <el-button type="success" v-if="isEdit" @click="editTag()" size="small">修改标记</el-button>
-                <el-button type="danger" v-if="!isEdit && dynamicTags.length != 0" @click="deleteAllTag()" size="small">删除所有标签</el-button>
-                <el-button type="warning" v-if="isQuitEdit" @click="quitEditTag()" size="small">取消修改</el-button>
-                <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnTo(1,isShowAll)" :disabled="isFirst">上一句</el-button>
-                <el-button type="primary" size="small" @click="turnTo(2,isShowAll)" :disabled="isLast">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
-            </div>
-            <div class = "tagarea">
-                <el-tag :key="index" v-for="(tag,index) in dynamicTags" :closable="!isEdit" :disable-transitions="false" @close="handleClose(tag.content,index)">
-                    {{tag.content}}&nbsp;({{tag.startIdx}},{{tag.endIdx}})
-                </el-tag>
-            </div>
         </div>
     </div>
 </template>
@@ -240,12 +240,13 @@ export default {
                     const entityId = info.data;
                     deleteEntityByEntityId({id_entity:entityId});
                     }
-                    deleteEntityBySentenceId({id_sentence:this.textareaId});
-                    this.isEdit = false;
-                    this.dynamicTags = [];//仅删除该句中的该标签
-                    this.dynamicTagsPre = [];
-                    this.dynamicTagsNow = [];
                 }))
+                deleteEntityBySentenceId({id_sentence:this.textareaId});
+                this.isEdit = false;
+                this.isQuitEdit = false;
+                this.dynamicTags = [];//仅删除该句中的该标签
+                this.dynamicTagsPre = [];
+                this.dynamicTagsNow = [];
                 updateSentenceMarkById({id:this.textareaId,is_marked:0});//删除全部标签后改变句子的标记状态
             })
             .catch(() => {
@@ -256,37 +257,44 @@ export default {
             });
       },
       saveTag(){
-          this.$confirm('确定要保存标记？', '提示', {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning'
-                })
-            .then(async () => {
-                await deleteEntityBySentenceId({id_sentence:this.textareaId})
-                this.dynamicTags.map((item) =>{
-                    insertEntityIndex({id_sentence:this.textareaId, id_entity:item.id, start_index:item.startIdx, end_index:item.endIdx})
-                })
-                updateSentenceMarkById({id:this.textareaId,is_marked:1});
-                this.isQuitEdit = false;
-                this.isEdit = true;
-                if(!this.isLast){
-                    this.$message({
-                    type: 'success',
-                    message: '保存成功！'
-                    })
-                }else{
-                    this.$message({
-                    type: 'success',
-                    message: '保存成功！已是最后一句！'
+          if(this.dynamicTags.length == 0){
+              this.$message({
+                    type: 'warning',
+                    message: '该句子未被标记，无法保存标记！'
                     });
-                }
-            })
-            .catch(() => {
-                this.$message({
-                    type: 'info',
-                    message: '已取消保存'
-                });          
-            });
+          }else{
+                this.$confirm('确定要保存标记？', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                        })
+                    .then(async () => {
+                        await deleteEntityBySentenceId({id_sentence:this.textareaId})
+                        this.dynamicTags.map((item) =>{
+                            insertEntityIndex({id_sentence:this.textareaId, id_entity:item.id, start_index:item.startIdx, end_index:item.endIdx})
+                        })
+                        updateSentenceMarkById({id:this.textareaId,is_marked:1});
+                        this.isQuitEdit = false;
+                        this.isEdit = true;
+                        if(!this.isLast){
+                            this.$message({
+                            type: 'success',
+                            message: '保存成功！'
+                            })
+                        }else{
+                            this.$message({
+                            type: 'success',
+                            message: '保存成功！已是最后一句！'
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消保存'
+                        });          
+                    });
+           }
       },
       async editTag(){
           this.isEdit = false;
@@ -396,7 +404,7 @@ export default {
 }
 .tagarea{
     width: 92%;
-    margin: 30px 0px;
+    // margin: 30px 0px;
 }
 .el-tag {
     margin: 10px;
