@@ -33,21 +33,28 @@
             </el-table-column>
         </el-table>
         </div>
-        <hr/>
         <div class="show_bottom">
-            从第&nbsp;<el-input v-model="begin" size="mini"></el-input>&nbsp;句到第&nbsp;<el-input v-model="end" size="mini"></el-input>&nbsp;句
-            <el-button type="danger" icon="el-icon-delete" circle @click="deleteFromBeginToEnd(begin,end)"></el-button>
-        <el-pagination
-            @size-change="handleSizeChange"
-            :page-sizes="[10, 20, 30, 40]"
-            layout="sizes,  pager">
-        </el-pagination> 
-        &nbsp;&nbsp;共{{this.pageNumTotal}}页 跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange(num)" :min="1" :max="this.pageNumTotal" label="描述文字" size="mini"></el-input-number>
-        &nbsp;页&nbsp;
-                <el-button size="mini" @click="handleChange(num)">跳转</el-button>&nbsp;
-        当前是第{{this.pageNumNow}}页
-        <br>
-            
+            <div class="show_bottom_delete">
+                从第&nbsp;
+                <el-input class="deleteInput" v-model="begin" size="mini"></el-input>
+                &nbsp;句到第&nbsp;
+                <el-input class="deleteInput" v-model="end" size="mini"></el-input>
+                &nbsp;句
+                <el-button type="danger" size="mini" @click="deleteFromBeginToEnd(begin,end)">批量删除</el-button>
+            </div>
+            <div class = "show_bottom_changePage">
+                <el-pagination
+                    @size-change="handleSizeChange"
+                    :page-sizes="[10, 20, 30, 40]"
+                    layout="sizes,  pager">
+                </el-pagination>
+                跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange(num)" :min="1" :max="this.pageNumTotal" label="描述文字" size="mini"></el-input-number>
+                &nbsp;页&nbsp;
+                        <el-button type="success" size="mini" @click="handleChange(num)">跳转</el-button>&nbsp;
+            </div>
+            <div class="shoe_bottom_pageNumNow">
+                共{{this.pageNumTotal}}页 &nbsp;当前是第{{this.pageNumNow}}页
+            </div>
         </div>
     </div>
 </template>>
@@ -99,13 +106,14 @@ export default {
                 this.showCurrentPage(this.pageNumNow);
             }
         },
-        // 控制每页显示的句子个数
+        // 控制每页显示的句子内容
         showCurrentPage(page){
             this.sentencesCurrent = [];
             for(var index=(page - 1) * this.maxShowLength; index < (page * this.maxShowLength) && index < this.sentences.length ;index++){
                     this.sentencesCurrent.push(this.sentences[index]);
                 }
         },
+        // 控制每页显示的句子数
         handleSizeChange(max){
             this.maxShowLength = max;
             this.pageNumTotal = Math.ceil(this.sentences.length/this.maxShowLength);
@@ -131,6 +139,7 @@ export default {
             await this.showCurrentPage(this.pageNumNow);
             
         },
+        //将输入框内容按照换行分割，并存放到句子表中
         async spiltByENTER(){
             await Promise.all(this.splitSentence.map(async (item) => {
                 window.console.log(item)
@@ -209,7 +218,6 @@ export default {
             this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
             this.$router.push("./tagEntity")
         },
-        
         // 删除句子
         handleDelete(index, row) {
             this.$confirm('此操作将永久删除该句子, 是否继续?', '提示', {
@@ -239,8 +247,15 @@ export default {
             this.pageNumNow = page;
             this.showCurrentPage(page);
         },
+        //批量删除句子
         async deleteFromBeginToEnd(begin,end){
-            this.$confirm('此操作将永久删除这些句子, 是否继续?', '提示', {
+            if(begin == ''|| end == ''|| begin < 0 || end < 0){
+                this.$message({
+                    type: 'info',
+                    message: '请检查输入！'
+                });  
+            }else{
+                this.$confirm('此操作将永久删除这些句子, 是否继续?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
@@ -260,12 +275,13 @@ export default {
                     message: '已取消删除'
                 });          
             });
+            }
         }
     }
 }
 </script>
 
-<style scoped>
+<style lang='scss' scoped>
 .allsentences {
     width: 100%;
     margin: 0;
@@ -296,6 +312,24 @@ export default {
     word-spacing:nowrap;
 }
 .show_bottom {
-    float: right;
+    width: 100%;
+}
+.show_bottom_delete{
+    margin: 10px 0px 10px 830px;
+    width: 380px;
+    .el-input {
+        width:60px;
+    }  
+}
+.show_bottom_changePage{
+    width: 50%;
+    margin: 0px 0px 0px 755px;
+}
+.el-pagination{
+    display: inline-block;
+    padding-right: 0px;
+}
+.shoe_bottom_pageNumNow{
+    margin: 10px 0 0 1030px;
 }
 </style>

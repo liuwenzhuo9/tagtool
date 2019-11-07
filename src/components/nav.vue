@@ -4,8 +4,8 @@
             <img src="../assets/NAV.png" alt="title">
         </div>
         <div class="nav_bar">
-            <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" >
-                <el-menu-item v-for="(item,$index) in section" :key="(item,$index)" @click="showFunc($index)">{{item}}</el-menu-item>
+            <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
+                <el-menu-item v-for="(item,$index) in section" :key="(item,$index)" :index="$index.toString()">{{item}}</el-menu-item>
             </el-menu>
         </div>
     </div>
@@ -18,14 +18,14 @@
     name:'navbar',
     data(){
         return {
-            activeIndex: '1',
+            activeIndex: '0',
             section: ['所有句子','标注标签','导出结果'],
             sectionUrl: ['allSentences','tagEntity','tagResult'],
         }       
     },
     methods: {
-      showFunc(index){
-          let url = '/'+ this.sectionUrl[index]
+      handleSelect(key) {
+          let url = '/'+ this.sectionUrl[key]
           this.$router.push(url)
       }
     }
