@@ -128,18 +128,17 @@ export default {
                 this.splitSentence = this.textarea.split('\n')
                 await this.spiltByENTER();
                 this.textarea=''
+                this.isInitial = false;
+                await this.showAllSentences();
+                this.pageNumNow = this.pageNumTotal;
+                this.num = this.pageNumNow
+                await this.showCurrentPage(this.pageNumNow);
             }else{
                 this.$message({
                 message: '输入为空',
                 type: 'warning'
                 });
             }
-            this.isInitial = false;
-            await this.showAllSentences();
-            this.pageNumNow = this.pageNumTotal;
-            this.num = this.pageNumNow
-            await this.showCurrentPage(this.pageNumNow);
-            
         },
         //将输入框内容按照换行分割，并存放到句子表中
         async spiltByENTER(){
@@ -162,7 +161,7 @@ export default {
                 this.$store.commit('setCurrentTextarea', row)
                 this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
                 this.$store.commit('setIsMarked',true)
-                // this.$store.commit('setActiveIndex',1)
+                this.$store.commit('setActiveIndex',1)
             }//已标记的句子进行编辑
         },
         // 确认编辑
@@ -213,7 +212,8 @@ export default {
             this.$store.commit('setCurrentTextarea', row)
             this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
             this.$store.commit('setIsMarked',true)
-            // this.$store.commit('setActiveIndex',1)
+            this.$store.commit('setActiveIndex',1)
+            window.console.log(this.$store.state.activeIndex)
             this.$router.push("./tagEntity")
         },
         // 选中句子进行标记
@@ -221,7 +221,8 @@ export default {
             this.$store.commit('setCurrentTextarea', row)
             this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
             this.$store.commit('setIsMarked',false)
-            // this.$store.commit('setActiveIndex',1)
+            this.$store.commit('setActiveIndex',1)
+            window.console.log(this.$store.state.activeIndex)
             this.$router.push("./tagEntity")
         },
         // 删除句子
@@ -335,5 +336,28 @@ export default {
 }
 .shoe_bottom_pageNum{
     margin: 10px 0 0 558px;
+}
+.el-button--success:focus{
+    background: #67C23A;
+    border-color: #67C23A;
+}
+ .el-button--success:hover {
+    background: #85ce61;
+    border-color: #85ce61;
+    color: #FFF;
+}
+.el-button--primary:focus{
+    background: #409EFF;
+    border-color: #409EFF;
+}
+.el-button--danger:hover {
+    background: #f78989;
+    border-color: #f78989;
+    color: #FFF;
+}
+.el-button--danger:focus{
+    color: #FFF;
+    background-color: #F56C6C;
+    border-color: #F56C6C;
 }
 </style>

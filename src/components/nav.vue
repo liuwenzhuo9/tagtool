@@ -4,7 +4,7 @@
             <img src="../assets/NAV.png" alt="title">
         </div>
         <div class="nav_bar">
-            <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
+            <el-menu :default-active="count.toString()" class="el-menu-demo" mode="horizontal" @select="handleSelect">
                 <el-menu-item v-for="(item,$index) in section" :key="(item,$index)" :index="$index.toString()">{{item}}</el-menu-item>
             </el-menu>
         </div>
@@ -18,11 +18,20 @@
     name:'navbar',
     data(){
         return {
-            activeIndex: '0',
             section: ['所有句子','标注标签','导出结果'],
             sectionUrl: ['allSentences','tagEntity','tagResult'],
         }       
     },
+    computed:{
+		count() {
+            return this.$store.state.activeIndex
+		}
+	},
+	watch:{
+		count() {
+            return this.$store.state.activeIndex
+		}
+	},
     mounted(){
         this.handleSelect(0);
     },

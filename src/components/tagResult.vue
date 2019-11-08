@@ -179,4 +179,23 @@ export default {
     margin: 10px;
     width:800px;
 }
+.el-button--success:focus{
+    background: #67C23A;
+    border-color: #67C23A;
+}
+ .el-button--success:hover {
+    background: #85ce61;
+    border-color: #85ce61;
+    color: #FFF;
+}
+.el-button--warning:focus{
+    background: #E6A23C;
+    border-color: #E6A23C;
+    color: #FFF;
+}
+.el-button--warning:hover  {
+    background: #ebb563;
+    border-color: #ebb563;
+    color: #FFF;
+}
 </style>

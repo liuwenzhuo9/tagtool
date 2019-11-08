@@ -410,4 +410,27 @@ export default {
     margin: 10px;
     font-size: 17px
 }
+.el-button--primary:focus{
+    background: #409EFF;
+    border-color: #409EFF;
+}
+.el-button--success:focus{
+    background: #67C23A;
+    border-color: #67C23A;
+}
+ .el-button--success:hover {
+    background: #85ce61;
+    border-color: #85ce61;
+    color: #FFF;
+}
+.el-button--danger:hover {
+    background: #f78989;
+    border-color: #f78989;
+    color: #FFF;
+}
+.el-button--danger:focus{
+    color: #FFF;
+    background-color: #F56C6C;
+    border-color: #F56C6C;
+}
 </style>

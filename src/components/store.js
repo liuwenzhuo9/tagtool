@@ -7,7 +7,7 @@ const state = {
     content: '',
     index:'',
     isMark:'',
-    // activeIndex:''
+    activeIndex:'0'
   }
 
   export default new Vuex.Store({
@@ -22,9 +22,9 @@ const state = {
         setIsMarked(state,isMark) {
             state.isMark = isMark;
         },
-        // setActiveIndex(){
-        //     state.activeIndex = 1;
-        // }
+        setActiveIndex(state,activeIndex){
+            state.activeIndex = activeIndex;
+        }
     }
   });
   
