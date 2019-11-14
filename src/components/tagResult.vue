@@ -25,8 +25,12 @@ export default {
             // showInput:false,
             startIndex:[],
             endIndex:[],
-            allSentences:[]
+            allSentences:[],
+            lineNum: 0
         }
+    },
+    mounted(){
+        this.$store.commit('setActiveIndex',2)
     },
     methods:{
         async outTxt(begin,end,type){
@@ -45,15 +49,16 @@ export default {
                 this.addBIO(splitSentence,this.startIndex,this.endIndex,type);
                 this.allSentences = this.allSentences.concat(splitSentence);
             }))
-            // this.showInput = true;
             this.textarea = '';
             for(var index = 0;index < this.allSentences.length;index++ ){
+                if(this.allSentences[index].split(/\t/).length < 1 + this.lineNum){//为保证所有句子输出时列数相同
+                    this.allSentences[index] = this.allSentences[index] +"\tO";
+                    }
                 this.textarea = this.textarea + this.allSentences[index] + '\n';
             }
         },
 
         addBIO(all,start,end,type){
-            window.console.log(all)
             let lengthOfSentence = all.length;
             var minStart = 0, minEnd = 0;
             for(let i = 1; start.length != 0;i++){//判断该句子实体展示需要多少列
@@ -88,16 +93,17 @@ export default {
                 var lineLength = lineStartIndex.length;
                     for(var n = 0; n < lineLength; n++){
                         var indexB = lineStartIndex[n];
-                        all[indexB] = all[indexB] +" B";
+                        all[indexB] = all[indexB] +"\tB-MCF";
                         for(var indexI = lineStartIndex[n] +1 ; indexI > lineStartIndex[n] && indexI < lineEndIndex[n] ; indexI++){
-                            all[indexI] = all[indexI] +" I";
+                            all[indexI] = all[indexI] +"\tI-MCF";
                         }
                     }
                     for(var indexO = 0;indexO < lengthOfSentence; indexO++){
-                            if(all[indexO].length < 1+i*2){
-                                all[indexO] = all[indexO] +" O";
+                            if(all[indexO].split(/\t/).length < 1+i){
+                                all[indexO] = all[indexO] +"\tO";
                             }
                     }
+                this.lineNum = Math.max(this.lineNum,i)
             }
         },
         saveTxt(name, data){

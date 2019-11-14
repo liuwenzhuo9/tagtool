@@ -1,7 +1,7 @@
 <template>
     <div class="allsentences">
         <div class="input_sentences">
-            <el-input type="textarea" :autosize="{ minRows: 2, maxRows: 4}" placeholder="请输入句子" v-model="textarea" >
+            <el-input type="textarea" :autosize="{ minRows: 2, maxRows: 4}" placeholder="请输入句子" v-model="textarea">
             </el-input>
             &nbsp;&nbsp;
             <div class="buttons">
@@ -55,12 +55,17 @@
                 &nbsp;句
                 <el-button type="danger" size="mini" @click="deleteFromBeginToEnd(begin,end)">批量删除</el-button>
             </div>
+            <div class="show_bottom_unmarked">
+                当前还有&nbsp;{{unmarkedNum}}&nbsp;个句子未被标记
+                <el-button type="danger" size="mini" v-if="showPart" :disabled="this.unmarkedNum == 0" @click="showAllSentences(0)">只显示未标记句子</el-button>
+                <el-button type="danger" size="mini" v-if="!showPart" @click="showAllSentences(1)">显示全部句子</el-button>
+            </div>
         </div>
     </div>
 </template>>
 
 <script>
-import {getAllSentences, insertSentence, deleteSentence, findIdBySentence, updateSentenceContentById, deleteEntityBySentenceId, deleteSentenceFromOffset} from '../unit/fetch';
+import {getAllSentences, insertSentence, deleteSentence, findIdBySentence, updateSentenceContentById, deleteEntityBySentenceId, deleteSentenceFromOffset, findUnmarkedNum} from '../unit/fetch';
 export default {
     data () {
         return {
@@ -78,22 +83,26 @@ export default {
             pageNumTotal:1,//总页数
             pageNumNow:1,//当前页数
             begin:'',
-            end:''
+            end:'',
+            unmarkedNum:0,
+            showPart:true
         }
     },
     mounted(){
         this.init();
+        this.$store.commit('setActiveIndex',0)
     },
     methods:{
         async init() {
-            this.showAllSentences();
+            this.showAllSentences(1);
+            this.getUnmarkedNum();
         },
         // 展示所有句子
-        async showAllSentences(){
+        async showAllSentences(type){
             const lastSentences = this.sentences;
                 try{
                     this.sentences = [];
-                    const info = await getAllSentences();
+                    const info = await getAllSentences({is_marked:type});
                     info.data.map((item) => {
                             this.sentences.push(item)
                         })
@@ -105,6 +114,16 @@ export default {
             if(this.isInitial){
                 this.showCurrentPage(this.pageNumNow);
             }
+            if(type == 0){
+                this.showPart = false;
+            }else{
+                this.showPart = true;
+            }
+        },
+        //获取未标记句子数
+        async getUnmarkedNum(){
+            const info = await findUnmarkedNum();
+            this.unmarkedNum = info.data;
         },
         // 控制每页显示的句子内容
         showCurrentPage(page){
@@ -143,7 +162,6 @@ export default {
         //将输入框内容按照换行分割，并存放到句子表中
         async spiltByENTER(){
             await Promise.all(this.splitSentence.map(async (item) => {
-                window.console.log(item)
                 if(item != null && item != '' && item != undefined ){//输入不能为空
                     await insertSentence({content:item}
                     )}
@@ -161,7 +179,7 @@ export default {
                 this.$store.commit('setCurrentTextarea', row)
                 this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
                 this.$store.commit('setIsMarked',true)
-                this.$store.commit('setActiveIndex',1)
+                // this.$store.commit('setActiveIndex',1)
             }//已标记的句子进行编辑
         },
         // 确认编辑
@@ -212,7 +230,7 @@ export default {
             this.$store.commit('setCurrentTextarea', row)
             this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
             this.$store.commit('setIsMarked',true)
-            this.$store.commit('setActiveIndex',1)
+            // this.$store.commit('setActiveIndex',1)
             window.console.log(this.$store.state.activeIndex)
             this.$router.push("./tagEntity")
         },
@@ -221,7 +239,7 @@ export default {
             this.$store.commit('setCurrentTextarea', row)
             this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
             this.$store.commit('setIsMarked',false)
-            this.$store.commit('setActiveIndex',1)
+            // this.$store.commit('setActiveIndex',1)
             window.console.log(this.$store.state.activeIndex)
             this.$router.push("./tagEntity")
         },
@@ -336,6 +354,9 @@ export default {
 }
 .shoe_bottom_pageNum{
     margin: 10px 0 0 558px;
+}
+.show_bottom_unmarked{
+     margin: 10px 0 0 858px;
 }
 .el-button--success:focus{
     background: #67C23A;

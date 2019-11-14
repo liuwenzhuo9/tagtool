@@ -55,8 +55,8 @@ export function updateSentenceMarkById(info) {
         }
     });
 }
-export function getAllSentences() {
-    let url = `${hostname}/getAllSentences`;
+export function getAllSentences(info) {
+    let url = `${hostname}/getAllSentences${objToQueryString(info)}`;
     return executeFetch(url,{
         method:'GET',
         headers: {
@@ -113,6 +113,16 @@ export function findSentenceFromOffset(info) {
 
 export function deleteSentenceFromOffset(info) {
     let url = `${hostname}/deleteSentenceFromOffset${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+
+export function findUnmarkedNum() {
+    let url = `${hostname}/findUnmarkedNum`;
     return executeFetch(url,{
         method:'GET',
         headers: {

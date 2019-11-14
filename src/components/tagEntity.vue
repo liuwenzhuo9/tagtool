@@ -5,7 +5,9 @@
                 <div slot="header" class="clearfix">
                     <span>第{{textIndex}}句</span>
                 </div>
-                <div  class="text item">{{textarea}}</div>
+                
+                <!-- <div @contextmenu.prevent="addTag(1)" class="text item">{{textarea}}</div> -->
+                <div @keyup.enter.native="addTag()" class="text item">{{textarea}}</div>
             </el-card>
 
             <div class = "button">
@@ -80,7 +82,17 @@ export default {
     },
     mounted(){
         this.setTextarea();
+        this.$store.commit('setActiveIndex',1)
+        let that = this;
+        window.addEventListener("keypress",function(e){
+            if(e.which==108){
+                that.addTag(1);
+            }
+        })
     },
+    // destroyed(){
+    //     window.removeEventListener("keypress",this.addTag(1))
+    // },
     methods: {
       async setTextarea(){
           if(this.$store.state.content){
@@ -133,71 +145,91 @@ export default {
         })
         this.dynamicTags = this.dynamicTags.concat(this.dynamicTagsPre);//存储预标记的内容
       },
-      async addTag() {
-          //不同浏览器兼容问题，获取选中的内容及坐标
-          if (window.getSelection) {
-            var selectTxt = window.getSelection();
-            } else if (window.document.getSelection) {
-                selectTxt = window.document.getSelection();
-            } else if (window.document.selection) {
-                selectTxt = window.document.selection.createRange().text;
-            }
-            var selection = selectTxt.toString();
-            var startIndex = Math.min(selectTxt.anchorOffset,selectTxt.focusOffset);
-            var endIndex = Math.max(selectTxt.anchorOffset,selectTxt.focusOffset);//防止标记顺序从右到左时，记录错误
-            var entityLength = endIndex-startIndex;
-            var infoPre = [];
-            var infoNow = [];
-            var infoNowStart = [];
-            if(selection == ''||selection == null){
+      async addTag(type) {
+          window.console.log(1)
+          if(type == 1){
+              this.$confirm('确认添加标签？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+                })
+            .then(async () => {
+                this.addTag();
+            })
+            .catch(() => {
                 this.$message({
                     type: 'info',
-                    message: '选中内容为空！'
-                    });
-            }else{
-                // 添加标签之前先判断是否被预标记过
-                if(this.dynamicTagsPre.length != 0){
-                    this.dynamicTagsPre.map((item) =>{
-                        infoPre.push(item.content);//存放预标记dynamicTagsPre中已有的标签内容
-                    });
+                    message: '已取消删除'
+                });          
+            });
+          }
+          else{
+              //不同浏览器兼容问题，获取选中的内容及坐标
+            if (window.getSelection) {
+                var selectTxt = window.getSelection();
+                } else if (window.document.getSelection) {
+                    selectTxt = window.document.getSelection();
+                } else if (window.document.selection) {
+                    selectTxt = window.document.selection.createRange().text;
                 }
-                
-                if(this.dynamicTagsNow.length != 0){
-                    this.dynamicTagsNow.map((item) =>{
-                        infoNow.push(item.content);//存放新加的标签 (预标记之后通过add添加的)
-                        infoNowStart.push(item.startIdx); 
-                    })
-                }
-                
-                var tagContent = [];
-                if(infoPre.indexOf(selection) == -1){//预标记中不含有选中内容
-                    var isInNow = infoNow.indexOf(selection)
-                    var isSame = infoNowStart[isInNow]
-                    if( isInNow == -1){//新加的标签中不含选中内容
-                        // 将标签内容添加到数据库中
-                        const info =  await insertEntity({content:selection,length:entityLength});
-                        tagContent = {content:selection, startIdx:startIndex, endIdx: endIndex, id:info.data};
-                        this.dynamicTagsNow.push (tagContent);
-                        this.dynamicTags.push (tagContent);
-                    }else if( isSame != startIndex){//新加的标签中已有该内容，则不用加入entityONly表中。且在不同位置。
-                        // 将信息显示在标签中
-                        const info = await findIdByEntity({content:selection})
-                        tagContent = {content:selection, startIdx:startIndex, endIdx: endIndex, id:info.data};
-                        this.dynamicTagsNow.push (tagContent);
-                        this.dynamicTags.push (tagContent);
-                    }else{//新加的标签中已有该内容，且在相同位置。不允许重复标记
-                        this.$message({
-                        type: 'info',
-                        message: '该实体已被标记，请勿重复标记'
-                        });
-                    }
-                }else{
+                var selection = selectTxt.toString();
+                var startIndex = Math.min(selectTxt.anchorOffset,selectTxt.focusOffset);
+                var endIndex = Math.max(selectTxt.anchorOffset,selectTxt.focusOffset);//防止标记顺序从右到左时，记录错误
+                var entityLength = endIndex-startIndex;
+                var infoPre = [];
+                var infoNow = [];
+                var infoNowStart = [];
+                if(selection == ''||selection == null){
                     this.$message({
                         type: 'info',
-                        message: '该实体已被预标记，请勿重复标记'
+                        message: '选中内容为空！'
                         });
+                }else{
+                    // 添加标签之前先判断是否被预标记过
+                    if(this.dynamicTagsPre.length != 0){
+                        this.dynamicTagsPre.map((item) =>{
+                            infoPre.push(item.content);//存放预标记dynamicTagsPre中已有的标签内容
+                        });
+                    }
+                    
+                    if(this.dynamicTagsNow.length != 0){
+                        this.dynamicTagsNow.map((item) =>{
+                            infoNow.push(item.content);//存放新加的标签 (预标记之后通过add添加的)
+                            infoNowStart.push(item.startIdx); 
+                        })
+                    }
+                    
+                    var tagContent = [];
+                    if(infoPre.indexOf(selection) == -1){//预标记中不含有选中内容
+                        var isInNow = infoNow.indexOf(selection)
+                        var isSame = infoNowStart[isInNow]
+                        if( isInNow == -1){//新加的标签中不含选中内容
+                            // 将标签内容添加到数据库中
+                            const info =  await insertEntity({content:selection,length:entityLength});
+                            tagContent = {content:selection, startIdx:startIndex, endIdx: endIndex, id:info.data};
+                            this.dynamicTagsNow.push (tagContent);
+                            this.dynamicTags.push (tagContent);
+                        }else if( isSame != startIndex){//新加的标签中已有该内容，则不用加入entityONly表中。且在不同位置。
+                            // 将信息显示在标签中
+                            const info = await findIdByEntity({content:selection})
+                            tagContent = {content:selection, startIdx:startIndex, endIdx: endIndex, id:info.data};
+                            this.dynamicTagsNow.push (tagContent);
+                            this.dynamicTags.push (tagContent);
+                        }else{//新加的标签中已有该内容，且在相同位置。不允许重复标记
+                            this.$message({
+                            type: 'info',
+                            message: '该实体已被标记，请勿重复标记'
+                            });
+                        }
+                    }else{
+                        this.$message({
+                            type: 'info',
+                            message: '该实体已被预标记，请勿重复标记'
+                            });
+                    }
                 }
-            }
+          }
+          
             
       },
     //   删除标签
@@ -234,20 +266,20 @@ export default {
                 type: 'warning'
                 })
             .then(async () => {
-                await Promise.all(this.dynamicTags.map((tag) =>{
+                await Promise.all(this.dynamicTags.map(async (tag) =>{
                     if(this.isDeleteinAll == 1){//删除所有句子中的该标签
-                    const info = deleteEntity({content:tag.content});
+                    const info = await deleteEntity({content:tag.content});
                     const entityId = info.data;
-                    deleteEntityByEntityId({id_entity:entityId});
+                    await deleteEntityByEntityId({id_entity:entityId});
                     }
                 }))
-                deleteEntityBySentenceId({id_sentence:this.textareaId});
+                await deleteEntityBySentenceId({id_sentence:this.textareaId});
                 this.isEdit = false;
                 this.isQuitEdit = false;
                 this.dynamicTags = [];//仅删除该句中的该标签
                 this.dynamicTagsPre = [];
                 this.dynamicTagsNow = [];
-                updateSentenceMarkById({id:this.textareaId,is_marked:0});//删除全部标签后改变句子的标记状态
+                await updateSentenceMarkById({id:this.textareaId,is_marked:0});//删除全部标签后改变句子的标记状态
             })
             .catch(() => {
                 this.$message({
@@ -328,7 +360,6 @@ export default {
         this.judgeFirstandLast();
       },
       async turnTo(msg,type) {
-          window.console.log(type)
           var info = [];
           if(msg == 1){
               info = await getLastSentence({id : this.textareaId, is_marked : type});

@@ -3,6 +3,7 @@ import Router from 'vue-router'
 const allSentences = () =>import('@/components/allSentences')
 const tagEntity = () =>import('@/components/tagEntity')
 const tagResult = () =>import('@/components/tagResult')
+const personal = () =>import('@/components/PersonalCenter/login')
 
 Vue.use(Router)
 
@@ -29,5 +30,13 @@ export default new Router({
             name:'tagResult',
             component: tagResult,
         },
+        {
+            path: '/personal',
+            name: 'personal',
+            // meta:{
+            //   needAuth : true,
+            // },
+            component: personal,
+          },
     ]
 })
