@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-// import { isLogin,getCookie } from '../unit/fetch';
+import { isLogin,getCookie } from '../unit/fetch';
 
 Vue.use(Vuex);
 
@@ -9,10 +9,11 @@ const state = {
     index:'',
     isMark:'',
     activeIndex:'0',
-    // loginstate:isLogin(),
-    // loginuser:getCookie('account'),
-    // loginrole:getCookie('role'),
-    // personState: true,
+    loginstate:isLogin(),
+    loginuser:getCookie('account'),
+    loginrole:getCookie('role'),
+    personState: true,
+    loginname:getCookie('name')
   }
 
   export default new Vuex.Store({
@@ -30,19 +31,22 @@ const state = {
         setActiveIndex(state,activeIndex){
             state.activeIndex = activeIndex;
         },
-        // changelogin (state) {
-        //     state.loginstate = isLogin();
-        //     // console.log(loginstate);
-        //   },
-        //   changeuser(state) {
-        //     state.loginuser = getCookie('account');
-        //   },
-        //   changerole(state) {
-        //     state.loginrole = getCookie('role');
-        //   },
-        //   changePersonState(state, n) {
-        //     state.personState = n
-        //   }
+        changelogin (state) {
+            state.loginstate = isLogin();
+            window.console.log(state.loginstate);
+        },
+        changeuser(state) {
+            state.loginuser = getCookie('account');
+        },
+        changerole(state) {
+            state.loginrole = getCookie('role');
+        },
+        changePersonState(state, n) {
+            state.personState = n
+        },
+        changename(state) {
+            state.loginname = getCookie('name');
+        }
     }
   });
   

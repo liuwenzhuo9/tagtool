@@ -4,6 +4,8 @@ const allSentences = () =>import('@/components/allSentences')
 const tagEntity = () =>import('@/components/tagEntity')
 const tagResult = () =>import('@/components/tagResult')
 const personal = () =>import('@/components/PersonalCenter/login')
+const labUser = () =>import('@/components/PersonalCenter/labUser')
+const system = () =>import('@/components/PersonalCenter/system')
 
 Vue.use(Router)
 
@@ -33,10 +35,20 @@ export default new Router({
         {
             path: '/personal',
             name: 'personal',
-            // meta:{
-            //   needAuth : true,
-            // },
+            meta:{
+              needAuth : true,
+            },
             component: personal,
+          },
+          {
+            path: '/labUser',
+            name: 'labUser',
+            component: labUser,
+          },
+          {
+            path: '/system',
+            name: 'system',
+            component: system,
           },
     ]
 })

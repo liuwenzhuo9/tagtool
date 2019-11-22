@@ -26,7 +26,8 @@ export default {
             startIndex:[],
             endIndex:[],
             allSentences:[],
-            lineNum: 0
+            lineNum: 0,
+            obtainUnmarked:false
         }
     },
     mounted(){
@@ -41,20 +42,31 @@ export default {
                 splitSentence.pop();
                 this.startIndex = [];
                 this.endIndex = [];
-                const indexInfo = await getEntityIndexBySentenceId({id_sentence:item.id});
+                if(item.is_marked == 0){
+                    this.obtainUnmarked = true;
+                }else{
+                    const indexInfo = await getEntityIndexBySentenceId({id_sentence:item.id});
                 indexInfo.data.map((item)=>{
                     this.startIndex.push(item.start_index);
                     this.endIndex.push(item.end_index);
                 })
                 this.addBIO(splitSentence,this.startIndex,this.endIndex,type);
                 this.allSentences = this.allSentences.concat(splitSentence);
+                }
             }))
+            window.console.log(this.allSentences)
             this.textarea = '';
             for(var index = 0;index < this.allSentences.length;index++ ){
-                if(this.allSentences[index].split(/\t/).length < 1 + this.lineNum){//为保证所有句子输出时列数相同
+                while(this.allSentences[index].split(/\t/).length < (1 + this.lineNum)){//为保证所有句子输出时列数相同
                     this.allSentences[index] = this.allSentences[index] +"\tO";
                     }
                 this.textarea = this.textarea + this.allSentences[index] + '\n';
+            }
+            if(this.obtainUnmarked){
+                this.$message({
+                    type: 'warning',
+                    message: '所选句子中包含未标记的句子！'
+                    });
             }
         },
 
@@ -184,6 +196,11 @@ export default {
 .el-textarea {
     margin: 10px;
     width:800px;
+}
+.el-button--primary {
+    color: #FFF;
+    background-color: #409EFF;
+    border-color: #409EFF;
 }
 .el-button--success:focus{
     background: #67C23A;

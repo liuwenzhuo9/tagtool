@@ -25,10 +25,10 @@
                 </el-table-column>
             <el-table-column label="操作" >
                 <template slot-scope="scope">
-                    <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row.content)">删除</el-button>
+                    <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row.content)" v-if ="logCount">删除</el-button>
                     <el-button size="mini" type="success" v-if="scope.row.is_marked" @click="handleShow(scope.$index, scope.row.content)">查看</el-button>
                     <el-button size="mini" type="warning" v-if="!scope.row.is_marked" @click="handleTag(scope.$index, scope.row.content)">标记</el-button>
-                    <el-button size="mini"  @click="handleEdit(scope.$index, scope.row.content,scope.row.is_marked)" >编辑</el-button>  
+                    <el-button size="mini"  @click="handleEdit(scope.$index, scope.row.content,scope.row.is_marked)" v-if ="logCount">编辑</el-button>  
                 </template>
             </el-table-column>
         </el-table>
@@ -65,7 +65,7 @@
 </template>>
 
 <script>
-import {getAllSentences, insertSentence, deleteSentence, findIdBySentence, updateSentenceContentById, deleteEntityBySentenceId, deleteSentenceFromOffset, findUnmarkedNum} from '../unit/fetch';
+import {getAllSentences, insertSentence, deleteSentence, findIdBySentence, updateSentenceContentById, updateSentenceMarkById, deleteEntityBySentenceId, deleteSentenceFromOffset, findUnmarkedNum} from '../unit/fetch';
 export default {
     data () {
         return {
@@ -92,6 +92,15 @@ export default {
         this.init();
         this.$store.commit('setActiveIndex',0)
     },
+    computed:{
+        logCount() {
+            return this.$store.state.loginstate
+        }
+	},
+	watch:{
+        logCount() {
+        },
+	},
     methods:{
         async init() {
             this.showAllSentences(1);
@@ -148,7 +157,7 @@ export default {
                 await this.spiltByENTER();
                 this.textarea=''
                 this.isInitial = false;
-                await this.showAllSentences();
+                await this.showAllSentences(1);
                 this.pageNumNow = this.pageNumTotal;
                 this.num = this.pageNumNow
                 await this.showCurrentPage(this.pageNumNow);
@@ -174,12 +183,9 @@ export default {
             const info = await findIdBySentence({content:row})
             this.editSentenceId = info.data
             this.editSentenceIndex = index
+            this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
             if(msg == 1){
                 this.isMark = 1
-                this.$store.commit('setCurrentTextarea', row)
-                this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
-                this.$store.commit('setIsMarked',true)
-                // this.$store.commit('setActiveIndex',1)
             }//已标记的句子进行编辑
         },
         // 确认编辑
@@ -187,9 +193,10 @@ export default {
             updateSentenceContentById({id:this.editSentenceId,content:this.textarea})
             this.isEdit = false
             const editId = this.sentencesCurrent[this.editSentenceIndex]
-            this.sentencesCurrent.splice(this.editSentenceIndex,1,{id:editId,content:this.textarea,is_marked:this.isMark})
-            this.textarea = ''
+            this.sentencesCurrent.splice(this.editSentenceIndex,1,{id:editId,content:this.textarea,is_marked:0})
+            this.$store.commit('setCurrentTextarea', this.textarea)
             if(this.isMark == 1){//判断该句子是否被标记过
+                updateSentenceMarkById({id:this.editSentenceId, is_marked:0})
                 this.$confirm('该句子已被标记，保存编辑后是否重新标记？', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
@@ -206,6 +213,7 @@ export default {
                     });          
                 });
             }
+            this.textarea = ''
         },
         // 取消添加或编辑
         handleClickEditQuit(){
@@ -230,8 +238,6 @@ export default {
             this.$store.commit('setCurrentTextarea', row)
             this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
             this.$store.commit('setIsMarked',true)
-            // this.$store.commit('setActiveIndex',1)
-            window.console.log(this.$store.state.activeIndex)
             this.$router.push("./tagEntity")
         },
         // 选中句子进行标记
@@ -239,8 +245,6 @@ export default {
             this.$store.commit('setCurrentTextarea', row)
             this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
             this.$store.commit('setIsMarked',false)
-            // this.$store.commit('setActiveIndex',1)
-            window.console.log(this.$store.state.activeIndex)
             this.$router.push("./tagEntity")
         },
         // 删除句子
@@ -251,10 +255,17 @@ export default {
                 type: 'warning'
                 })
             .then(async () => {
+                this.sentences.splice(index + (this.pageNumNow-1) * this.maxShowLength ,1);
                 const info = await deleteSentence({content:row});
                 await deleteEntityBySentenceId({id_sentence:info.data});
-                this.sentences.splice(index + (this.pageNumNow-1) * this.maxShowLength ,1);
-                this.showCurrentPage(this.pageNumNow);
+                this.pageNumTotal = Math.ceil(this.sentences.length/this.maxShowLength);
+                if(this.pageNumNow > this.pageNumTotal){
+                    this.showCurrentPage(this.pageNumTotal);
+                    this.pageNumNow = this.pageNumTotal
+                }else{
+                    this.showCurrentPage(this.pageNumNow);
+                }
+                this.num = this.pageNumNow;
                 this.$message({
                     type: 'success',
                     message: '删除成功!'
@@ -357,6 +368,11 @@ export default {
 }
 .show_bottom_unmarked{
      margin: 10px 0 0 858px;
+}
+.el-button--primary {
+    color: #FFF;
+    background-color: #409EFF;
+    border-color: #409EFF;
 }
 .el-button--success:focus{
     background: #67C23A;

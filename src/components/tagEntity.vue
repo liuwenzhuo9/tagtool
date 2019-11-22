@@ -12,9 +12,9 @@
 
             <div class = "button">
                 <el-button type="primary" v-if="!isEdit" @click="addTag()" size="small">添加标签</el-button>
-                <el-button type="success" v-if="!isEdit" @click="saveTag()" size="small">保存标记</el-button>
-                <el-button type="success" v-if="isEdit" @click="editTag()" size="small">修改标记</el-button>
-                <el-button type="danger" v-if="!isEdit && dynamicTags.length != 0" @click="deleteAllTag()" size="small">删除所有标签</el-button>
+                <el-button type="success" v-if="!isEdit && logCount" @click="saveTag()" size="small">保存标记</el-button>
+                <el-button type="success" v-if="isEdit && logCount" @click="editTag()" size="small">修改标记</el-button>
+                <el-button type="danger" v-if="!isEdit && dynamicTags.length != 0 && logCount" @click="deleteAllTag()" size="small">删除所有标签</el-button>
                 <el-button type="warning" v-if="isQuitEdit" @click="quitEditTag()" size="small">取消修改</el-button>
                 <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnTo(1,isShowAll)" :disabled="isFirst">上一句</el-button>
                 <el-button type="primary" size="small" @click="turnTo(2,isShowAll)" :disabled="isLast">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
@@ -90,6 +90,15 @@ export default {
             }
         })
     },
+    computed:{
+        logCount() {
+            return this.$store.state.loginstate
+        }
+	},
+	watch:{
+        logCount() {
+        },
+	},
     // destroyed(){
     //     window.removeEventListener("keypress",this.addTag(1))
     // },
@@ -440,6 +449,11 @@ export default {
 .el-tag {
     margin: 10px;
     font-size: 17px
+}
+.el-button--primary {
+    color: #FFF;
+    background-color: #409EFF;
+    border-color: #409EFF;
 }
 .el-button--primary:focus{
     background: #409EFF;
