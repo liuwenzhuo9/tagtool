@@ -2,14 +2,14 @@ import {insertEntityIndex, deleteEntityBySentenceId, getEntityIndexBySentenceId,
 import {insertEntity, deleteEntity, findEntityById, findIdByEntity, updateLengthByEntityId, getAllEntity}from './entityOnly'
 import {insertSentence, deleteSentence, findSentenceById, findIdBySentence, updateSentenceMarkById, updateSentenceContentById, 
         getAllSentences, getLastSentence, getNextSentence, getFirstUnmarkedSentence, findIndexBySentenceId, findSentenceFromOffset,
-         deleteSentenceFromOffset, findUnmarkedNum}from './sentences'
+         deleteSentenceFromOffset, findUnmarkedNum, findSentenceByAuthor}from './sentences'
 import {getAllAccount, addAccount, deleteAccount}from './account'
 import {login,loginOut,rePassword} from './login'
 
 export {insertEntityIndex, deleteEntityBySentenceId, getEntityIndexBySentenceId, deleteEntityByEntityId, insertEntity, deleteEntity, findEntityById, findIdByEntity,
         updateLengthByEntityId, getAllEntity, insertSentence, deleteSentence, findSentenceById, findIdBySentence, updateSentenceMarkById, updateSentenceContentById, 
         getAllSentences,getLastSentence, getNextSentence, getFirstUnmarkedSentence, findIndexBySentenceId, findSentenceFromOffset, deleteSentenceFromOffset , 
-        findUnmarkedNum, getAllAccount, addAccount, deleteAccount, login,loginOut,rePassword} 
+        findUnmarkedNum, findSentenceByAuthor, getAllAccount, addAccount, deleteAccount, login,loginOut,rePassword} 
 
 //封装cookie
 

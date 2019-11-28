@@ -155,7 +155,6 @@ export default {
         this.dynamicTags = this.dynamicTags.concat(this.dynamicTagsPre);//存储预标记的内容
       },
       async addTag(type) {
-          window.console.log(1)
           if(type == 1){
               this.$confirm('确认添加标签？', '提示', {
                 confirmButtonText: '确定',

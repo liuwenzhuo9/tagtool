@@ -6,6 +6,7 @@ const tagResult = () =>import('@/components/tagResult')
 const personal = () =>import('@/components/PersonalCenter/login')
 const labUser = () =>import('@/components/PersonalCenter/labUser')
 const system = () =>import('@/components/PersonalCenter/system')
+const regUser = () =>import('@/components/PersonalCenter/regUser')
 
 Vue.use(Router)
 
@@ -49,6 +50,11 @@ export default new Router({
             path: '/system',
             name: 'system',
             component: system,
+          },
+          {
+            path: '/regUser',
+            name: 'regUser',
+            component: regUser,
           },
     ]
 })

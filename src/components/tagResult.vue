@@ -54,7 +54,6 @@ export default {
                 this.allSentences = this.allSentences.concat(splitSentence);
                 }
             }))
-            window.console.log(this.allSentences)
             this.textarea = '';
             for(var index = 0;index < this.allSentences.length;index++ ){
                 while(this.allSentences[index].split(/\t/).length < (1 + this.lineNum)){//为保证所有句子输出时列数相同

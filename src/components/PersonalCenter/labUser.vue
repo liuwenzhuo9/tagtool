@@ -1,10 +1,13 @@
 <template>
     <div>
-        这是实验室用户页面
+        <div class="ownSentence">
+            labuser
+        </div>
     </div>
 </template>
 
 <script>
+// import {findSentenceByAuthor} from '.../unit/fetch';
 export default {
     
 }

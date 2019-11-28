@@ -33,7 +33,6 @@ const state = {
         },
         changelogin (state) {
             state.loginstate = isLogin();
-            window.console.log(state.loginstate);
         },
         changeuser(state) {
             state.loginuser = getCookie('account');

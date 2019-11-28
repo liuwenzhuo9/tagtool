@@ -130,3 +130,13 @@ export function findUnmarkedNum() {
         }
     });
 }
+
+export function findSentenceByAuthor(info) {
+    let url = `${hostname}/findSentenceByAuthor${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
