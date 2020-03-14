@@ -5,11 +5,18 @@ import {insertSentence, deleteSentence, findSentenceById, findIdBySentence, upda
          deleteSentenceFromOffset, findUnmarkedNum, findSentenceByAuthor}from './sentences'
 import {getAllAccount, addAccount, deleteAccount}from './account'
 import {login,loginOut,rePassword} from './login'
+import {insertTaskContent, deleteContentByTaskId, findContentByTaskId} from './taskContent'
+import {insertTaskInfo, findUnfinishedTasks, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, updateMemberAccountByTaskId} from './tasksInfo'
+import {insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateScoreByUserAccount} from './user'
 
 export {insertEntityIndex, deleteEntityBySentenceId, getEntityIndexBySentenceId, deleteEntityByEntityId, insertEntity, deleteEntity, findEntityById, findIdByEntity,
         updateLengthByEntityId, getAllEntity, insertSentence, deleteSentence, findSentenceById, findIdBySentence, updateSentenceMarkById, updateSentenceContentById, 
         getAllSentences,getLastSentence, getNextSentence, getFirstUnmarkedSentence, findIndexBySentenceId, findSentenceFromOffset, deleteSentenceFromOffset , 
-        findUnmarkedNum, findSentenceByAuthor, getAllAccount, addAccount, deleteAccount, login,loginOut,rePassword} 
+        findUnmarkedNum, findSentenceByAuthor, getAllAccount, addAccount, deleteAccount, login,loginOut,rePassword,
+        insertTaskContent, deleteContentByTaskId, findContentByTaskId,
+        insertTaskInfo, findUnfinishedTasks, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, updateMemberAccountByTaskId,
+        insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateScoreByUserAccount
+      } 
 
 //封装cookie
 
