@@ -1,16 +1,21 @@
 <template>
     <div class='output'>
-        从第&nbsp;
-        <el-input v-model="begin" size="mini"></el-input>
-        &nbsp;句到第&nbsp;
-        <el-input v-model="end" size="mini"></el-input>
-        &nbsp;句 
-        <el-button type="success"  @click="outTxt(begin,end,1)" :disabled="!textarea ==''">大实体靠前导出</el-button>
-        <el-button type="success"  @click="outTxt(begin,end,0)" :disabled="!textarea ==''">小实体靠前导出</el-button>
-        <el-input type="textarea" :autosize="{ minRows: 8, maxRows: 10}"  v-model="textarea" ></el-input>
-        <br/>
-        <el-button type="success" @click="saveTxt('test.txt',textarea)" :disabled="textarea ==''">确认保存为txt</el-button>
-        <el-button type="warning" @click="cancel()" :disabled="textarea ==''">取消</el-button>
+        <div v-if="logRole=='labUser'">
+            从第&nbsp;
+            <el-input v-model="begin" size="mini"></el-input>
+            &nbsp;句到第&nbsp;
+            <el-input v-model="end" size="mini"></el-input>
+            &nbsp;句 
+            <el-button type="success"  @click="outTxt(begin,end,1)" :disabled="!textarea ==''">大实体靠前导出</el-button>
+            <el-button type="success"  @click="outTxt(begin,end,0)" :disabled="!textarea ==''">小实体靠前导出</el-button>
+            <el-input type="textarea" :autosize="{ minRows: 8, maxRows: 10}"  v-model="textarea" ></el-input>
+            <br/>
+            <el-button type="success" @click="saveTxt('test.txt',textarea)" :disabled="textarea ==''">确认保存为txt</el-button>
+            <el-button type="warning" @click="cancel()" :disabled="textarea ==''">取消</el-button>
+        </div>
+        <div v-else>
+            请用实验室账号登录使用该功能！
+        </div>
     </div>
 </template>
 
@@ -31,8 +36,17 @@ export default {
         }
     },
     mounted(){
-        this.$store.commit('setActiveIndex',2)
+        this.$store.commit('setActiveIndex',3)
     },
+    computed:{
+        logRole() {
+            return this.$store.state.loginrole
+        }
+	},
+	watch:{
+        logRole() {
+        },
+	},
     methods:{
         async outTxt(begin,end,type){
             const sentencesInfo = await findSentenceFromOffset({offset:begin-1,count:end-begin+1});

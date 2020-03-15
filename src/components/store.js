@@ -41,7 +41,7 @@ const state = {
             state.loginrole = getCookie('role');
         },
         changePersonState(state, n) {
-            state.personState = n
+            state.personState = n;
         },
         changename(state) {
             state.loginname = getCookie('name');

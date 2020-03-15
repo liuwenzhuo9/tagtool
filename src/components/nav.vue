@@ -27,8 +27,8 @@ import { getCookie,delCookie,loginOut } from '../unit/fetch'
     name:'navbar',
     data(){
         return {
-            section: ['所有句子','标注标签','导出结果','个人中心'],
-            sectionUrl: ['allSentences','tagEntity','tagResult','personal'],
+            section: ['任务展示','所有句子','标注标签','导出结果','个人中心'],
+            sectionUrl: ['showTasks','allSentences','tagEntity','tagResult','personal'],
         }       
     },
     computed:{
@@ -39,7 +39,7 @@ import { getCookie,delCookie,loginOut } from '../unit/fetch'
             return this.$store.state.loginstate
         },
         userCount() {
-            return this.$store.state.loginname
+            return this.$store.state.loginuser
         }
 	},
 	watch:{
@@ -77,19 +77,20 @@ import { getCookie,delCookie,loginOut } from '../unit/fetch'
             this.$store.commit('changerole');
             this.$store.commit('changename');
             this.$router.push('/personal');
-            this.$store.commit('setActiveIndex',3)
+            this.$store.commit('setActiveIndex',5)
           }catch(e){
             // console.log('error')
-            this.$i18n.locale === 'zh' ? this.$message.error((e && e.message) ? e.message : '登出失败，请稍后重试') : this.$message.error((e && e.message) ? e.message : 'LoginOut error, Please try again later!');
+            this.$message.error((e && e.message) ? e.message : '登出失败，请稍后重试');
           }
           })();
       },
       icon(i) {
           switch(i){
-              case 0 : return 'list'
-              case 1 : return 'tags'
-              case 2 : return 'download'
-              case 3: return 'user-edit'
+              case 0 : return 'bullhorn'
+              case 1 : return 'list'
+              case 2 : return 'tags'
+              case 3 : return 'download'
+              case 4: return 'user-edit'
           }
       }
     }

@@ -1,65 +1,70 @@
 <template>
     <div class="allsentences">
-        <div class="input_sentences">
-            <el-input type="textarea" :autosize="{ minRows: 2, maxRows: 4}" placeholder="请输入句子" v-model="textarea">
-            </el-input>
-            &nbsp;&nbsp;
-            <div class="buttons">
-                <el-button type="success" @click="handleClick()" v-if="!isEdit">确认添加</el-button>
-                <el-button type="success" @click="handleClickEdit()" v-if="isEdit">确认修改</el-button>
+        <div v-if="logRole=='labUser'">
+            <div class="input_sentences">
+                <el-input type="textarea" :autosize="{ minRows: 2, maxRows: 4}" placeholder="请输入句子" v-model="textarea">
+                </el-input>
                 &nbsp;&nbsp;
-                <el-upload  class="upload-demo" v-if="this.textarea == ''" action="https://jsonplaceholder.typicode.com/posts/" :on-success="handleSuccess" :before-remove="beforeRemove" list-type="text">
-                <el-button size="middle" type="primary">上传txt文件</el-button>
-                </el-upload>
-                <el-button v-if="this.textarea !== ''" type="success" @click="handleClickEditQuit()">取消</el-button>
+                <div class="buttons">
+                    <el-button type="success" @click="handleClick()" v-if="!isEdit">确认添加</el-button>
+                    <el-button type="success" @click="handleClickEdit()" v-if="isEdit">确认修改</el-button>
+                    &nbsp;&nbsp;
+                    <el-upload  class="upload-demo" v-if="this.textarea == ''" action="https://jsonplaceholder.typicode.com/posts/" :on-success="handleSuccess" :before-remove="beforeRemove" list-type="text">
+                    <el-button size="middle" type="primary">上传txt文件</el-button>
+                    </el-upload>
+                    <el-button v-if="this.textarea !== ''" type="success" @click="handleClickEditQuit()">取消</el-button>
+                </div>
             </div>
-        </div>
-        <div class="show_sentences">
-            <el-table :data="this.sentencesCurrent" style="width: 100%" >
-                <el-table-column label="句子" width="1000" >
+            <div class="show_sentences">
+                <el-table :data="this.sentencesCurrent" style="width: 100%" >
+                    <el-table-column label="句子" width="1000" >
+                        <template slot-scope="scope">
+                            <p >
+                                {{ scope.$index + (pageNumNow-1) * maxShowLength +1}}. &nbsp;&nbsp;{{ scope.row.content }}
+                            </p>
+                        </template>
+                    </el-table-column>
+                <el-table-column label="操作" >
                     <template slot-scope="scope">
-                        <p >
-                            {{ scope.$index + (pageNumNow-1) * maxShowLength +1}}. &nbsp;&nbsp;{{ scope.row.content }}
-                        </p>
+                        <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row.content)">删除</el-button>
+                        <el-button size="mini" type="success" v-if="scope.row.is_marked" @click="handleShow(scope.$index, scope.row.content)">查看</el-button>
+                        <el-button size="mini" type="warning" v-if="!scope.row.is_marked" @click="handleTag(scope.$index, scope.row.content)">标记</el-button>
+                        <el-button size="mini"  @click="handleEdit(scope.$index, scope.row.content,scope.row.is_marked)">编辑</el-button>  
                     </template>
                 </el-table-column>
-            <el-table-column label="操作" >
-                <template slot-scope="scope">
-                    <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row.content)" v-if ="logCount">删除</el-button>
-                    <el-button size="mini" type="success" v-if="scope.row.is_marked" @click="handleShow(scope.$index, scope.row.content)">查看</el-button>
-                    <el-button size="mini" type="warning" v-if="!scope.row.is_marked" @click="handleTag(scope.$index, scope.row.content)">标记</el-button>
-                    <el-button size="mini"  @click="handleEdit(scope.$index, scope.row.content,scope.row.is_marked)" v-if ="logCount">编辑</el-button>  
-                </template>
-            </el-table-column>
-        </el-table>
+            </el-table>
+            </div>
+            <div class="show_bottom">
+                <div class="shoe_bottom_pageNum">
+                    <el-pagination
+                        @size-change="handleSizeChange"
+                        :page-sizes="[10, 20, 30, 50]"
+                        layout="sizes,  pager">
+                    </el-pagination>
+                    共{{this.pageNumTotal}}页 
+                    跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange(num)" :min="1" :max="this.pageNumTotal" label="描述文字" size="mini"></el-input-number>
+                    &nbsp;页&nbsp;
+                            <el-button type="success" size="mini" @click="handleChange(num)">跳转</el-button>&nbsp;
+                    <el-divider direction="vertical"></el-divider>
+                    当前是第{{this.pageNumNow}}页
+                </div>
+                <div class="show_bottom_delete">
+                    从第&nbsp;
+                    <el-input class="deleteInput" v-model="begin" size="mini"></el-input>
+                    &nbsp;句到第&nbsp;
+                    <el-input class="deleteInput" v-model="end" size="mini"></el-input>
+                    &nbsp;句
+                    <el-button type="danger" size="mini" @click="deleteFromBeginToEnd(begin,end)">批量删除</el-button>
+                </div>
+                <div class="show_bottom_unmarked">
+                    当前还有&nbsp;{{unmarkedNum}}&nbsp;个句子未被标记
+                    <el-button type="danger" size="mini" v-if="showPart" :disabled="this.unmarkedNum == 0" @click="showAllSentences(0)">只显示未标记句子</el-button>
+                    <el-button type="danger" size="mini" v-if="!showPart" @click="showAllSentences(1)">显示全部句子</el-button>
+                </div>
+            </div>
         </div>
-        <div class="show_bottom">
-            <div class="shoe_bottom_pageNum">
-                <el-pagination
-                    @size-change="handleSizeChange"
-                    :page-sizes="[10, 20, 30, 50]"
-                    layout="sizes,  pager">
-                </el-pagination>
-                共{{this.pageNumTotal}}页 
-                跳转至第&nbsp;<el-input-number v-model="num" @change="handleChange(num)" :min="1" :max="this.pageNumTotal" label="描述文字" size="mini"></el-input-number>
-                &nbsp;页&nbsp;
-                        <el-button type="success" size="mini" @click="handleChange(num)">跳转</el-button>&nbsp;
-                <el-divider direction="vertical"></el-divider>
-                当前是第{{this.pageNumNow}}页
-            </div>
-            <div class="show_bottom_delete">
-                从第&nbsp;
-                <el-input class="deleteInput" v-model="begin" size="mini"></el-input>
-                &nbsp;句到第&nbsp;
-                <el-input class="deleteInput" v-model="end" size="mini"></el-input>
-                &nbsp;句
-                <el-button type="danger" size="mini" @click="deleteFromBeginToEnd(begin,end)">批量删除</el-button>
-            </div>
-            <div class="show_bottom_unmarked">
-                当前还有&nbsp;{{unmarkedNum}}&nbsp;个句子未被标记
-                <el-button type="danger" size="mini" v-if="showPart" :disabled="this.unmarkedNum == 0" @click="showAllSentences(0)">只显示未标记句子</el-button>
-                <el-button type="danger" size="mini" v-if="!showPart" @click="showAllSentences(1)">显示全部句子</el-button>
-            </div>
+        <div v-else>
+            请用实验室账号登录使用该功能！
         </div>
     </div>
 </template>>
@@ -90,15 +95,15 @@ export default {
     },
     mounted(){
         this.init();
-        this.$store.commit('setActiveIndex',0)
+        this.$store.commit('setActiveIndex',1)
     },
     computed:{
-        logCount() {
-            return this.$store.state.loginstate
+        logRole() {
+            return this.$store.state.loginrole
         }
 	},
 	watch:{
-        logCount() {
+        logRole() {
         },
 	},
     methods:{

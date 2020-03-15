@@ -24,7 +24,7 @@ export function addAccount(info) {
 }
 
 export function deleteAccount(info) {
-    let url = `${hostname}/deleteAccount${objToQueryString(info)}`;
+    let url = `${hostname}/deleteAccountByAccountAndRole${objToQueryString(info)}`;
     return executeFetch(url, {
         methods: 'GET',
         headers: {

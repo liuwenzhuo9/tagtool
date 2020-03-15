@@ -10,8 +10,8 @@
                 </el-form-item>
 
                 <el-form-item label="角色" prop="role">
-                    <el-radio v-model="form.role" label="教师">教师</el-radio>
-                    <el-radio v-model="form.role" label="学生">学生</el-radio>
+                    <el-radio v-model="form.role" label="实验室用户">实验室用户</el-radio>
+                    <el-radio v-model="form.role" label="普通用户">普通用户</el-radio>
                 </el-form-item>
 
                 <el-form-item>

@@ -10,8 +10,18 @@ export function insertTaskInfo(info) {
         }
     });
 }
-export function findUnfinishedTasks(info) {
-    let url = `${hostname}/findUnfinishedTasks${objToQueryString(info)}`;
+export function findUnfinishedTasks() {
+    let url = `${hostname}/findUnfinishedTasks${objToQueryString()}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+
+export function findTasksByTasksType(info) {
+    let url = `${hostname}/findTasksByTasksType${objToQueryString(info)}`;
     return executeFetch(url,{
         method:'GET',
         headers: {

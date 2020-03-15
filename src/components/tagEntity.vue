@@ -1,62 +1,67 @@
 <template>
     <div class="tagEntity">
-        <div class = "left">
-            <el-card class="box-card">
-                <div slot="header" class="clearfix">
-                    <span>第{{textIndex}}句</span>
-                </div>
-                
-                <!-- <div @contextmenu.prevent="addTag(1)" class="text item">{{textarea}}</div> -->
-                <div @keyup.enter.native="addTag()" class="text item">{{textarea}}</div>
-            </el-card>
+        <div v-if="logRole=='labUser'">
+            <div class = "left">
+                <el-card class="box-card">
+                    <div slot="header" class="clearfix">
+                        <span>第{{textIndex}}句</span>
+                    </div>
+                    
+                    <!-- <div @contextmenu.prevent="addTag(1)" class="text item">{{textarea}}</div> -->
+                    <div @keyup.enter.native="addTag()" class="text item">{{textarea}}</div>
+                </el-card>
 
-            <div class = "button">
-                <el-button type="primary" v-if="!isEdit" @click="addTag()" size="small">添加标签</el-button>
-                <el-button type="success" v-if="!isEdit && logCount" @click="saveTag()" size="small">保存标记</el-button>
-                <el-button type="success" v-if="isEdit && logCount" @click="editTag()" size="small">修改标记</el-button>
-                <el-button type="danger" v-if="!isEdit && dynamicTags.length != 0 && logCount" @click="deleteAllTag()" size="small">删除所有标签</el-button>
-                <el-button type="warning" v-if="isQuitEdit" @click="quitEditTag()" size="small">取消修改</el-button>
-                <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnTo(1,isShowAll)" :disabled="isFirst">上一句</el-button>
-                <el-button type="primary" size="small" @click="turnTo(2,isShowAll)" :disabled="isLast">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
+                <div class = "button">
+                    <el-button type="primary" v-if="!isEdit" @click="addTag()" size="small">添加标签</el-button>
+                    <el-button type="success" v-if="!isEdit && logCount" @click="saveTag()" size="small">保存标记</el-button>
+                    <el-button type="success" v-if="isEdit && logCount" @click="editTag()" size="small">修改标记</el-button>
+                    <el-button type="danger" v-if="!isEdit && dynamicTags.length != 0 && logCount" @click="deleteAllTag()" size="small">删除所有标签</el-button>
+                    <el-button type="warning" v-if="isQuitEdit" @click="quitEditTag()" size="small">取消修改</el-button>
+                    <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnTo(1,isShowAll)" :disabled="isFirst">上一句</el-button>
+                    <el-button type="primary" size="small" @click="turnTo(2,isShowAll)" :disabled="isLast">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
+                </div>
+                <div class = "tagarea">
+                    <el-tag :key="index" v-for="(tag,index) in dynamicTags" :closable="!isEdit" :disable-transitions="false" @close="handleClose(tag.content,index)">
+                        {{tag.content}}&nbsp;({{tag.startIdx}},{{tag.endIdx}})
+                    </el-tag>
+                </div>
             </div>
-            <div class = "tagarea">
-                <el-tag :key="index" v-for="(tag,index) in dynamicTags" :closable="!isEdit" :disable-transitions="false" @close="handleClose(tag.content,index)">
-                    {{tag.content}}&nbsp;({{tag.startIdx}},{{tag.endIdx}})
-                </el-tag>
+            <div class ="right">
+                <el-row>
+                <el-col :span="24">
+                <el-card shadow="always">
+                    <el-dropdown @command="handleCommandShow">
+                        <span class="el-dropdown-link">
+                            选择显示内容<i class="el-icon-arrow-down el-icon--right"></i>
+                        </span>
+                        <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item command="1">显示全部句子</el-dropdown-item>
+                            <el-dropdown-item command="0">显示未标记句子</el-dropdown-item>
+                            <el-dropdown-item  disabled>默认显示未标记句子</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
+                    <p v-if="isShowAll">当前：显示全部句子</p>
+                    <p v-if="!isShowAll">当前：显示未标记句子</p>
+                    <el-divider></el-divider>
+                    <el-dropdown @command="handleCommandDelete">
+                        <span class="el-dropdown-link">
+                            选择删除标签的方式<i class="el-icon-arrow-down el-icon--right"></i>
+                        </span>
+                        <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item command="0">仅在该句中删除标签</el-dropdown-item>
+                            <el-dropdown-item command="1">在所有句子中删除该标签</el-dropdown-item>
+                            <el-dropdown-item  disabled>默认在所有句子中删除该标签</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
+                    <p v-if="isDeleteinAll">当前：在所有句子中删除该标签</p>
+                    <p v-if="!isDeleteinAll">当前：仅在该句中删除标签</p>
+                </el-card>
+                </el-col>
+                </el-row>
             </div>
         </div>
-        <div class ="right">
-            <el-row>
-            <el-col :span="24">
-            <el-card shadow="always">
-                <el-dropdown @command="handleCommandShow">
-                    <span class="el-dropdown-link">
-                        选择显示内容<i class="el-icon-arrow-down el-icon--right"></i>
-                    </span>
-                    <el-dropdown-menu slot="dropdown">
-                        <el-dropdown-item command="1">显示全部句子</el-dropdown-item>
-                        <el-dropdown-item command="0">显示未标记句子</el-dropdown-item>
-                        <el-dropdown-item  disabled>默认显示未标记句子</el-dropdown-item>
-                    </el-dropdown-menu>
-                </el-dropdown>
-                <p v-if="isShowAll">当前：显示全部句子</p>
-                <p v-if="!isShowAll">当前：显示未标记句子</p>
-                <el-divider></el-divider>
-                <el-dropdown @command="handleCommandDelete">
-                    <span class="el-dropdown-link">
-                        选择删除标签的方式<i class="el-icon-arrow-down el-icon--right"></i>
-                    </span>
-                    <el-dropdown-menu slot="dropdown">
-                        <el-dropdown-item command="0">仅在该句中删除标签</el-dropdown-item>
-                        <el-dropdown-item command="1">在所有句子中删除该标签</el-dropdown-item>
-                        <el-dropdown-item  disabled>默认在所有句子中删除该标签</el-dropdown-item>
-                    </el-dropdown-menu>
-                </el-dropdown>
-                <p v-if="isDeleteinAll">当前：在所有句子中删除该标签</p>
-                <p v-if="!isDeleteinAll">当前：仅在该句中删除标签</p>
-            </el-card>
-            </el-col>
-            </el-row>
+        <div v-else>
+            请用实验室账号登录使用该功能！
         </div>
     </div>
 </template>
@@ -81,8 +86,10 @@ export default {
         }
     },
     mounted(){
-        this.setTextarea();
-        this.$store.commit('setActiveIndex',1)
+        if(this.logCount=='labUser'){
+            this.setTextarea();
+        }
+        this.$store.commit('setActiveIndex',2)
         let that = this;
         window.addEventListener("keypress",function(e){
             if(e.which==108){
@@ -91,12 +98,12 @@ export default {
         })
     },
     computed:{
-        logCount() {
-            return this.$store.state.loginstate
+        logRole() {
+            return this.$store.state.loginrole
         }
 	},
 	watch:{
-        logCount() {
+        logRole() {
         },
 	},
     // destroyed(){

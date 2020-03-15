@@ -97,6 +97,9 @@
         (async() => {
           try{
             const accountinfo = await login(info);
+            console.log(1)
+            console.log(accountinfo)
+            console.log(2)
             if (accountinfo.data == 0||accountinfo.data == 1||accountinfo.data == 2){
               this.$message.error(accountinfo.message);
               if (getCookie('role')){
@@ -108,7 +111,6 @@
               setCookie('role',accountinfo.data);
               setCookie('name',accountinfo.message);
               let url = '/' + getCookie('role');
-              window.console.log(url)
               this.$router.push(url);
               }
             this.$store.commit('changelogin');

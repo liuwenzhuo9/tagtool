@@ -65,19 +65,20 @@
                     const info = await getAllAccount();
                     this.accountList = info.data;
                 } catch(e) {
-                    this.$i18n.locale === 'zh' ? this.$message.error((e && e.message) ? e.message : '获取信息失败，请稍后重试') : this.$message.error((e && e.message) ? e.message : 'Error, Please try again later!');
+                    this.$message.error((e && e.message) ? e.message : '获取信息失败，请稍后重试') ;
                 }
             },
             async deleteRow(row,accountList) {
+                console.log(row);
                 try {
                     await deleteAccount({
                         account: row.account,
                         role: row.role,
                     });
                     this.init();
-                    this.$i18n.locale === 'zh' ? this.$message.success('删除成功！') : this.$message.success('Success！');
+                    this.$message.success('删除成功！');
                 } catch(e) {
-                    this.$i18n.locale === 'zh' ? this.$message.error((e && e.message) ? e.message : '删除失败，请稍后重试') : this.$message.error((e && e.message) ? e.message : 'Error, Please try again later!');
+                    this.$message.error((e && e.message) ? e.message : '删除失败，请稍后重试')
                 }
             },
             changeAddAccount() {
