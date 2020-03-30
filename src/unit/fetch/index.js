@@ -6,7 +6,8 @@ import {insertSentence, deleteSentence, findSentenceById, findIdBySentence, upda
 import {getAllAccount, addAccount, deleteAccount}from './account'
 import {login,loginOut,rePassword} from './login'
 import {insertTaskContent, deleteContentByTaskId, findContentByTaskId} from './taskContent'
-import {insertTaskInfo, findUnfinishedTasks, findTasksByTasksType, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, updateMemberAccountByTaskId} from './tasksInfo'
+import {insertTaskInfo, findUnfinishedTasks, findTasksByTasksType, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, 
+        updateMemberAccountByTaskId, findTaskIdByTaskName} from './tasksInfo'
 import {insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateScoreByUserAccount} from './user'
 
 export {insertEntityIndex, deleteEntityBySentenceId, getEntityIndexBySentenceId, deleteEntityByEntityId, insertEntity, deleteEntity, findEntityById, findIdByEntity,
@@ -14,7 +15,7 @@ export {insertEntityIndex, deleteEntityBySentenceId, getEntityIndexBySentenceId,
         getAllSentences,getLastSentence, getNextSentence, getFirstUnmarkedSentence, findIndexBySentenceId, findSentenceFromOffset, deleteSentenceFromOffset , 
         findUnmarkedNum, findSentenceByAuthor, getAllAccount, addAccount, deleteAccount, login,loginOut,rePassword,
         insertTaskContent, deleteContentByTaskId, findContentByTaskId,
-        insertTaskInfo, findUnfinishedTasks, findTasksByTasksType, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, updateMemberAccountByTaskId,
+        insertTaskInfo, findUnfinishedTasks, findTasksByTasksType, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, updateMemberAccountByTaskId, findTaskIdByTaskName,
         insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateScoreByUserAccount
       } 
 

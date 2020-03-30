@@ -76,3 +76,13 @@ export function updateMemberAccountByTaskId(info) {
         }
     });
 }
+
+export function findTaskIdByTaskName(info) {
+    let url = `${hostname}/findTaskIdByTaskName${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
