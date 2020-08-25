@@ -32,3 +32,13 @@ export function deleteAccount(info) {
         }
     });
 }
+
+export function findAccountByAccount(info) {
+    let url = `${hostname}/findAccountByAccount${objToQueryString(info)}`;
+    return executeFetch(url, {
+        methods: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}

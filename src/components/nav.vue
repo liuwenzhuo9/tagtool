@@ -12,7 +12,8 @@
             </el-menu>
         </div>
         <div class="nav_bar_logout" v-if='logCount'>
-            {{userCount}},你好！ &nbsp;
+            {{userName}},
+            你好！ &nbsp;
             <font-awesome-icon icon="sign-out-alt" />
             <el-link :underline="false" class="logout"  @click="toLoginOut('form')">注销</el-link>
         </div>
@@ -21,7 +22,7 @@
 
 
 <script>
-import { getCookie,delCookie,loginOut } from '../unit/fetch'
+import { getCookie,delCookie,loginOut,findAccountByAccount } from '../unit/fetch'
   export default {
       
     name:'navbar',
@@ -29,6 +30,7 @@ import { getCookie,delCookie,loginOut } from '../unit/fetch'
         return {
             section: ['任务展示','所有句子','标注标签','导出结果','个人中心'],
             sectionUrl: ['showTasks','allSentences','tagEntity','tagResult','personal'],
+            userName:'',
         }       
     },
     computed:{
@@ -52,11 +54,17 @@ import { getCookie,delCookie,loginOut } from '../unit/fetch'
 	},
     mounted(){
         this.handleSelect(0);
+        this.getName();
     },
     methods: {
       handleSelect(key) {
           let url = '/'+ this.sectionUrl[key]
           this.$router.push(url)
+      },
+      async getName(){
+          const accInfo = this.$store.state.loginuser;
+        const nameInfo = await findAccountByAccount({account:accInfo});
+        this.userName = nameInfo.data.name;
       },
       toLoginOut(){
         (async() => {
@@ -69,13 +77,14 @@ import { getCookie,delCookie,loginOut } from '../unit/fetch'
             if (getCookie('role')){
               delCookie('role');
             }
-            if (getCookie('name')){
-              delCookie('name');
-            }
+            // if (getCookie('name')){
+            //   delCookie('name');
+            // }
             this.$store.commit('changelogin');
             this.$store.commit('changeuser');
             this.$store.commit('changerole');
-            this.$store.commit('changename');
+            this.$store.commit('setName','');
+            // this.$store.commit('changename');
             this.$router.push('/personal');
             this.$store.commit('setActiveIndex',5)
           }catch(e){

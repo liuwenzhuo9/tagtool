@@ -45,7 +45,7 @@
 </template>
 
 <script>
-    import { getAllAccount, deleteAccount } from '../../../unit/fetch';
+    import { getAllAccount, deleteAccount ,deleteUser} from '../../../unit/fetch';
     import Add from './add.vue';
 
     export default {
@@ -69,17 +69,33 @@
                 }
             },
             async deleteRow(row,accountList) {
-                console.log(row);
-                try {
-                    await deleteAccount({
-                        account: row.account,
-                        role: row.role,
-                    });
-                    this.init();
-                    this.$message.success('删除成功！');
-                } catch(e) {
-                    this.$message.error((e && e.message) ? e.message : '删除失败，请稍后重试')
-                }
+                this.$confirm('此操作将永久删除该账号及相关信息, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+                })
+                .then(async () => {
+                    try {
+                        const info = await deleteAccount({
+                            account: row.account,
+                            role: row.role,
+                        });
+                        console.log(info)
+                        await deleteUser({
+                            account: row.account
+                        })
+                        this.init();
+                        this.$message.success('删除成功！');
+                    } catch(e) {
+                        this.$message.error((e && e.message) ? e.message : '删除失败，请稍后重试')
+                    }
+                })
+                .catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });          
+                });
             },
             changeAddAccount() {
                 this.isAdd = !this.isAdd;

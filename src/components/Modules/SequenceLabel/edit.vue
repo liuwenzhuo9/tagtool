@@ -1,6 +1,5 @@
 <template>
     <div class="labelAnnotation">
-        <template v-if ="!isTest">
              <div class="content-title">
                 <p >任务名：{{editInfo.task_name}}</p>
                 <p >进度：{{this.finishParagraphNum}}/{{this.allParagraphNum}}</p>
@@ -20,12 +19,13 @@
                     </el-radio>
                     <el-button @click="addLabel">添加标签</el-button>
                 <div>
-                    <el-button @click="saveLabel">保存标签</el-button>
+                    <el-button @click="saveLabel" v-if="isEdit">保存标注</el-button>
+                    <el-button @click="changeLabel" v-if="!isEdit">修改标注</el-button>
                     <el-button @click="nextParagraph()">下一句</el-button>
                     <el-button @click="lastParagraph()">上一句</el-button>
                 </div>
             </div>
-            <div class="content-right">
+            <div class="content-right" v-if="isEdit">
                 <p>标注结果：</p>
                 <el-tag
                     :key="tag"
@@ -36,18 +36,24 @@
                     {{tag}}
                 </el-tag>
             </div>
-        </template>
-        <template v-else>
-            <testEdit :editInfo="editInfo"></testEdit>
-            
-            <el-button @click="finishTest">提交测试结果</el-button>
-        </template>
+            <div class="content-right" v-else>
+                <p>标注结果：</p>
+                <el-tag
+                    :key="tag"
+                    v-for="tag in labelResShow"
+                    :disable-transitions="false">
+                    {{tag}}
+                </el-tag>
+            </div>
+            <el-button v-if="this.finishParagraphNum == this.allParagraphNum" @click="finishTask">提交任务</el-button>
+        
     </div>
 </template>
 
 <script>
-    import { findParagraphNumByTaskId, findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph,findContentByParagraphId, updateLabelById,
-            findLastUnfinishedParagraph,findNextUnfinishedParagraph,findLabelResultById,findFirstUnfinishedTestParagraph} from '../../../unit/fetch';
+    import { findParagraphNumByTaskId, findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph, updateLabelById,
+            findLastUnfinishedParagraph,findNextUnfinishedParagraph,findLabelResultById,findFirstUnfinishedTestParagraph,
+            findInfoByUserAccount,updateFinishTasksByUserAccount} from '../../../unit/fetch';
     import testEdit from './testEdit';
     export default {
         props: {
@@ -55,7 +61,6 @@
         },
         data() {
             return {
-                isTest:'',
                 allParagraphNum:'',
                 finishParagraphNum:'',
                 userAccount:this.$store.state.loginuser,
@@ -65,8 +70,9 @@
                 choosedLabel:'',
                 resultId:'',
                 radio: '1',
-                labelRes:[],
+                // labelRes:[],
                 labelResShow:[],
+                isEdit:true,
             }
         },
         mounted(){
@@ -74,12 +80,7 @@
         },
         methods:{
             async init(){
-                // 获取所有段落数
-                const infoA = await findParagraphNumByTaskId({task_id:this.editInfo.id});
-                this.allParagraphNum = infoA.data;
-                // 获取所有完成的段落数
-                const infoF = await findFinishParagraphNumByTaskId({task_id:this.editInfo.id,user_account:this.userAccount});
-                this.finishParagraphNum = infoF.data;
+                this.getRate();
                 // 获取第一条未被标记的段落id
                 const info = await findFirstUnfinishedParagraph({task_id:this.editInfo.id,user_account:this.userAccount});
                 
@@ -90,19 +91,48 @@
                 // const infoResult = await findLabelResultById({id:this.resultId});
                 // this.labelRes = infoRes.data.label_result;
 
-                // 判断是否有测试集
-                if(this.editInfo.sds_name){
-                    // 判断测试集是否标记完全
-                    const info = await findFirstUnfinishedTestParagraph({task_id:this.editInfo.id,user_account:this.userAccount});
-                    if(info){
-                        this.isTest = 1;
-                    }else{
-                        this.isTest = 0;
+            },
+            async finishTask(){
+                this.$confirm('确认提交该任务的标注结果？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+                })
+                .then(async () => {
+                    try {
+                        const info = await findInfoByUserAccount({account:this.userAccount});
+                        var proTask = info.data[0].progress_tasks.split(',');
+                        proTask.splice(proTask.indexOf(this.editInfo.id.toString()),1);
+                        if(info.data[0].finished_tasks!=null && info.data[0].finished_tasks!=''){
+                            var finTask = info.data[0].finished_tasks.split(',');
+                            finTask.push(this.editInfo.id);
+                        }else{
+                            var finTask = this.editInfo.id;
+                        };
+                        await updateFinishTasksByUserAccount({account:this.userAccount,
+                                                            progress_tasks:proTask.toString(),
+                                                            finished_tasks:finTask.toString()
+                                                            });
+                        this.$message.success('恭喜您完成任务！');
+                    } catch(e) {
+                        this.$message.error((e && e.message) ? e.message : '请稍后重试')
                     }
-                }else{
-                    this.isTest = 0;
-                }
-
+                })
+                .catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消'
+                    });          
+                });
+            },
+            async getRate(){
+                // 获取所有段落数
+                const infoA = await findParagraphNumByTaskId({task_id:this.editInfo.id, is_test:1});
+                const infoB = await findParagraphNumByTaskId({task_id:this.editInfo.id, is_test:0});
+                this.allParagraphNum = infoA.data + infoB.data;
+                // 获取所有完成的段落数
+                const infoF = await findFinishParagraphNumByTaskId({task_id:this.editInfo.id,user_account:this.userAccount});
+                this.finishParagraphNum = infoF.data;
             },
             chooseLabel(info){
                 this.choosedLabel = info;
@@ -119,34 +149,41 @@
                 var startIndex = Math.min(selectTxt.anchorOffset,selectTxt.focusOffset);
                 var endIndex = Math.max(selectTxt.anchorOffset,selectTxt.focusOffset);
                 
-                this.labelRes.push('{'+ startIndex + ',' + endIndex + ',' + this.choosedLabel + '}');
+                // this.labelRes.push('{'+ startIndex + ',' + endIndex + ',' + this.choosedLabel + '}');
                 this.labelResShow.push('{'+ startIndex + ',' + endIndex + ',“'  + selection + '”,' + this.choosedLabel + '}');
-                console.log(this.labelRes);
+                this.radio = '1';
             },
             async saveLabel(){
-                await updateLabelById({id:this.resultId,label_result:this.labelRes.toString()});
+                await updateLabelById({id:this.resultId,label_result:this.labelResShow.toString()});
+                // this.labelRes = [];
+                this.getRate();
+                this.isEdit = false;
+            },
+            changeLabel(){
+                this.isEdit = true;
             },
             handleClose(tag) {
                 var index = this.labelResShow.indexOf(tag);
                 this.labelResShow.splice(index, 1);
-                this.labelRes.splice(index, 1);
+                // this.labelRes.splice(index, 1);
             },
             async nextParagraph(){
                 const info = await findNextUnfinishedParagraph({task_id:this.editInfo.id,user_account:this.userAccount,paragraph_position:this.contentPosition});
                 this.contentInfo = info.message;
                 this.contentPosition = Number(info.data[1]);
                 this.resultId = info.data[0];
+                this.labelResShow = [];
+                this.radio = '1';
+                this.isEdit = true;
             },
             async lastParagraph(){
                 const info = await findLastUnfinishedParagraph({task_id:this.editInfo.id,user_account:this.userAccount,paragraph_position:this.contentPosition});
                 this.contentInfo = info.message;
                 this.contentPosition = Number(info.data[1]);
                 this.resultId = info.data[0];
+                this.isEdit = true;
             },
             
-            finishTest(){
-                this.isTest = 0;
-            }
         },
         components:{
             testEdit,

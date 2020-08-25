@@ -106,14 +106,17 @@
             }else{
               setCookie('account',this.form.accountName);
               setCookie('role',accountinfo.data);
-              setCookie('name',accountinfo.message);//用户姓名
+              // setCookie('name',accountinfo.message);//用户姓名
               let url = '/' + getCookie('role');
               this.$router.push(url);
               }
             this.$store.commit('changelogin');
             this.$store.commit('changeuser');
             this.$store.commit('changerole');
-            this.$store.commit('changename');
+            // const accInfo = this.$store.state.loginuser;
+            // const nameInfo = await findAccountByAccount({account:accInfo});
+            // this.$store.commit('setName',nameInfo.data.name);
+            // this.$store.commit('changename');
           }catch(e){
              this.$message.error((e && e.message) ? e.message : '登陆失败，请稍后重试') ;
           }

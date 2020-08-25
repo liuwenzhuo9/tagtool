@@ -37,6 +37,25 @@ export function updateJoinTasksByUserAccount(info) {
         }
     });
 }
+export function updateFinishTasksByUserAccount(info) {
+    let url = `${hostname}/updateFinishTasksByUserAccount${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+
+export function deleteUser(info) {
+    let url = `${hostname}/deleteUser${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
 
 export function updateScoreByUserAccount(info) {
     let url = `${hostname}/updateScoreByUserAccount${objToQueryString(info)}`;

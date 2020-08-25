@@ -86,3 +86,13 @@ export function findTaskIdByTaskName(info) {
         }
     });
 }
+
+export function updateFinishStateByTaskId(info) {
+    let url = `${hostname}/updateFinishStateByTaskId${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}

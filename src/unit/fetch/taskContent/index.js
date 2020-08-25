@@ -47,3 +47,57 @@ export function findContentByParagraphId(info) {
         }
     });
 }
+export function findLabeledTestNumByTaskId(info) {
+    let url = `${hostname}/findLabeledTestNumByTaskId${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function updateRightLabel(info) {
+    let url = `${hostname}/updateRightLabel${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function findFirstUnfinishedTestParagraph(info) {
+    let url = `${hostname}/findFirstUnfinishedTestParagraph${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function findNextUnfinishedTestParagraph(info) {
+    let url = `${hostname}/findNextUnfinishedTestParagraph${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function findLastUnfinishedTestParagraph(info) {
+    let url = `${hostname}/findLastUnfinishedTestParagraph${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function getTestLabelByTaskId(info) {
+    let url = `${hostname}/getTestLabelByTaskId${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}

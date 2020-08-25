@@ -39,8 +39,8 @@ export function deleteLabelByTaskId(info) {
     });
 }
 
-export function findLabelByTaskAndParagraph(info) {
-    let url = `${hostname}/findLabelByTaskAndParagraph${objToQueryString(info)}`;
+export function deleteLabelByTaskIdAndAccount(info) {
+    let url = `${hostname}/deleteLabelByTaskIdAndAccount${objToQueryString(info)}`;
     return executeFetch(url,{
         method:'GET',
         headers: {
@@ -48,6 +48,7 @@ export function findLabelByTaskAndParagraph(info) {
         }
     });
 }
+
 
 export function findFinishParagraphNumByTaskId(info) {
     let url = `${hostname}/findFinishParagraphNumByTaskId${objToQueryString(info)}`;

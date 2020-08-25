@@ -12,8 +12,9 @@ const state = {
     loginstate:isLogin(),
     loginuser:getCookie('account'),
     loginrole:getCookie('role'),
+    loginname:'',
+    // loginname:getCookie('name'),
     personState: true,
-    loginname:getCookie('name')
   }
 
   export default new Vuex.Store({
@@ -40,12 +41,15 @@ const state = {
         changerole(state) {
             state.loginrole = getCookie('role');
         },
+        setName(state,item){
+            state.loginname = item;
+        },
+        // changename(state) {
+        //     state.loginname = getCookie('name');
+        // },
         changePersonState(state, n) {
             state.personState = n;
         },
-        changename(state) {
-            state.loginname = getCookie('name');
-        }
     }
   });
   

@@ -3,30 +3,26 @@ import {insertEntity, deleteEntity, findEntityById, findIdByEntity, updateLength
 import {insertSentence, deleteSentence, findSentenceById, findIdBySentence, updateSentenceMarkById, updateSentenceContentById, 
         getAllSentences, getLastSentence, getNextSentence, getFirstUnmarkedSentence, findIndexBySentenceId, findSentenceFromOffset,
          deleteSentenceFromOffset, findUnmarkedNum, findSentenceByAuthor}from './sentences'
-import {getAllAccount, addAccount, deleteAccount}from './account'
+import {getAllAccount, addAccount, deleteAccount,findAccountByAccount}from './account'
 import {login,loginOut,rePassword} from './login'
-import {insertTaskContent, deleteContentByTaskId, findContentByTaskId,findParagraphNumByTaskId,findContentByParagraphId} from './taskContent'
+import {insertTaskContent, deleteContentByTaskId, findContentByTaskId,findParagraphNumByTaskId,findContentByParagraphId,findLabeledTestNumByTaskId,updateRightLabel,findFirstUnfinishedTestParagraph,findNextUnfinishedTestParagraph,
+        findLastUnfinishedTestParagraph, getTestLabelByTaskId} from './taskContent'
 import {insertTaskInfo, findUnfinishedTasks, findTasksByTasksType, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, 
-        updateMemberAccountByTaskId, findTaskIdByTaskName} from './tasksInfo'
-import {insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateJoinTasksByUserAccount, updateScoreByUserAccount} from './user'
-import {insertLabelResult, updateLabelById, deleteLabelByAccount, deleteLabelByTaskId, findLabelByTaskAndParagraph,findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph, findLastUnfinishedParagraph,
+        updateMemberAccountByTaskId, findTaskIdByTaskName, updateFinishStateByTaskId} from './tasksInfo'
+import {insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateJoinTasksByUserAccount,updateFinishTasksByUserAccount, updateScoreByUserAccount,deleteUser} from './user'
+import {insertLabelResult, updateLabelById, deleteLabelByAccount, deleteLabelByTaskId, deleteLabelByTaskIdAndAccount,findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph, findLastUnfinishedParagraph,
         findNextUnfinishedParagraph,findLabelResultById} from './labelResult'
-import {insertTestContent, deleteTestContentByTaskId, findTestContentByTaskId, findTestParagraphNumByTaskId, findTestContentByParagraphId, updateRightLabel} from './testContent'
-import {insertTestRes, updateTestResById, deleteTestLabelByAccount, deleteTestLabelByTaskId, findTestLabelByTaskAndParagraph, findFinishTestParagraphNumByTaskId, findFirstUnfinishedTestParagraph, 
-        findNextUnfinishedTestParagraph, findLastUnfinishedTestParagraph, findTestLabelResultById} from './testResult'
 
 export {insertEntityIndex, deleteEntityBySentenceId, getEntityIndexBySentenceId, deleteEntityByEntityId, insertEntity, deleteEntity, findEntityById, findIdByEntity,
         updateLengthByEntityId, getAllEntity, insertSentence, deleteSentence, findSentenceById, findIdBySentence, updateSentenceMarkById, updateSentenceContentById, 
         getAllSentences,getLastSentence, getNextSentence, getFirstUnmarkedSentence, findIndexBySentenceId, findSentenceFromOffset, deleteSentenceFromOffset , 
-        findUnmarkedNum, findSentenceByAuthor, getAllAccount, addAccount, deleteAccount, login,loginOut,rePassword,
-        insertTaskContent, deleteContentByTaskId, findContentByTaskId,findParagraphNumByTaskId,findContentByParagraphId,
-        insertTaskInfo, findUnfinishedTasks, findTasksByTasksType, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, updateMemberAccountByTaskId, findTaskIdByTaskName,
-        insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateJoinTasksByUserAccount, updateScoreByUserAccount,
-        insertLabelResult, updateLabelById, deleteLabelByAccount, deleteLabelByTaskId, findLabelByTaskAndParagraph,findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph,findLastUnfinishedParagraph,
+        findUnmarkedNum, findSentenceByAuthor, getAllAccount, addAccount, deleteAccount, findAccountByAccount,
+        login,loginOut,rePassword,
+        insertTaskContent, deleteContentByTaskId, findContentByTaskId,findParagraphNumByTaskId,findContentByParagraphId,findLabeledTestNumByTaskId,updateRightLabel,findFirstUnfinishedTestParagraph,findNextUnfinishedTestParagraph,findLastUnfinishedTestParagraph,getTestLabelByTaskId,
+        insertTaskInfo, findUnfinishedTasks, findTasksByTasksType, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, updateMemberAccountByTaskId, findTaskIdByTaskName,updateFinishStateByTaskId,
+        insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateJoinTasksByUserAccount, updateFinishTasksByUserAccount,updateScoreByUserAccount,deleteUser,
+        insertLabelResult, updateLabelById, deleteLabelByAccount, deleteLabelByTaskId, deleteLabelByTaskIdAndAccount,findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph,findLastUnfinishedParagraph,
         findNextUnfinishedParagraph,findLabelResultById,
-        insertTestContent, deleteTestContentByTaskId, findTestContentByTaskId, findTestParagraphNumByTaskId, findTestContentByParagraphId, updateRightLabel,
-        insertTestRes, updateTestResById, deleteTestLabelByAccount, deleteTestLabelByTaskId, findTestLabelByTaskAndParagraph, findFinishTestParagraphNumByTaskId, findFirstUnfinishedTestParagraph, 
-        findNextUnfinishedTestParagraph, findLastUnfinishedTestParagraph, findTestLabelResultById
       } 
 
 //封装cookie

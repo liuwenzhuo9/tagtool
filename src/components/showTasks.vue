@@ -23,10 +23,10 @@
         </div>
         <div class = "taskInfo">
                 <el-col :span="8" v-for="(item, index) in tasksinfo" :key="index" >
-                    <el-card class="box-card">
+                    <el-card v-if="!isJoin[index]" class="box-card">
                         <div slot="header" class="clearfix">
                             <span>{{item.task_name}}</span>
-                            <el-button style="float: right; padding: 3px 0" type="text" @click="joinTask(item)">加入任务</el-button>
+                            <el-button style="float: right; padding: 3px 0" type="text" v-if="loginUserAccount" @click="joinTask(item)">加入任务</el-button>
                         </div>
                         <div class="text item">
                             发起人：{{item.leader_name}}
@@ -48,17 +48,22 @@
 
 <script>
 import {findUnfinishedTasks, findTasksByTasksType,findTaskById,updateMemberAccountByTaskId,findInfoByUserAccount,updateJoinTasksByUserAccount,
-        findContentByTaskId,insertLabelResult, findTestContentByTaskId, insertTestRes}from '../unit/fetch';
+        findContentByTaskId,insertLabelResult}from '../unit/fetch';
 export default {
     data(){
         return{
             tasksinfo:[],
-            loginUserAccount:this.$store.state.loginuser,
+            isJoin:[],//判断用户是否加入或发布该任务，如果isJoin为true，则不为该用户显示该任务
+            loginUserAccount:'',
+            // loginUserName:this.$store.state.loginname,
         }
     },
     mounted(){
         this.findAllTasks();
         this.$store.commit('setActiveIndex',0);
+        if(this.$store.state.loginuser){
+            this.loginUserAccount = this.$store.state.loginuser;
+        }
     },
     methods: {
       selectShowPart(index) {
@@ -72,12 +77,28 @@ export default {
           }   
       },
       async findAllTasks(){
+        //   console.log(this.loginUserName)
             const lastTasksinfo = this.tasksinfo;
                 try{
                     this.tasksinfo = [];
                     const info = await findUnfinishedTasks();
                     info.data.map((item) => {
-                            this.tasksinfo.push(item)
+                            this.tasksinfo.push(item);
+                            if(this.loginUserAccount){
+                                if(item.leader_account == this.loginUserAccount){
+                                    this.isJoin.push(true);
+                                }else if(item.member_account){
+                                    const memb = item.member_account.split(',');
+                                    if(this.loginUserAccount.indexOf(memb) != -1){
+                                        this.isJoin.push(true);
+                                    }else{
+                                        this.isJoin.push(false);
+                                    }
+                                }else{
+                                    this.isJoin.push(false);
+                                }
+                            }
+                            
                         })
                 }catch(e){
                     this.tasksinfo = [...lastTasksinfo];
@@ -114,25 +135,25 @@ export default {
           var taskType = '';
           info.task_type == "序列标注"? taskType = 0 : taskType = 1;
         // 更新tb_label_result
-          const taskContentInfo = await findContentByTaskId({task_id:info.id});
-          await Promise.all(taskContentInfo.data.map((item) => {
+          const taskContentInfo = await findContentByTaskId({task_id:info.id, is_test:0});
+          const testContentInfo = await findContentByTaskId({task_id:info.id, is_test:1});
+          const taskArr = Array.from(taskContentInfo.data);
+          if(testContentInfo){
+              const testArr = Array.from(testContentInfo.data);
+              var sds = info.sds_pos.split(',');
+              var len = sds.length;
+              for(var i = 0; i<len; i++){
+                    taskArr.splice(sds[i],0,testArr[i]);
+                }
+          }
+          taskArr.map((item, index) => {
               insertLabelResult({task_id:info.id,
                                 paragraph_id:item.id,
-                                paragraph_position:item.paragraph_position,
+                                paragraph_position:index,
                                 user_account:this.loginUserAccount,
                                 task_type:taskType})
-          }));
-        //   更新tb_test_result
-          const testContentInfo = await findTestContentByTaskId({task_id:info.id});
-          if(testContentInfo){
-              await Promise.all(testContentInfo.data.map((item) => {
-              insertTestRes({task_id:info.id,
-                                paragraph_id:item.id,
-                                paragraph_position:item.paragraph_position,
-                                user_account:this.loginUserAccount,
-                                task_type:taskType})
-          }));
-          }
+                })
+          this.$message.success('加入成功！');
       },
     },
 }

@@ -23,7 +23,7 @@
 </template>
 
 <script>
-    import { addAccount } from '../../../unit/fetch';
+    import { addAccount, insertUserInfo } from '../../../unit/fetch';
     export default {
         props: {
             initAccount: Function,
@@ -56,6 +56,10 @@
                             name: this.form.name,
                             role: this.form.role,
                         });
+                        await insertUserInfo({
+                            account: this.form.account,
+                            name: this.form.name,
+                        })
                         this.initAccount();
                         this.changeAddAccount();
                         this.$message.success('添加成功！');
