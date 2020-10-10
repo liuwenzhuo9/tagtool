@@ -8,7 +8,10 @@
         </div>
         <div class="login-content ">
           <el-form class="login_form" ref="form" :model="form" label-width="100px" :rules='rules'>
-            <el-form-item label="账号" prop="accountName">
+            <el-form-item label="用户名" prop="accountName" v-if="loginMethod == 'name'">
+                <el-input v-model="form.accountName"></el-input>
+            </el-form-item>
+            <el-form-item label="账号" prop="accountName" v-if="loginMethod == 'account'">
                 <el-input v-model="form.accountName"></el-input>
             </el-form-item>
             <el-form-item label="密码" prop="password">
@@ -19,7 +22,8 @@
                 <!-- <el-button type="primary" @click="toLoginOut('form')">注销</el-button> -->
                 <el-button type="primary" @click="toRegist()">注册</el-button>
             </el-form-item>
-            <!-- <a class="reg" href="">注册新账号</a> -->
+            <el-link :underline="false" class="reg"  v-if ="loginMethod == 'account'" @click="changeLoginMethod('name')">用户名登录</el-link>
+            <el-link :underline="false" class="reg"  v-if ="loginMethod == 'name'" @click="changeLoginMethod('account')">账号登录</el-link>
           </el-form>
         </div>
       </div>
@@ -32,10 +36,10 @@
         <div class="regist-content ">
           <el-form class="regist_form" ref="form" :model="form" label-width="100px" :rules='rules'>
             <el-form-item label="账号" prop="account">
-                <el-input v-model="form.account" ></el-input>
+                <el-input v-model="form.account" placeholder="请输入六位数字"></el-input>
             </el-form-item>
             <el-form-item label="用户名" prop="name">
-                <el-input v-model="form.name" ></el-input>
+                <el-input v-model="form.name" placeholder="请输入包含数字和字母的三位以上字符"></el-input>
             </el-form-item>
             <el-form-item >
                 <el-button type="primary" @click="toAddAccount('form')">注册</el-button>
@@ -50,14 +54,10 @@
 
 
 <script>
-  import { login,getCookie,setCookie,delCookie,loginOut, addAccount } from '../../unit/fetch'
+  import { login,getCookie,setCookie,delCookie,loginOut, addAccount, insertUserInfo } from '../../unit/fetch'
   import { Encrypt } from '../../utils/encoder'
 
   export default {
-    // props: {
-    //         initAccount: Function,
-    //         changeAddAccount: Function,
-    //     },
     data(){
       return{
         isRegist:false,
@@ -72,7 +72,8 @@
           account:[{required:true,message:"请填写账号！",trigger:'blur'}],
           name:[{required:true,message:"请填写用户名！",trigger:'blur'}],
           password:[{required:true,message:"请填写密码！",trigger:'blur'}],
-        }
+        },
+        loginMethod:'account'
       }
     },
     mounted(){
@@ -85,7 +86,7 @@
       toLogin(formName){
         this.$refs[formName].validate((valid) => {
           if(valid){
-            var encoderStr = Encrypt(this.form.password)
+            var encoderStr = Encrypt(this.form.password);
             this.loginNow({
               account: this.form.accountName,
               password: encoderStr,
@@ -106,17 +107,14 @@
             }else{
               setCookie('account',this.form.accountName);
               setCookie('role',accountinfo.data);
-              // setCookie('name',accountinfo.message);//用户姓名
+              setCookie('name',accountinfo.message);
               let url = '/' + getCookie('role');
               this.$router.push(url);
               }
             this.$store.commit('changelogin');
             this.$store.commit('changeuser');
             this.$store.commit('changerole');
-            // const accInfo = this.$store.state.loginuser;
-            // const nameInfo = await findAccountByAccount({account:accInfo});
-            // this.$store.commit('setName',nameInfo.data.name);
-            // this.$store.commit('changename');
+            this.$store.commit('changename');
           }catch(e){
              this.$message.error((e && e.message) ? e.message : '登陆失败，请稍后重试') ;
           }
@@ -153,24 +151,36 @@
           this.isRegist = false;
       },
       toAddAccount(formName) {
-                this.$refs[formName].validate(valid => {
-                    if(!valid) {
-                        return;
-                    }
-
-                    (async() => {
-                        await addAccount({
-                            account: this.form.account,
-                            name: this.form.name,
-                            role: "普通用户",
-                        });
-                        // this.initAccount();
-                        // this.changeAddAccount();
-                         this.$message.success('添加成功！') ;
-                    })();
-
+          this.$refs[formName].validate(valid => {
+              if(!valid) {
+                  return;
+              }
+              (async() => {
+                var accountReg = /^[0-9]{6}$/
+                var nameReg = /^[a-zA-Z0-9]{3,}$/;
+                
+                if(nameReg.test(this.form.name) && accountReg.test(this.form.account)){
+                  await addAccount({
+                      account: this.form.account,
+                      name: this.form.name,
+                      role: "普通用户",
+                  });
+                  this.$message.success('添加成功！') ;
+                }else if(!nameReg.test(this.form.name)){
+                  this.$message.error('请按要求输入用户名！') ;
+                }else if(!accountReg.test(this.form.account)){
+                  this.$message.error('请按要求输入账号！') ;
+                }
+                await insertUserInfo({
+                    account: this.form.account,
+                    name: this.form.name,
                 });
-            }
+              })();
+          });
+      },
+      changeLoginMethod(info) {
+        this.loginMethod = info;
+      }
     }
   }
 </script>
@@ -231,7 +241,7 @@
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
     padding-top: 20px;
-    height: 185px;
+    height: 220px;
     width: 100%;
     max-width: 500px;
     // background-color: rgb(214, 220, 232);
@@ -259,12 +269,9 @@ html,body {
   width: 100%;
   height: 100%;
 }
-// .reg{
-//     left: 168px;
-//     color: #3B78DD;
-//     font-size: 14px;
-//     line-height: 20px;
-// }
+.reg{
+    text-decoration: underline;
+}
 .boxaaa {
             // background: url(../../assets/login.jpg) no-repeat center center;
             // background-size: cover;

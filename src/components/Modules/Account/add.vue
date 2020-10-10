@@ -59,7 +59,7 @@
                         await insertUserInfo({
                             account: this.form.account,
                             name: this.form.name,
-                        })
+                        });
                         this.initAccount();
                         this.changeAddAccount();
                         this.$message.success('添加成功！');

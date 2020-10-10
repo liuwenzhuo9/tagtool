@@ -87,8 +87,44 @@ export function findLastUnfinishedParagraph(info) {
         }
     });
 }
+export function findFirstParagraph(info) {
+    let url = `${hostname}/findFirstParagraph${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function findNextParagraph(info) {
+    let url = `${hostname}/findNextParagraph${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function findLastParagraph(info) {
+    let url = `${hostname}/findLastParagraph${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
 export function findLabelResultById(info) {
     let url = `${hostname}/findLabelResultById${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function inferLabelResult(info) {
+    let url = `${hostname}/inferLabelResult${objToQueryString(info)}`;
     return executeFetch(url,{
         method:'GET',
         headers: {

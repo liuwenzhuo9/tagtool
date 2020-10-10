@@ -23,10 +23,11 @@
         </div>
         <div class = "taskInfo">
                 <el-col :span="8" v-for="(item, index) in tasksinfo" :key="index" >
-                    <el-card v-if="!isJoin[index]" class="box-card">
+                    <el-card class="box-card">
                         <div slot="header" class="clearfix">
                             <span>{{item.task_name}}</span>
-                            <el-button style="float: right; padding: 3px 0" type="text" v-if="loginUserAccount" @click="joinTask(item)">加入任务</el-button>
+                            <el-button style="float: right; padding: 3px 0" type="text" v-if="loginUserAccount && isJoin[index]=='notIn'" @click="joinTask(item)">加入任务</el-button>
+                            <el-button style="float: right; padding: 3px 0" type="text" v-if="loginUserAccount && isJoin[index]!='notIn'" :disabled="true">我的任务</el-button>
                         </div>
                         <div class="text item">
                             发起人：{{item.leader_name}}
@@ -48,7 +49,7 @@
 
 <script>
 import {findUnfinishedTasks, findTasksByTasksType,findTaskById,updateMemberAccountByTaskId,findInfoByUserAccount,updateJoinTasksByUserAccount,
-        findContentByTaskId,insertLabelResult}from '../unit/fetch';
+        findContentByTaskId,insertLabelResult, insertLabelTime}from '../unit/fetch';
 export default {
     data(){
         return{
@@ -86,16 +87,16 @@ export default {
                             this.tasksinfo.push(item);
                             if(this.loginUserAccount){
                                 if(item.leader_account == this.loginUserAccount){
-                                    this.isJoin.push(true);
+                                    this.isJoin.push("leader");
                                 }else if(item.member_account){
                                     const memb = item.member_account.split(',');
-                                    if(this.loginUserAccount.indexOf(memb) != -1){
-                                        this.isJoin.push(true);
+                                    if(memb.indexOf(this.loginUserAccount) != -1){
+                                        this.isJoin.push("member");
                                     }else{
-                                        this.isJoin.push(false);
+                                        this.isJoin.push("notIn");
                                     }
                                 }else{
-                                    this.isJoin.push(false);
+                                    this.isJoin.push("notIn");
                                 }
                             }
                             
@@ -137,8 +138,8 @@ export default {
         // 更新tb_label_result
           const taskContentInfo = await findContentByTaskId({task_id:info.id, is_test:0});
           const testContentInfo = await findContentByTaskId({task_id:info.id, is_test:1});
-          const taskArr = Array.from(taskContentInfo.data);
-          if(testContentInfo){
+          var taskArr = Array.from(taskContentInfo.data);
+          if(info.sds_name != null){
               const testArr = Array.from(testContentInfo.data);
               var sds = info.sds_pos.split(',');
               var len = sds.length;
@@ -152,10 +153,19 @@ export default {
                                 paragraph_position:index,
                                 user_account:this.loginUserAccount,
                                 task_type:taskType})
-                })
-          this.$message.success('加入成功！');
+                });
+        // 更新tb_time
+        insertLabelTime({account:this.loginUserAccount,
+                         task_id:info.id,
+                         use_time:0,
+                         is_finish:0});
+        this.$message({
+          duration:600,
+          message:'加入成功！',
+          type: 'success'
+        });
       },
-    },
+    }
 }
 </script>
 
@@ -164,4 +174,7 @@ export default {
     width: 82%;
     float: right;
 }
+.el-card{
+    height: 223px;
+  }
 </style>

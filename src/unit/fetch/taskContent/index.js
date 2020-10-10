@@ -92,6 +92,33 @@ export function findLastUnfinishedTestParagraph(info) {
         }
     });
 }
+export function findFirstTestParagraph(info) {
+    let url = `${hostname}/findFirstTestParagraph${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function findNextTestParagraph(info) {
+    let url = `${hostname}/findNextTestParagraph${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function findLastTestParagraph(info) {
+    let url = `${hostname}/findLastTestParagraph${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
 export function getTestLabelByTaskId(info) {
     let url = `${hostname}/getTestLabelByTaskId${objToQueryString(info)}`;
     return executeFetch(url,{

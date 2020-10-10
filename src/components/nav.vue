@@ -12,7 +12,7 @@
             </el-menu>
         </div>
         <div class="nav_bar_logout" v-if='logCount'>
-            {{userName}},
+            {{loginName}},
             你好！ &nbsp;
             <font-awesome-icon icon="sign-out-alt" />
             <el-link :underline="false" class="logout"  @click="toLoginOut('form')">注销</el-link>
@@ -30,7 +30,7 @@ import { getCookie,delCookie,loginOut,findAccountByAccount } from '../unit/fetch
         return {
             section: ['任务展示','所有句子','标注标签','导出结果','个人中心'],
             sectionUrl: ['showTasks','allSentences','tagEntity','tagResult','personal'],
-            userName:'',
+            // userName:'',
         }       
     },
     computed:{
@@ -42,7 +42,10 @@ import { getCookie,delCookie,loginOut,findAccountByAccount } from '../unit/fetch
         },
         userCount() {
             return this.$store.state.loginuser
-        }
+        },
+        loginName() {
+            return this.$store.state.loginname
+        },
 	},
 	watch:{
 		count() {
@@ -50,22 +53,25 @@ import { getCookie,delCookie,loginOut,findAccountByAccount } from '../unit/fetch
         logCount() {
         },
         userCount() {
-        }
+        },
+        loginName() {
+        },
 	},
     mounted(){
         this.handleSelect(0);
-        this.getName();
+        this.loginName = getCookie('name');
+        // this.getName();
     },
     methods: {
       handleSelect(key) {
           let url = '/'+ this.sectionUrl[key]
           this.$router.push(url)
       },
-      async getName(){
-          const accInfo = this.$store.state.loginuser;
-        const nameInfo = await findAccountByAccount({account:accInfo});
-        this.userName = nameInfo.data.name;
-      },
+    //   async getName(){
+    //       const accInfo = this.$store.state.loginuser;
+    //     const nameInfo = await findAccountByAccount({account:accInfo});
+    //     this.userName = nameInfo.data.name;
+    //   },
       toLoginOut(){
         (async() => {
         try{
@@ -77,14 +83,13 @@ import { getCookie,delCookie,loginOut,findAccountByAccount } from '../unit/fetch
             if (getCookie('role')){
               delCookie('role');
             }
-            // if (getCookie('name')){
-            //   delCookie('name');
-            // }
+            if (getCookie('name')){
+              delCookie('name');
+            }
             this.$store.commit('changelogin');
             this.$store.commit('changeuser');
             this.$store.commit('changerole');
-            this.$store.commit('setName','');
-            // this.$store.commit('changename');
+            this.$store.commit('changename');
             this.$router.push('/personal');
             this.$store.commit('setActiveIndex',5)
           }catch(e){
@@ -102,7 +107,10 @@ import { getCookie,delCookie,loginOut,findAccountByAccount } from '../unit/fetch
               case 4: return 'user-edit'
           }
       }
-    }
+    },
+    // components: {
+    //     rePassword,
+    //   }
   }
 
 </script>
@@ -125,11 +133,11 @@ import { getCookie,delCookie,loginOut,findAccountByAccount } from '../unit/fetch
 }
 .nav_bar_logout {
     position: relative;
-    top: -38px;
-    left: 80%;
+    top: -41px;
+    left: 86%;
     color: #4f71b1;
     font-size: 17px;
-    width: 180px;
+    width: 226px;
 }
 .nav_bar_logout a {
     color: #4f71b1;

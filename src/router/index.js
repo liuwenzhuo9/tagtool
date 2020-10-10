@@ -9,6 +9,7 @@ const system = () =>import('@/components/PersonalCenter/system')
 const regUser = () =>import('@/components/PersonalCenter/regUser')
 const showTasks = () =>import('@/components/showTasks')
 
+
 Vue.use(Router)
 
 export default new Router({
@@ -56,6 +57,9 @@ export default new Router({
             path: '/regUser',
             name: 'regUser',
             component: regUser,
+            // children:[
+            //   {path:'/regUserInfo'}
+            // ]
           },
           {
             path: '/showTasks',

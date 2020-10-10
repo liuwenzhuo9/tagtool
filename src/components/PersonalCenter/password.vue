@@ -21,7 +21,7 @@
                 <el-input type="password" v-model="form.newPassword"></el-input>
             </el-form-item>
             <el-form-item >
-                <el-button type="primary" @click="toChangePassword('form')">登陆</el-button>
+                <el-button type="primary" @click="toChangePassword('form')">确认修改</el-button>
                 <!-- <el-button type="primary" @click="toLoginOut('form')">注销</el-button> -->
             </el-form-item>
           </el-form>
@@ -75,18 +75,23 @@
                         this.$message.error(result.message);
                     }else{
                         const accountinfo = await loginOut();
-                        // this.$message.error(accountinfo.message);
+                        this.$message.success("修改成功！请使用新密码登录");
                         if (getCookie('account')){
-                        delCookie('account');
+                          delCookie('account');
                         }
                         if (getCookie('role')){
-                        delCookie('role');
+                          delCookie('role');
                         }
+                        // if (getCookie('name')){
+                        //   delCookie('name');
+                        // }
                         this.$store.commit('changelogin');
                         this.$store.commit('changeuser');
                         this.$store.commit('changerole');
-                        this.$store.commit('changename');
-                        this.$router.push('/personal'); 
+                        this.$store.commit('setName','');
+                        // this.$store.commit('changename');
+                        this.$router.push('/personal');
+                        this.$store.commit('setActiveIndex',5)
                     }
                 }catch(e){
                     // console.log('error')

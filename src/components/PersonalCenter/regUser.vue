@@ -1,35 +1,30 @@
 <template>
-    <div>
-         <div class = "sideNav">
-            <el-col :span="4">
-                <el-menu
-                default-active="1"
-                class="el-menu-vertical-demo"
-                @select="selectShowPart">
-                <el-submenu index="1">
-                    <template slot="title">
-                    <i class="el-icon-location"></i>
-                    <span>我的任务</span>
-                    </template>
-                    <el-menu-item-group>
-                    <!-- <template slot="title">分组一</template> -->
-                    <el-menu-item index="1">未完成的任务</el-menu-item>
-                    <el-menu-item index="2">已完成的任务</el-menu-item>
-                    <el-menu-item index="3">已发布的任务</el-menu-item>
-                    </el-menu-item-group>
-                 </el-submenu>
-                <el-menu-item index="4">
-                    <i class="el-icon-menu"></i>
-                    <span slot="title">发布任务</span>
-                </el-menu-item>
-                <el-menu-item index="5">
-                    <i class="el-icon-document"></i>
-                    <span slot="title">个人信息</span>
-                </el-menu-item>
-                </el-menu>
-            </el-col>
-        </div>
-        <template v-if="!isEdit">
+  <div class="container">
+    <div class = "sideNav">
+          <el-menu default-active="1" class="el-menu-vertical-demo" @select="selectShowPart">
+            <el-submenu index="1">
+              <template slot="title">
+              <i class="el-icon-location"></i>
+              <span>我的任务</span>
+              </template>
+              <el-menu-item-group>
+              <!-- <template slot="title">分组一</template> -->
+              <el-menu-item index="1">未完成的任务</el-menu-item>
+              <el-menu-item index="2">已完成的任务</el-menu-item>
+              <el-menu-item index="3">已发布的任务</el-menu-item>
+              </el-menu-item-group>
+            </el-submenu>
+            <el-menu-item index="4">
+                <i class="el-icon-menu"></i>
+                <span slot="title">发布任务</span>
+            </el-menu-item>
+            <el-menu-item index="5">
+                <i class="el-icon-document"></i>
+                <span slot="title">个人信息</span>
+            </el-menu-item>
+          </el-menu>
+    </div>
+        <div v-if="!isEdit" class="right-content">
           <!-- 与我有关的任务 -->
           <div class = "involvedTask" v-show="menuShow[0]||menuShow[1]||menuShow[2]">
             <el-col :span="8" v-for="(item, index) in tasksinfo" :key="index" >
@@ -50,6 +45,7 @@
                               <span>{{item.task_name}}</span>
                               <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.sds_name" @click="editTest(item)">标记测试集</el-button>
                               <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.is_finished == 0" @click="finishTask(item)">结束任务</el-button>
+                              <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.is_finished == 1" @click="inferResult(item)">导出结果</el-button>
                               <el-button style="float: right; padding: 3px 0" type="text" @click="deleteTask(item)">删除任务</el-button>
                           </div>
                           <div class="text item">
@@ -174,17 +170,18 @@
           </div>
           <!-- 个人信息界面 -->
           <div class="selfInfo" v-show="menuShow[4]">
-            
+              <el-link :underline="false" class="rePassword"  @click="toRePassWord('form')">修改密码</el-link>
           </div>
-        </template>
+        </div>
         
-        <template v-if="isEdit">
-          <labelEdit v-if="isLabelEdit" :editInfo="editInfo" />
-          <sequenceEdit v-if="isSequenceEdit" :editInfo="editInfo" />
-          <labelTestEdit v-if="isLabelTestEdit" :editInfo="editInfo" />
-          <sequenceTestEdit v-if="isSequenceTestEdit" :editInfo="editInfo"/>
-        </template>
-    </div>
+        <div v-if="isEdit" class="right-content">
+          <rePassword v-if="isRePassword" />
+          <labelEdit v-if="isLabelEdit" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
+          <sequenceEdit v-if="isSequenceEdit" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
+          <labelTestEdit v-if="isLabelTestEdit" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
+          <sequenceTestEdit v-if="isSequenceTestEdit" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
+        </div>
+  </div>
     
 </template>
 
@@ -192,11 +189,12 @@
 import {insertTaskInfo, findTaskIdByTaskName, findInfoByUserAccount,findTaskById,updateTasksByUserAccount,
         insertTaskContent,updateMemberAccountByTaskId, updateJoinTasksByUserAccount,deleteTestLabelByTaskIdAndAccount,deleteLabelByTaskIdAndAccount,
         deleteTaskInfoByTaskId,deleteContentByTaskId,deleteLabelByTaskId,deleteTestLabelByTaskId,
-        findAccountByAccount, updateFinishTasksByUserAccount,updateFinishStateByTaskId} from '../../unit/fetch';
+        findAccountByAccount, updateFinishTasksByUserAccount,updateFinishStateByTaskId, inferLabelResult} from '../../unit/fetch';
 import labelEdit from '../Modules/LabelAnnotation/edit';
 import sequenceEdit from '../Modules/SequenceLabel/edit';
 import labelTestEdit from '../Modules/LabelAnnotation/testEdit';
 import sequenceTestEdit from '../Modules/SequenceLabel/testEdit';
+import rePassword from './password';
 export default {
     data(){
         return{
@@ -258,6 +256,7 @@ export default {
             isSequenceEdit:false,
             isLabelTestEdit:false,
             isSequenceTestEdit:false,
+            isRePassword:false,
             editInfo:'',
             userAccount:this.$store.state.loginuser,
             userName:'',
@@ -317,6 +316,7 @@ export default {
         },
         // 导航栏展示选择
           selectShowPart(index){
+              this.isEdit = false;
               var temp = [false, false, false, false, false];
               temp[index-1] = true;
               this.menuShow = temp;
@@ -330,7 +330,11 @@ export default {
                 this.tasksinfo = this.issuedInfo
               }
               if(this.tasksinfo == null || this.tasksinfo == undefined || this.tasksinfo ==''){
-                this.$message.warning('暂无该类型任务');  
+                this.$message({
+                  duration:600,
+                  message:'暂无该类型任务',
+                  type: 'warning'
+                }); 
               }
           },
           // 获取登录用户的姓名
@@ -400,7 +404,8 @@ export default {
                                             progress_tasks:this.unfinishedTaskId.toString(),
                                             involved_tasks:this.involvedTasksId.toString()
                                           });
-            this.$message.success('任务发布成功！');         
+            this.$message.success('任务发布成功！');
+            this.resetForm('ruleForm');
           },
         // 发布任务后将任务的段落内容存入tb_task_content中
           async insertContent(){
@@ -565,6 +570,7 @@ export default {
                 });
         
       },
+      // 删除任务
       async deleteTask(info){
         this.$confirm('确认删除该任务？', '提示', {
                 confirmButtonText: '确定',
@@ -583,6 +589,7 @@ export default {
                     } catch(e) {
                         this.$message.error((e && e.message) ? e.message : '请稍后重试')
                     }
+                    this.init();
                 })
                 .catch(() => {
                     this.$message({
@@ -592,6 +599,7 @@ export default {
                 });
 
       },
+      // 结束任务
       async finishTask(info){
         this.$confirm('确认结束该任务？', '提示', {
                 confirmButtonText: '确定',
@@ -599,31 +607,31 @@ export default {
                 type: 'warning'
                 })
                 .then(async () => {
+                    try{
                     //更新每个参与用户的用户表，如果该用户还未完成该任务，也直接在任务表中将任务从progress中放到finish中
-                    try{ 
                       const maccount = info.member_account.split(',')
-                            await Promise.all(maccount.map(async(item,index)=>{
-                              const minfo = await findInfoByUserAccount({account:item});
-                              if(minfo.data[0].finished_tasks.indexOf(info.id)==-1){
-                                var proTask = minfo.data[0].progress_tasks.split(',');
-                                proTask.splice(proTask.indexOf(info.id.toString()),1);
-                                if(minfo.data[0].finished_tasks!=null && minfo.data[0].finished_tasks!=''){
-                                    var finTask = minfo.data[0].finished_tasks.split(',');
-                                    finTask.push(info.id);
-                                }else{
-                                    var finTask = info.id;
-                                };
-                                await updateFinishTasksByUserAccount({account:item,
-                                                                    progress_tasks:proTask.toString(),
-                                                                    finished_tasks:finTask.toString()
-                                                                    });
-                              };
-                              await updateFinishStateByTaskId({id:info.id});
-                          }));
-                        this.$message.success('该任务已结束！');
+                      await Promise.all(maccount.map(async(item,index)=>{
+                        const minfo = await findInfoByUserAccount({account:item});
+                        if(minfo.data[0].finished_tasks.indexOf(info.id)==-1){
+                          var proTask = minfo.data[0].progress_tasks.split(',');
+                          proTask.splice(proTask.indexOf(info.id.toString()),1);
+                          if(minfo.data[0].finished_tasks!=null && minfo.data[0].finished_tasks!=''){
+                              var finTask = minfo.data[0].finished_tasks.split(',');
+                              finTask.push(info.id);
+                          }else{
+                              var finTask = info.id;
+                          };
+                          await updateFinishTasksByUserAccount({account:item,
+                                                              progress_tasks:proTask.toString(),
+                                                              finished_tasks:finTask.toString()
+                                                              });
+                        };
+                      }));
+                      await updateFinishStateByTaskId({id:info.id, is_finished:1});
+                      this.$message.success('该任务已结束！');
                     }
                     catch(e){
-                        this.$message.error((e && e.message) ? e.message : '请稍后重试')
+                      this.$message.error((e && e.message) ? e.message : '请稍后重试')
                     }
                     
                 })
@@ -634,6 +642,19 @@ export default {
                     });          
                 });
       },
+      // 导出结果
+      async inferResult(info){
+          const infer_res = await inferLabelResult({task_id:info.id});
+          console.log(infer_res.data);
+          var urlObject = window.URL || window.webkitURL || window;
+          var export_blob = new Blob([infer_res.data]);
+          var save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a")
+          save_link.href = urlObject.createObjectURL(export_blob);
+          save_link.download = info.task_name + '.txt';
+          var ev = document.createEvent("MouseEvents");
+          ev.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+          save_link.dispatchEvent(ev);
+      },
       // 任务发布者标注测试任务
       async editTest(info) {
         this.isEdit=true;
@@ -643,21 +664,23 @@ export default {
           this.isLabelTestEdit = true;
         }
         this.editInfo = info;
-      }
+      },
+      toRePassWord(){
+        this.isEdit=true;
+        this.isRePassword = true;
+      },
     },
     components: {
         labelEdit,
         sequenceEdit,
         labelTestEdit,
         sequenceTestEdit,
+        rePassword,
       }
 }
 </script>
 
 <style scoped>
-.issueTask,.involvedTask{
-    margin: 0px 0px 0px 220px; 
-} 
 .el-form-item {
     margin-bottom: 22px;
     height: 25px;
@@ -680,4 +703,22 @@ export default {
   .uploadPart{
     height: 57px;
   }
-</style>
+  .right-content{
+    float: right;
+    width: 80%;
+  }
+  .involvedTask .issueTask{
+    float: left;
+    width: 100px;
+    margin: 0px;
+  }
+  .sideNav{
+    display: inline-block;
+    width: 250px;
+    height: 800px;
+    margin: 0px;
+  }
+  .el-card{
+    height: 223px;
+  }
+</style> 

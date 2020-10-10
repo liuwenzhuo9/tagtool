@@ -12,8 +12,7 @@ const state = {
     loginstate:isLogin(),
     loginuser:getCookie('account'),
     loginrole:getCookie('role'),
-    loginname:'',
-    // loginname:getCookie('name'),
+    loginname:getCookie('name'),
     personState: true,
   }
 
@@ -41,12 +40,9 @@ const state = {
         changerole(state) {
             state.loginrole = getCookie('role');
         },
-        setName(state,item){
-            state.loginname = item;
+        changename(state) {
+            state.loginname = getCookie('name');
         },
-        // changename(state) {
-        //     state.loginname = getCookie('name');
-        // },
         changePersonState(state, n) {
             state.personState = n;
         },
