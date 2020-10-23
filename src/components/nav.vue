@@ -22,7 +22,7 @@
 
 
 <script>
-import { getCookie,delCookie,loginOut,findAccountByAccount } from '../unit/fetch'
+import { getCookie,delCookie,loginOut } from '../unit/fetch'
   export default {
       
     name:'navbar',
@@ -90,8 +90,8 @@ import { getCookie,delCookie,loginOut,findAccountByAccount } from '../unit/fetch
             this.$store.commit('changeuser');
             this.$store.commit('changerole');
             this.$store.commit('changename');
+            this.$store.commit('setActiveIndex',5);
             this.$router.push('/personal');
-            this.$store.commit('setActiveIndex',5)
           }catch(e){
             // console.log('error')
             this.$message.error((e && e.message) ? e.message : '登出失败，请稍后重试');

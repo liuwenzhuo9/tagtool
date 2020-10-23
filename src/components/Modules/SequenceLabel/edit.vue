@@ -70,7 +70,7 @@
 
 <script>
     import { findParagraphNumByTaskId, findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph, findFirstParagraph,updateLabelById,
-            findLastUnfinishedParagraph,findNextUnfinishedParagraph, findLastParagraph,findNextParagraph, findLabelResultById,findFirstUnfinishedTestParagraph,
+            findNextUnfinishedParagraph, findLastUnfinishedParagraph, findLastParagraph,findNextParagraph, findLabelResultById,findFirstUnfinishedTestParagraph,
             findInfoByUserAccount,updateFinishTasksByUserAccount,updateFinishMemberByTaskId} from '../../../unit/fetch';
     import testEdit from './testEdit';
     export default {
@@ -128,11 +128,11 @@
                         const info = await findInfoByUserAccount({account:this.userAccount});
                         var proTask = info.data[0].progress_tasks.split(',');
                         proTask.splice(proTask.indexOf(this.editInfo.id.toString()),1);
+                        var finTask = '';
                         if(info.data[0].finished_tasks!=null && info.data[0].finished_tasks!=''){
-                            var finTask = info.data[0].finished_tasks.split(',');
-                            finTask.push(this.editInfo.id);
+                            finTask = info.data[0].finished_tasks.split(',').push(this.editInfo.id);
                         }else{
-                            var finTask = this.editInfo.id;
+                            finTask = this.editInfo.id;
                         };
                         await updateFinishTasksByUserAccount({account:this.userAccount,
                                                             progress_tasks:proTask.toString(),
@@ -216,11 +216,11 @@
             async lastParagraph(msg){
                 var info = [];
                 if(msg == 0){
-                    info = await findNextUnfinishedParagraph({task_id:this.editInfo.id,
+                    info = await findLastUnfinishedParagraph({task_id:this.editInfo.id,
                                                               user_account:this.userAccount,
                                                               paragraph_position:this.contentPosition});
                 }else{
-                    info = await findNextParagraph({task_id:this.editInfo.id,
+                    info = await findLastParagraph({task_id:this.editInfo.id,
                                                     user_account:this.userAccount,
                                                     paragraph_position:this.contentPosition});
                 }

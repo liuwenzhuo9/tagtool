@@ -70,8 +70,7 @@
 
 <script>
     import {updateRightLabel, findLabeledTestNumByTaskId,findFirstUnfinishedTestParagraph,findFirstTestParagraph,
-            findLastUnfinishedTestParagraph,findLastTestParagraph, findNextUnfinishedTestParagraph,findNextTestParagraph,findParagraphNumByTaskId} from '../../../unit/fetch';
-    import regUser from '../../PersonalCenter/regUser';
+         findNextUnfinishedTestParagraph,findNextTestParagraph,findParagraphNumByTaskId} from '../../../unit/fetch';
     export default {
         props: {
             editInfo: Object,

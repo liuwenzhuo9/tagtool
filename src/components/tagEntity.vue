@@ -13,9 +13,9 @@
 
                 <div class = "button">
                     <el-button type="primary" v-if="!isEdit" @click="addTag()" size="small">添加标签</el-button>
-                    <el-button type="success" v-if="!isEdit && logCount" @click="saveTag()" size="small">保存标记</el-button>
-                    <el-button type="success" v-if="isEdit && logCount" @click="editTag()" size="small">修改标记</el-button>
-                    <el-button type="danger" v-if="!isEdit && dynamicTags.length != 0 && logCount" @click="deleteAllTag()" size="small">删除所有标签</el-button>
+                    <el-button type="success" v-if="!isEdit" @click="saveTag()" size="small">保存标记</el-button>
+                    <el-button type="success" v-if="isEdit" @click="editTag()" size="small">修改标记</el-button>
+                    <el-button type="danger" v-if="!isEdit && dynamicTags.length != 0" @click="deleteAllTag()" size="small">删除所有标签</el-button>
                     <el-button type="warning" v-if="isQuitEdit" @click="quitEditTag()" size="small">取消修改</el-button>
                     <el-button type="primary" icon="el-icon-arrow-left" size="small" @click="turnTo(1,isShowAll)" :disabled="isFirst">上一句</el-button>
                     <el-button type="primary" size="small" @click="turnTo(2,isShowAll)" :disabled="isLast">下一句<i class="el-icon-arrow-right el-icon--right"></i></el-button>
@@ -86,7 +86,7 @@ export default {
         }
     },
     mounted(){
-        if(this.logCount=='labUser'){
+        if(this.logRole=='labUser'){
             this.setTextarea();
         }
         this.$store.commit('setActiveIndex',2)
@@ -111,15 +111,15 @@ export default {
     // },
     methods: {
       async setTextarea(){
-          if(this.$store.state.content){
+          if(this.$store.state.content){//从allSentences跳转的话，会给state.content赋值
               this.textarea = this.$store.state.content;
               this.textIndex = this.$store.state.index;
               const info = await findIdBySentence({content:this.textarea});
               this.textareaId = info.data;
               if(this.$store.state.isMark){
-                  this.isEdit = this.$store.state.isMark
+                  this.isEdit = this.$store.state.isMark;
               }
-          }else{
+          }else{//直接从nav进入tagEntity页面，则默认显示第一句未被标记的句子
               const info = await getFirstUnmarkedSentence();
               this.textarea = info.data[0].content;
               this.textareaId = info.data[0].id;
@@ -150,14 +150,14 @@ export default {
          this.dynamicTagsNow = [];
          const info = await getAllEntity();
          info.data.map( (item) =>{
-            for(let index = 0; this.textarea.indexOf(item.content,index) != -1;){
-                let startIndex = this.textarea.indexOf(item.content,index);
-                let endIndex = startIndex + item.length;
+             var index = 0;
+             while(this.textarea.indexOf(item.content,index) != -1){
+                var startIndex = this.textarea.indexOf(item.content,index);
+                var endIndex = startIndex + item.length;
                 index = endIndex + 1;
-                let tagContent = [];
-                tagContent = {content:item.content, startIdx: startIndex, endIdx: endIndex, id:item.id};
-                this.dynamicTagsPre.push (tagContent);
-            }
+                var tagContent = {content:item.content, startIdx: startIndex, endIdx: endIndex, id:item.id};
+                this.dynamicTagsPre.push(tagContent);
+             }
         })
         this.dynamicTags = this.dynamicTags.concat(this.dynamicTagsPre);//存储预标记的内容
       },

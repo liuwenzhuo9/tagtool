@@ -84,20 +84,17 @@
                   <el-form-item label="任务简介" prop="task_intro" required>
                       <el-input v-model="ruleForm.task_intro"></el-input>
                   </el-form-item>
-                  <el-form-item label="截止时间" required>
-                      <el-col :span="11">
-                      <el-form-item prop="deadline">
-                          <el-date-picker type="date" 
-                                          placeholder="选择日期" 
-                                          v-model="ruleForm.deadline" 
-                                          style="width: 100%;"
-                                          format="yyyy 年 MM 月 dd 日"
-                                          value-format="yyyy-MM-dd">
-                          </el-date-picker>
-                      </el-form-item>
-                      </el-col>
+                  <el-form-item label="截止时间" prop="deadline" required>
+                    <el-date-picker type="date" 
+                                    placeholder="选择日期" 
+                                    v-model="ruleForm.deadline" 
+                                    style="width: 40%;"
+                                    format="yyyy 年 MM 月 dd 日"
+                                    value-format="yyyy-MM-dd" 
+                                    :picker-options="pickerOptions">
+                    </el-date-picker>
                   </el-form-item>
-                  <el-form-item label="设置标签" required>
+                  <el-form-item label="设置标签" prop="task_label" required>
                       <el-tag
                           :key="tag"
                           v-for="tag in dynamicTags"
@@ -187,8 +184,8 @@
 
 <script>
 import {insertTaskInfo, findTaskIdByTaskName, findInfoByUserAccount,findTaskById,updateTasksByUserAccount,
-        insertTaskContent,updateMemberAccountByTaskId, updateJoinTasksByUserAccount,deleteTestLabelByTaskIdAndAccount,deleteLabelByTaskIdAndAccount,
-        deleteTaskInfoByTaskId,deleteContentByTaskId,deleteLabelByTaskId,deleteTestLabelByTaskId,
+        insertTaskContent,updateMemberAccountByTaskId, updateJoinTasksByUserAccount,deleteLabelByTaskIdAndAccount,
+        deleteTaskInfoByTaskId,deleteContentByTaskId,deleteLabelByTaskId,
         findAccountByAccount, updateFinishTasksByUserAccount,updateFinishStateByTaskId, inferLabelResult} from '../../unit/fetch';
 import labelEdit from '../Modules/LabelAnnotation/edit';
 import sequenceEdit from '../Modules/SequenceLabel/edit';
@@ -261,6 +258,11 @@ export default {
             userAccount:this.$store.state.loginuser,
             userName:'',
             uploadSuccess:true,//判断文件是否上传成功
+            pickerOptions: {
+              disabledDate(time) {
+                return time.getTime() < Date.now();
+              }
+            }
         }
     },
     mounted(){
@@ -352,7 +354,6 @@ export default {
               var arr=[];
               for(var i=0; i<testLen; i++) {
                   var arrNum = parseInt(Math.random()*(contentLen+testLen));
-                  var flag = true;
                   if(arr.indexOf(arrNum) != -1){
                     i--;
                     continue;
@@ -615,11 +616,11 @@ export default {
                         if(minfo.data[0].finished_tasks.indexOf(info.id)==-1){
                           var proTask = minfo.data[0].progress_tasks.split(',');
                           proTask.splice(proTask.indexOf(info.id.toString()),1);
+                          var finTask = '';
                           if(minfo.data[0].finished_tasks!=null && minfo.data[0].finished_tasks!=''){
-                              var finTask = minfo.data[0].finished_tasks.split(',');
-                              finTask.push(info.id);
+                              finTask = minfo.data[0].finished_tasks.split(',').push(info.id);
                           }else{
-                              var finTask = info.id;
+                              finTask = info.id;
                           };
                           await updateFinishTasksByUserAccount({account:item,
                                                               progress_tasks:proTask.toString(),

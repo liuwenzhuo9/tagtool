@@ -123,7 +123,6 @@
       toLoginOut(){
         (async() => {
         try{
-            // const accountinfo = await loginOut();
             await loginOut();
             if (getCookie('account')){
               delCookie('account');
@@ -270,7 +269,7 @@ html,body {
   height: 100%;
 }
 .reg{
-    text-decoration: underline;
+    text-decoration: underline  ;
 }
 .boxaaa {
             // background: url(../../assets/login.jpg) no-repeat center center;

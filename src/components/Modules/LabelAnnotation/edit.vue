@@ -47,7 +47,7 @@
 
 <script>
     import { findParagraphNumByTaskId, findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph, findFirstParagraph, updateLabelById,
-            findLastUnfinishedParagraph,findNextUnfinishedParagraph, findFirstUnfinishedTestPdaragraph,findInfoByUserAccount,
+            findLastUnfinishedParagraph,findNextUnfinishedParagraph,findInfoByUserAccount,
             updateFinishTasksByUserAccount, updateFinishMemberByTaskId, findLastParagraph,findNextParagraph,} from '../../../unit/fetch';
     import testEdit from './testEdit';
     export default {
@@ -101,11 +101,11 @@
                         const info = await findInfoByUserAccount({account:this.userAccount});
                         var proTask = info.data[0].progress_tasks.split(',');
                         proTask.splice(proTask.indexOf(this.editInfo.id.toString()),1);
+                        var finTask = '';
                         if(info.data[0].finished_tasks!=null && info.data[0].finished_tasks!=''){
-                            var finTask = info.data[0].finished_tasks.split(',');
-                            finTask.push(this.editInfo.id);
+                            finTask = info.data[0].finished_tasks.split(',').push(this.editInfo.id);
                         }else{
-                            var finTask = this.editInfo.id;
+                            finTask = this.editInfo.id;
                         };
                         await updateFinishTasksByUserAccount({account:this.userAccount,
                                                             progress_tasks:proTask.toString(),

@@ -240,17 +240,17 @@ export default {
         },
         //查看已标记的句子结果
         handleShow(index,row){
-            this.$store.commit('setCurrentTextarea', row)
-            this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
-            this.$store.commit('setIsMarked',true)
-            this.$router.push("./tagEntity")
+            this.$store.commit('setCurrentTextarea', row);
+            this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1);
+            this.$store.commit('setIsMarked',true);
+            this.$router.push("./tagEntity");
         },
         // 选中句子进行标记
         handleTag(index,row){
-            this.$store.commit('setCurrentTextarea', row)
-            this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1)
-            this.$store.commit('setIsMarked',false)
-            this.$router.push("./tagEntity")
+            this.$store.commit('setCurrentTextarea', row);
+            this.$store.commit('setCurrentIndex', index + (this.pageNumNow-1)*this.maxShowLength +1);
+            this.$store.commit('setIsMarked',false);
+            this.$router.push("./tagEntity");
         },
         // 删除句子
         handleDelete(index, row) {
