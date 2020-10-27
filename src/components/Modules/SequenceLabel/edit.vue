@@ -23,7 +23,7 @@
             <div class="content-left">
                 <p class="tips">第{{this.contentPosition+1}}段:</p>
                 <el-divider></el-divider>
-                <p class="paragraphContent">{{this.contentInfo}}</p>
+                <div id="paragraphContent" v-html="contentInfo">{{this.contentInfo}}</div>
                 <el-divider></el-divider>
                 <p class="tips">标注方法：选中文字内容，选择你认为正确的标签</p>
                 <p class="tips">可选标签：</p>
@@ -91,6 +91,7 @@
                 radio: '1',
                 // labelRes:[],
                 labelResShow:[],
+                labelResArr:[],
                 isEdit:true,
                 isShowAll:0,//显示未标记句子
             }
@@ -176,9 +177,10 @@
                 var selection = selectTxt.toString();
                 var startIndex = Math.min(selectTxt.anchorOffset,selectTxt.focusOffset);
                 var endIndex = Math.max(selectTxt.anchorOffset,selectTxt.focusOffset);
-                
-                // this.labelRes.push('{'+ startIndex + ',' + endIndex + ',' + this.choosedLabel + '}');
+                // this.contentInfo = 'aaa<span class = "redColor" title="hhh">hhh</span>bbb<span class = "blueColor">hhh</span>';
                 this.labelResShow.push('{'+ startIndex + ',' + endIndex + ',“'  + selection + '”,' + this.choosedLabel + '}');
+                this.labelResArr.push(startIndex + '-' + endIndex + '-' + this.choosedLabel);
+                sortLabelRes(labelResArr);
                 this.radio = '1';
             },
             async saveLabel(){
@@ -240,7 +242,14 @@
             },
             countTime(){
                 this.selectShowPart(1);
-            }
+            },
+            // 将已存在的标签按照起始index降序排列，便于按照index值添加html标签
+            sortLabelRes(labelArr){
+                labelArr.sort(function(a, b){
+                    return b.split('-')[0]-a.split('-')[0];
+                })
+            },
+            // 将contentInfo渲染成html格式
         },
         components:{
             testEdit,
@@ -265,5 +274,14 @@
     }
     .content-left {
         width: 600px;
+    }
+    // .redColor {
+    //     color: red;
+    // }
+    .redColor:hover {
+        background-color: green;
+    }
+    .blueColor {
+        color: pink;
     }
 </style>
