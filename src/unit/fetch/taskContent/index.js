@@ -128,3 +128,12 @@ export function getTestLabelByTaskId(info) {
         }
     });
 }
+export function getFormalParagraph(info) {
+    let url = `${hostname}/getFormalParagraph${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}

@@ -6,25 +6,30 @@ import {insertSentence, deleteSentence, findSentenceById, findIdBySentence, upda
 import {getAllAccount, addAccount, deleteAccount,findAccountByAccount}from './account'
 import {login,loginOut,rePassword} from './login'
 import {insertTaskContent, deleteContentByTaskId, findContentByTaskId,findParagraphNumByTaskId,findContentByParagraphId,findLabeledTestNumByTaskId,updateRightLabel,findFirstUnfinishedTestParagraph,findNextUnfinishedTestParagraph,
-        findLastUnfinishedTestParagraph, findFirstTestParagraph,findNextTestParagraph, findLastTestParagraph, getTestLabelByTaskId} from './taskContent'
+        findLastUnfinishedTestParagraph, findFirstTestParagraph,findNextTestParagraph, findLastTestParagraph, getTestLabelByTaskId, getFormalParagraph} from './taskContent'
 import {insertTaskInfo, findUnfinishedTasks, findTasksByTasksType, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, 
         updateMemberAccountByTaskId, findTaskIdByTaskName, updateFinishStateByTaskId} from './tasksInfo'
 import {insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateJoinTasksByUserAccount,updateFinishTasksByUserAccount, updateScoreByUserAccount,deleteUser} from './user'
 import {insertLabelResult, updateLabelById, deleteLabelByAccount, deleteLabelByTaskId, deleteLabelByTaskIdAndAccount,findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph, findLastUnfinishedParagraph,
         findNextUnfinishedParagraph,findFirstParagraph, findLastParagraph,findNextParagraph,findLabelResultById,inferLabelResult} from './labelResult'
 import {insertLabelTime, getLabelTimeByAccount, updateLabelTime, deleteLabelTime, updateIsFinishInTime, getLabelTimeByTaskId} from './time';
+import {insertInferResult, deleteInferResultByTaskId, updateInferLabelBySentenceId, updateCIBySentenceId, updateFinalResultBySentenceId, updateInferResultByPosition, updateCIByPosition,
+        updateFinalResultByPosition,findInferInfoByTaskId,findInferInfoBySentenceId,findInferInfoByPosition} from './inferResult'
 
 export {insertEntityIndex, deleteEntityBySentenceId, getEntityIndexBySentenceId, deleteEntityByEntityId, insertEntity, deleteEntity, findEntityById, findIdByEntity,
         updateLengthByEntityId, getAllEntity, insertSentence, deleteSentence, findSentenceById, findIdBySentence, updateSentenceMarkById, updateSentenceContentById, 
         getAllSentences,getLastSentence, getNextSentence, getFirstUnmarkedSentence, findIndexBySentenceId, findSentenceFromOffset, deleteSentenceFromOffset , 
         findUnmarkedNum, findSentenceByAuthor, getAllAccount, addAccount, deleteAccount, findAccountByAccount,
         login,loginOut,rePassword,
-        insertTaskContent, deleteContentByTaskId, findContentByTaskId,findParagraphNumByTaskId,findContentByParagraphId,findLabeledTestNumByTaskId,updateRightLabel,findFirstUnfinishedTestParagraph,findNextUnfinishedTestParagraph,findLastUnfinishedTestParagraph,findFirstTestParagraph,findNextTestParagraph, findLastTestParagraph,getTestLabelByTaskId,
+        insertTaskContent, deleteContentByTaskId, findContentByTaskId,findParagraphNumByTaskId,findContentByParagraphId,findLabeledTestNumByTaskId,updateRightLabel,findFirstUnfinishedTestParagraph,findNextUnfinishedTestParagraph,
+        findLastUnfinishedTestParagraph,findFirstTestParagraph,findNextTestParagraph, findLastTestParagraph,getTestLabelByTaskId, getFormalParagraph,
         insertTaskInfo, findUnfinishedTasks, findTasksByTasksType, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, updateMemberAccountByTaskId, findTaskIdByTaskName,updateFinishStateByTaskId,
         insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateJoinTasksByUserAccount, updateFinishTasksByUserAccount,updateScoreByUserAccount,deleteUser,
         insertLabelResult, updateLabelById, deleteLabelByAccount, deleteLabelByTaskId, deleteLabelByTaskIdAndAccount,findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph,findLastUnfinishedParagraph,
         findNextUnfinishedParagraph,findFirstParagraph, findLastParagraph,findNextParagraph, findLabelResultById,inferLabelResult,
-        insertLabelTime, getLabelTimeByAccount, updateLabelTime, deleteLabelTime, updateIsFinishInTime, getLabelTimeByTaskId
+        insertLabelTime, getLabelTimeByAccount, updateLabelTime, deleteLabelTime, updateIsFinishInTime, getLabelTimeByTaskId,
+        insertInferResult, deleteInferResultByTaskId, updateInferLabelBySentenceId, updateCIBySentenceId, updateFinalResultBySentenceId, updateInferResultByPosition, updateCIByPosition,
+        updateFinalResultByPosition,findInferInfoByTaskId,findInferInfoBySentenceId,findInferInfoByPosition
       } 
 
 //封装cookie

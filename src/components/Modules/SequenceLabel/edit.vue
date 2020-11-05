@@ -23,7 +23,8 @@
             <div class="content-left">
                 <p class="tips">第{{this.contentPosition+1}}段:</p>
                 <el-divider></el-divider>
-                <div id="paragraphContent" v-html="contentInfo">{{this.contentInfo}}</div>
+                <div class="paragraphContent1" >{{this.contentInfo}}</div>
+                <div class="paragraphContent10" v-html="htmlContent">{{this.htmlContent}}</div>
                 <el-divider></el-divider>
                 <p class="tips">标注方法：选中文字内容，选择你认为正确的标签</p>
                 <p class="tips">可选标签：</p>
@@ -84,16 +85,17 @@
                 finishParagraphNum:'',
                 userAccount:this.$store.state.loginuser,
                 contentInfo:'',
+                htmlContent:'',
                 contentPosition:'',
-                labelsInfo:this.editInfo.task_label.split(','),
+                labelsInfo:this.editInfo.task_label.split(','),//存放所有待选标签
                 choosedLabel:'',
                 resultId:'',
                 radio: '1',
-                // labelRes:[],
                 labelResShow:[],
                 labelResArr:[],
                 isEdit:true,
                 isShowAll:0,//显示未标记句子
+                color:['red', 'pink', 'orange'],
             }
         },
         mounted(){
@@ -112,6 +114,7 @@
                                                                 user_account:this.userAccount});
                 }
                 this.contentInfo = info.message;
+                this.htmlContent = this.contentInfo;
                 this.contentPosition = Number(info.data[1]);
                 this.resultId = info.data[0];
                 // const infoResult = await findLabelResultById({id:this.resultId});
@@ -177,10 +180,11 @@
                 var selection = selectTxt.toString();
                 var startIndex = Math.min(selectTxt.anchorOffset,selectTxt.focusOffset);
                 var endIndex = Math.max(selectTxt.anchorOffset,selectTxt.focusOffset);
-                // this.contentInfo = 'aaa<span class = "redColor" title="hhh">hhh</span>bbb<span class = "blueColor">hhh</span>';
                 this.labelResShow.push('{'+ startIndex + ',' + endIndex + ',“'  + selection + '”,' + this.choosedLabel + '}');
-                this.labelResArr.push(startIndex + '-' + endIndex + '-' + this.choosedLabel);
-                sortLabelRes(labelResArr);
+                this.labelResArr.push(startIndex + '-' + endIndex + '-' + selection + '-' + this.choosedLabel);
+                var temp = [].concat(this.labelResArr);
+                this.sortLabelRes(temp);
+                this.contentToHtml(temp, this.contentInfo);
                 this.radio = '1';
             },
             async saveLabel(){
@@ -195,7 +199,11 @@
             handleClose(tag) {
                 var index = this.labelResShow.indexOf(tag);
                 this.labelResShow.splice(index, 1);
-                // this.labelRes.splice(index, 1);
+                this.labelResArr.splice(index, 1);
+                var temp = [].concat(this.labelResArr);
+                this.sortLabelRes(temp);
+                console.log(temp);
+                this.contentToHtml(temp, this.contentInfo);
             },
             async nextParagraph(msg){
                 var info = [];
@@ -209,9 +217,11 @@
                                                     paragraph_position:this.contentPosition});
                 }
                 this.contentInfo = info.message;
+                this.htmlContent = this.contentInfo;
                 this.contentPosition = Number(info.data[1]);
                 this.resultId = info.data[0];
                 this.labelResShow = [];
+                this.labelResArr = [];
                 this.radio = '1';
                 this.isEdit = true;
             },
@@ -227,6 +237,7 @@
                                                     paragraph_position:this.contentPosition});
                 }
                 this.contentInfo = info.message;
+                this.htmlContent = this.contentInfo;
                 this.contentPosition = Number(info.data[1]);
                 this.resultId = info.data[0];
                 this.isEdit = true;
@@ -244,12 +255,27 @@
                 this.selectShowPart(1);
             },
             // 将已存在的标签按照起始index降序排列，便于按照index值添加html标签
-            sortLabelRes(labelArr){
-                labelArr.sort(function(a, b){
+            sortLabelRes(info){
+                info.sort(function(a, b){
                     return b.split('-')[0]-a.split('-')[0];
                 })
             },
             // 将contentInfo渲染成html格式
+            contentToHtml(arr, content) {
+                if(arr.length == 0){
+                    this.htmlContent = this.contentInfo;
+                }else{
+                    this.htmlContent = '';
+                    for(var i = 0; i < arr.length; i++){
+                        var temp = arr[i].split('-');
+                        var tagIndex = this.labelsInfo.indexOf(temp[3]);
+                        content = content.substring(0, temp[0]) + '<span class = "color' + tagIndex +
+                        '" title = "' + temp[3] + '">' + content.substring(temp[0], temp[1]) + '</span>' +
+                        content.substring(temp[1], content.length);
+                    }
+                    this.htmlContent = content;
+                }
+            },
         },
         components:{
             testEdit,
@@ -268,20 +294,58 @@
     .tips{
         font-style: italic;
     }
-    .paragraphContent{
-        font-weight: 700;
-        font-size: 150%;
+    .paragraphContent10{
+        // font-weight: 600;
+        // font-size: 150%;
+        // position: absolute;
+        z-index:10;
+        // opacity:0.5;
+        // color: #CCFF00;
+    }
+    .paragraphContent1{
+        // font-weight: 700;
+        // font-size: 150%;
+        position: absolute;
+        z-index:1;
+        opacity:0.5;
     }
     .content-left {
         width: 600px;
+        position: relative;
     }
     // .redColor {
     //     color: red;
     // }
-    .redColor:hover {
+    // .redColor:hover {
+    //     background-color: green;
+    // }
+    // .blueColor {
+    //     color: pink;
+    // }
+    .color0 {
+        background-color: #5F9EA0	;
+    }
+    // .color0:hover,.color1:hover,.color2:hover,.color3:hover,.color4:hover,.color5:hover,.color6:hover {
+    //     background-color: #FFB3E6;
+    // }
+    // 由于使用的两个div重叠的方式，上层div负责提供文字选中功能，下层div负责显示渲染效果，因此下层div的hover暂时不能使用，span设置的title失效
+    .color1 {
+        background-color: red;
+    }
+    .color2 {
+        background-color: orange;
+    }
+    .color3 {
         background-color: green;
     }
-    .blueColor {
-        color: pink;
+    .color4 {
+        background-color: blue;
     }
+    .color5 {
+        background-color: #B8860B;
+    }
+    .color6 {
+        background-color: #CCFF00;
+    }
+    
 </style>

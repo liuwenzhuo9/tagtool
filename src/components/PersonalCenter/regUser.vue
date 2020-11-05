@@ -177,6 +177,8 @@
           <sequenceEdit v-if="isSequenceEdit" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
           <labelTestEdit v-if="isLabelTestEdit" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
           <sequenceTestEdit v-if="isSequenceTestEdit" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
+          <labelInferResult v-if="isLabelInferResult" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
+          <sequenceInferResult v-if="isSequenceInferResult" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
         </div>
   </div>
     
@@ -186,11 +188,13 @@
 import {insertTaskInfo, findTaskIdByTaskName, findInfoByUserAccount,findTaskById,updateTasksByUserAccount,
         insertTaskContent,updateMemberAccountByTaskId, updateJoinTasksByUserAccount,deleteLabelByTaskIdAndAccount,
         deleteTaskInfoByTaskId,deleteContentByTaskId,deleteLabelByTaskId,
-        findAccountByAccount, updateFinishTasksByUserAccount,updateFinishStateByTaskId, inferLabelResult} from '../../unit/fetch';
+        findAccountByAccount, updateFinishTasksByUserAccount,updateFinishStateByTaskId,findInferInfoByTaskId, getFormalParagraph, insertInferResult} from '../../unit/fetch';
 import labelEdit from '../Modules/LabelAnnotation/edit';
 import sequenceEdit from '../Modules/SequenceLabel/edit';
 import labelTestEdit from '../Modules/LabelAnnotation/testEdit';
 import sequenceTestEdit from '../Modules/SequenceLabel/testEdit';
+import labelInferResult  from '../Modules/LabelAnnotation/inferResult';
+import sequenceInferResult  from '../Modules/SequenceLabel/inferResult';
 import rePassword from './password';
 export default {
     data(){
@@ -253,6 +257,8 @@ export default {
             isSequenceEdit:false,
             isLabelTestEdit:false,
             isSequenceTestEdit:false,
+            isLabelInferResult:false,
+            isSequenceInferResult:false,
             isRePassword:false,
             editInfo:'',
             userAccount:this.$store.state.loginuser,
@@ -262,7 +268,7 @@ export default {
               disabledDate(time) {
                 return time.getTime() < Date.now();
               }
-            }
+            },
         }
     },
     mounted(){
@@ -338,6 +344,14 @@ export default {
                   type: 'warning'
                 }); 
               }
+              this.isEdit = false;
+              this.isLabelEdit = false;
+              this.isSequenceEdit = false;
+              this.isLabelTestEdit = false;
+              this.isSequenceTestEdit = false;
+              this.isLabelInferResult = false;
+              this.isSequenceInferResult = false;
+              this.isRePassword = false;
           },
           // 获取登录用户的姓名
           async getName(){
@@ -412,7 +426,7 @@ export default {
           async insertContent(){
             var type ;
             this.ruleForm.task_type == "标签标注"? type = 1:type = 0;
-            const info = await findTaskIdByTaskName({task_name:this.ruleForm.task_name})
+            const info = await findTaskIdByTaskName({task_name:this.ruleForm.task_name});
             await Promise.all(this.splitContent.map(async (item,index) => {
                   if(item != null && item != '' && item != undefined ){//输入不能为空
                       await insertTaskContent({task_id:info.data,
@@ -437,6 +451,16 @@ export default {
                       }
                   }))
             }
+             // 从tb_task_content中获取正式任务句子的信息(包括paragraph_id),从而存入tb_infer_result中
+             const formalInfo = await getFormalParagraph({task_id: info.data});
+             formalInfo.data.map(async(item, index) => {
+               await insertInferResult({task_id: info.data,
+                                        paragraph_id: item.id,
+                                        paragraph_position: item.paragraph_position,
+                                        task_type: item.task_type,
+                                        content: item.content,
+                                        })
+             })
           },
         resetForm(formName) {
             this.$refs[formName].resetFields();
@@ -645,16 +669,26 @@ export default {
       },
       // 导出结果
       async inferResult(info){
-          const infer_res = await inferLabelResult({task_id:info.id});
-          console.log(infer_res.data);
-          var urlObject = window.URL || window.webkitURL || window;
-          var export_blob = new Blob([infer_res.data]);
-          var save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a")
-          save_link.href = urlObject.createObjectURL(export_blob);
-          save_link.download = info.task_name + '.txt';
-          var ev = document.createEvent("MouseEvents");
-          ev.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-          save_link.dispatchEvent(ev);
+          this.isEdit = true;
+          if(info.task_type == "序列标注"){
+            this.isSequenceInferResult = true;
+          }
+          if(info.task_type == "标签标注"){
+            this.isLabelInferResult = true;
+          }
+          // const infer_res = await findInferInfoByTaskId({task_id:info.id});
+          // var inferLabel = [];
+          // for(var i = 0; i<infer_res.data.length; i++){
+          //   inferLabel.push(infer_res.data[i].infer_result);
+          // }
+          // var urlObject = window.URL || window.webkitURL || window;
+          // var export_blob = new Blob([inferLabel.toString()]);
+          // var save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a")
+          // save_link.href = urlObject.createObjectURL(export_blob);
+          // save_link.download = info.task_name + '.txt';
+          // var ev = document.createEvent("MouseEvents");
+          // ev.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+          // save_link.dispatchEvent(ev);
       },
       // 任务发布者标注测试任务
       async editTest(info) {
@@ -676,7 +710,9 @@ export default {
         sequenceEdit,
         labelTestEdit,
         sequenceTestEdit,
-        rePassword,
+        labelInferResult,
+        sequenceInferResult,
+        rePassword
       }
 }
 </script>

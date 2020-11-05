@@ -89,10 +89,9 @@
                 radio: '1',
                 // labelRes:[],
                 labelResShow:[],
-                isTest:false,
                 isEdit:true,
                 isFinish:false,
-                isShowAll:0,//显示未标记句子
+                isShowAll:0,//显示未标记句子isEdit:false,
             }
         },
         mounted(){
