@@ -45,7 +45,7 @@
                               <span>{{item.task_name}}</span>
                               <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.sds_name" @click="editTest(item)">标记测试集</el-button>
                               <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.is_finished == 0" @click="finishTask(item)">结束任务</el-button>
-                              <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.is_finished == 1" @click="inferResult(item)">导出结果</el-button>
+                              <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.is_finished == 1" @click="inferResult(item)">查看预测结果</el-button>
                               <el-button style="float: right; padding: 3px 0" type="text" @click="deleteTask(item)">删除任务</el-button>
                           </div>
                           <div class="text item">
@@ -669,13 +669,15 @@ export default {
       },
       // 导出结果
       async inferResult(info){
-          this.isEdit = true;
-          if(info.task_type == "序列标注"){
-            this.isSequenceInferResult = true;
-          }
-          if(info.task_type == "标签标注"){
-            this.isLabelInferResult = true;
-          }
+        this.editInfo = info;
+        const infer_res = await findInferInfoByTaskId({task_id:info.id});
+        this.isEdit = true;
+        if(info.task_type == "序列标注"){
+          this.isSequenceInferResult = true;
+        }
+        if(info.task_type == "标签标注"){
+          this.isLabelInferResult = true;
+        }
           // const infer_res = await findInferInfoByTaskId({task_id:info.id});
           // var inferLabel = [];
           // for(var i = 0; i<infer_res.data.length; i++){

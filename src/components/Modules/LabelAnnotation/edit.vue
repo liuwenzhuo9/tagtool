@@ -74,6 +74,14 @@
         mounted(){
             this.init();
         },
+        created() {
+            document.addEventListener('keydown', this.handleKeyDown)
+            document.addEventListener('keyup', this.handleKeyUp)
+        },
+        destroyed() {
+            document.removeEventListener('keydown', this.handleKeyDown)
+            document.removeEventListener('keyup', this.handleKeyUp)
+        },
         methods:{
             async init(){
                 this.getRate();
@@ -193,6 +201,37 @@
             },
             countTime(){
                 this.selectShowPart(1);
+            },
+            handleKeyDown(e) {
+                var key = window.event.keyCode ? window.event.keyCode : window.event.which
+                if( key === 83 ){
+                    if(this.flag)
+                    {
+                        this.saveLabel()
+                        this.flag = false
+                    }
+                    e.preventDefault() //取消浏览器原有的ctrl+s操作
+                }
+                if( key === 78 ){
+                    if(this.flag)
+                    {
+                        this.nextParagraph(0)
+                        this.flag = false
+                    }
+                    e.preventDefault() //取消浏览器原有的ctrl+s操作
+                }
+            },
+            handleKeyUp(e) {
+                // enter
+                var key = window.event.keyCode ? window.event.keyCode : window.event.which
+                if( key === 83 ){
+                    this.flag = true
+                    e.preventDefault()
+                }
+                if( key === 78 ){
+                    this.flag = true
+                    e.preventDefault()
+                }
             }
         },
         components: {

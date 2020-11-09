@@ -4,6 +4,7 @@ import App from './App.vue'
 import store from './components/store'
 import router from './router'
 import ElementUI from 'element-ui'
+import echarts from 'echarts'
 import 'element-ui/lib/theme-chalk/index.css'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
@@ -15,6 +16,7 @@ library.add(fas);
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.component('font-awesome-layers', FontAwesomeLayers)
 Vue.component('font-awesome-layers-text', FontAwesomeLayersText)
+Vue.prototype.$echarts = echarts
 
 new Vue({
   router,

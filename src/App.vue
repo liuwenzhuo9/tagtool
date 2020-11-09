@@ -4,7 +4,7 @@
       <navbar/>
       <router-view></router-view>
     </div>
-    <bottom/>
+    <!-- <bottom/> -->
 </div>
 </template>
 
