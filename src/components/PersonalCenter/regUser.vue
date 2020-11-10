@@ -94,7 +94,7 @@
                                     :picker-options="pickerOptions">
                     </el-date-picker>
                   </el-form-item>
-                  <el-form-item label="设置标签" prop="task_label" required>
+                  <el-form-item label="设置标签" prop="task_label" class="setLabel">
                       <el-tag
                           :key="tag"
                           v-for="tag in dynamicTags"
@@ -127,6 +127,7 @@
                           :on-change="handleUploadChange"
                           :before-remove="beforeRemove"
                           :on-success="handleSuccess"
+                          :file-list="fileList"
                           >
                           <el-button size="small" type="primary" >上传txt文本</el-button>
                           <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
@@ -141,24 +142,12 @@
                                   :on-change="handleUploadChangeTest"
                                   :before-remove="beforeRemoveTest"
                                   :on-success="handleSuccessTest"
+                                  :file-list="testFileList"
                                   >
                                   <el-button size="small" type="primary" >上传txt文本</el-button>
                                   <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
                               </el-upload>
                   </el-form-item>
-                  <!-- <el-form-item label="测试集结果"  class="uploadPart">
-                      <el-upload
-                          class="upload-demo"
-                          action="https://jsonplaceholder.typicode.com/posts/"
-                          :on-preview="handlePreviewTestRes"
-                          :on-remove="handleRemoveTestRes"
-                          :on-change="handleUploadChangeTestRes"
-                          :before-remove="beforeRemoveTestRes"
-                          :on-success="handleSuccessTestRes"
-                           >
-                            <el-button size="small" type="primary" >上传txt文本</el-button>
-                      </el-upload>
-                  </el-form-item> -->
                   <el-form-item>
                       <el-button type="primary" :disabled="uploadSuccess" @click="submitForm('ruleForm')">发布任务</el-button>
                       <el-button @click="resetForm('ruleForm')">重置</el-button>
@@ -229,14 +218,14 @@ export default {
                 { required: true, message: '请输入任务报酬', trigger: 'change' }
               ],
               deadline: [
-                { type: 'date', required: true, message: '请选择日期', trigger: 'change' }
+                { type: 'string', required: true, message: '请选择日期', trigger: 'change' }
               ],
               task_reward: [
                 { required: true, message: '请输入任务报酬', trigger: 'change' }
               ],
-              task_label: [
-                { required: true, message: '请输入任务标签', trigger: 'change' }
-              ],
+              // task_label: [
+              //   { required: true, message: '请输入任务标签', trigger: 'blur' }
+              // ],
               member_num: [
                 { required: true, message: '请输入人数要求', trigger: 'change' }
               ],
@@ -269,15 +258,24 @@ export default {
                 return time.getTime() < Date.now();
               }
             },
+            fileList:[],
+            testFileList:[],
         }
     },
     mounted(){
-        this.init();
+        this.selectShowPart(1);
         this.getName();
     },
     methods:{
-        async init(){
-            const info = await findInfoByUserAccount({account:this.userAccount});
+        async getTaskInfo(){
+          this.involvedTasksId = [];
+          this.unfinishedTaskId =[];
+          this.finishedTaskId =[];
+          this.issuedTaksId =[];
+          this.unfinishedTaskInfo = [];
+          this.finishedInfo = [];
+          this.issuedInfo = [];
+          const info = await findInfoByUserAccount({account:this.userAccount});
           // 如果任务信息不为空，就将任务信息读出存入数组中
             (info.data[0].involved_tasks!=null&&info.data[0].involved_tasks!="")?this.involvedTasksId = info.data[0].involved_tasks.split(","):this.involvedTasksId =[];
             (info.data[0].progress_tasks!=null&&info.data[0].progress_tasks!="")?this.unfinishedTaskId = info.data[0].progress_tasks.split(","):this.unfinishedTaskId =[];
@@ -320,24 +318,24 @@ export default {
                     }
                 }))
             };
-            this.selectShowPart(1);
         },
         // 导航栏展示选择
-          selectShowPart(index){
+          async selectShowPart(index){
+              await this.getTaskInfo();
               this.isEdit = false;
               var temp = [false, false, false, false, false];
               temp[index-1] = true;
               this.menuShow = temp;
               if(index == 1 || index == 0){
-                this.tasksinfo = this.unfinishedTaskInfo
+                this.tasksinfo = this.unfinishedTaskInfo;
               }
               if(index == 2){
-                this.tasksinfo = this.finishedInfo
+                this.tasksinfo = this.finishedInfo;
               }
               if(index == 3){
-                this.tasksinfo = this.issuedInfo
+                this.tasksinfo = this.issuedInfo;
               }
-              if(this.tasksinfo == null || this.tasksinfo == undefined || this.tasksinfo ==''){
+              if(this.tasksinfo.length == 0){
                 this.$message({
                   duration:600,
                   message:'暂无该类型任务',
@@ -361,66 +359,74 @@ export default {
           },
         // 提交表单，发布任务
           async submitForm(formName) {
-            if(this.testFileName){
-              // 生成测试集的随机位置
-              var contentLen = this.splitContent.length;
-              var testLen = this.spiltTestContent.length;
-              var arr=[];
-              for(var i=0; i<testLen; i++) {
-                  var arrNum = parseInt(Math.random()*(contentLen+testLen));
-                  if(arr.indexOf(arrNum) != -1){
-                    i--;
-                    continue;
-                  }else {
-                    arr.push(arrNum);
-                  }
-              }
-              arr.sort((a, b)=>{
-                return a-b;
-              });
-              // 将任务信息插入tb_task_info中
-              var info = await insertTaskInfo(
-                {leader_account: this.userAccount,
-                leader_name: this.$store.state.loginname,
-                tfile_name: this.fileName,
-                task_name: this.ruleForm.task_name,
-                task_type: this.ruleForm.task_type,
-                task_reward: this.ruleForm.task_reward,
-                task_intro: this.ruleForm.task_intro,
-                task_label: this.dynamicTags,
-                member_num: this.ruleForm.member_num,
-                deadline: this.ruleForm.deadline,
-                sds_name: this.testFileName,//如果有上传测试集文件，则插入任务信息时，加上测试集文件名
-                sds_pos: arr,
-                });
+            console.log(this.dynamicTags);
+            if(this.dynamicTags.length == 0){
+              this.$message.error('请填写任务标签！');
             }else{
-              var info = await insertTaskInfo(
-                {leader_account: this.userAccount,
-                leader_name: this.$store.state.loginname,
-                tfile_name: this.fileName,
-                task_name: this.ruleForm.task_name,
-                task_type: this.ruleForm.task_type,
-                task_reward: this.ruleForm.task_reward,
-                task_intro: this.ruleForm.task_intro,
-                task_label: this.dynamicTags,
-                member_num: this.ruleForm.member_num,
-                deadline: this.ruleForm.deadline,
+              if(this.testFileName){
+                // 生成测试集的随机位置
+                var contentLen = this.splitContent.length;
+                var testLen = this.spiltTestContent.length;
+                var arr=[];
+                for(var i=0; i<testLen; i++) {
+                    var arrNum = parseInt(Math.random()*(contentLen+testLen));
+                    if(arr.indexOf(arrNum) != -1){
+                      i--;
+                      continue;
+                    }else {
+                      arr.push(arrNum);
+                    }
+                }
+                arr.sort((a, b)=>{
+                  return a-b;
                 });
-            }
-            
-            await this.insertContent();
+                // 将任务信息插入tb_task_info中
+                var info = await insertTaskInfo(
+                  {leader_account: this.userAccount,
+                  leader_name: this.$store.state.loginname,
+                  tfile_name: this.fileName,
+                  task_name: this.ruleForm.task_name,
+                  task_type: this.ruleForm.task_type,
+                  task_reward: this.ruleForm.task_reward,
+                  task_intro: this.ruleForm.task_intro,
+                  task_label: this.dynamicTags,
+                  member_num: this.ruleForm.member_num,
+                  deadline: this.ruleForm.deadline,
+                  sds_name: this.testFileName,//如果有上传测试集文件，则插入任务信息时，加上测试集文件名
+                  sds_pos: arr,
+                  });
+              }else{
+                var info = await insertTaskInfo(
+                  {leader_account: this.userAccount,
+                  leader_name: this.$store.state.loginname,
+                  tfile_name: this.fileName,
+                  task_name: this.ruleForm.task_name,
+                  task_type: this.ruleForm.task_type,
+                  task_reward: this.ruleForm.task_reward,
+                  task_intro: this.ruleForm.task_intro,
+                  task_label: this.dynamicTags,
+                  member_num: this.ruleForm.member_num,
+                  deadline: this.ruleForm.deadline,
+                  });
+              }
+              
+              await this.insertContent();
 
-            // 发布任务后，根据返回的新任务id，更新用户信息表中的任务信息
-            this.issuedTaksId.push(info.data);
-            this.involvedTasksId.push(info.data);
-            await updateTasksByUserAccount({account:this.userAccount,
-                                            issue_tasks:this.issuedTaksId.toString(),
-                                            finished_tasks:this.finishedTaskId.toString(),
-                                            progress_tasks:this.unfinishedTaskId.toString(),
-                                            involved_tasks:this.involvedTasksId.toString()
-                                          });
-            this.$message.success('任务发布成功！');
-            this.resetForm('ruleForm');
+              // 发布任务后，根据返回的新任务id，更新用户信息表中的任务信息
+              this.issuedTaksId.push(info.data);
+              this.involvedTasksId.push(info.data);
+              await updateTasksByUserAccount({account:this.userAccount,
+                                              issue_tasks:this.issuedTaksId.toString(),
+                                              finished_tasks:this.finishedTaskId.toString(),
+                                              progress_tasks:this.unfinishedTaskId.toString(),
+                                              involved_tasks:this.involvedTasksId.toString()
+                                            });
+              this.dynamicTags = [];
+              this.testFileList = [];
+              this.fileList = [];
+              this.$message.success('任务发布成功！');
+              this.resetForm('ruleForm');
+            }
           },
         // 发布任务后将任务的段落内容存入tb_task_content中
           async insertContent(){
@@ -463,7 +469,10 @@ export default {
              })
           },
         resetForm(formName) {
-            this.$refs[formName].resetFields();
+          this.dynamicTags = [];
+          this.testFileList = [];
+          this.fileList = [];
+          this.$refs[formName].resetFields();
         },
         handleClose(tag) {
           this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
@@ -528,12 +537,6 @@ export default {
                 this.uploadSuccess = false;
                 this.$message.success('测试集文件上传成功！');
             };
-      },
-      handleRemoveTestRes(file, fileList) {
-      },
-      handlePreviewTestRes(file) {
-      },
-      handleUploadChangeTestRes(file, fileList){
       },
       beforeRemoveTestRes(file, fileList) {
         return this.$confirm(`确定移除 ${ file.name }？`);
@@ -720,10 +723,13 @@ export default {
 </script>
 
 <style scoped>
-.el-form-item {
-    margin-bottom: 22px;
-    height: 25px;
-}
+  .el-form-item {
+      margin-bottom: 22px;
+      height: 25px;
+  }
+  .setLabel {
+    display: inline-table;
+  }
   .el-tag + .el-tag {
     margin-left: 10px;
   }

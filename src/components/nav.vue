@@ -59,7 +59,7 @@ import { getCookie,delCookie,loginOut } from '../unit/fetch'
 	},
     mounted(){
         this.handleSelect(0);
-        this.loginName = getCookie('name');
+        // this.loginName = getCookie('name');
         // this.getName();
     },
     methods: {
@@ -120,9 +120,9 @@ import { getCookie,delCookie,loginOut } from '../unit/fetch'
     min-height: 80px;
 }
 .nav_title {
-    width: 74%;
-    margin: 0 auto;
-    height: 115px;
+    width: 100%;
+    /* margin: 0 auto; */
+    height: 167px;
     display: flex;
     justify-content: space-between;
 }

@@ -26,7 +26,7 @@
                     <el-card class="box-card">
                         <div slot="header" class="clearfix">
                             <span>{{item.task_name}}</span>
-                            <el-button style="float: right; padding: 3px 0" type="text" v-if="loginUserAccount && isJoin[index]=='notIn'" @click="joinTask(item)">加入任务</el-button>
+                            <el-button style="float: right; padding: 3px 0" type="text" v-if="loginUserAccount && isJoin[index]=='notIn'" @click="joinTask(item, index)">加入任务</el-button>
                             <el-button style="float: right; padding: 3px 0" type="text" v-if="loginUserAccount && isJoin[index]!='notIn'" :disabled="true">我的任务</el-button>
                         </div>
                         <div class="text item">
@@ -54,9 +54,10 @@ export default {
     data(){
         return{
             tasksinfo:[],
-            isJoin:[],//判断用户是否加入或发布该任务，如果isJoin为true，则不为该用户显示该任务
+            isJoin:[],//判断用户是否加入或发布该任务
             loginUserAccount:'',
             // loginUserName:this.$store.state.loginname,
+            istest:true,
         }
     },
     mounted(){
@@ -99,7 +100,6 @@ export default {
                                     this.isJoin.push("notIn");
                                 }
                             }
-                            
                         })
                 }catch(e){
                     this.tasksinfo = [...lastTasksinfo];
@@ -119,7 +119,7 @@ export default {
                     this.$message.error((e && e.message) ? e.message : '获取任务错误，请稍后重试');
                 }
       },
-      async joinTask(info){
+      async joinTask(info,index){
           var newMember = info.member_account;
           newMember != null && newMember != "" ? newMember = newMember + ','+ this.loginUserAccount : newMember = this.loginUserAccount;
         //   更新任务信息表中的member_account字段
@@ -159,6 +159,7 @@ export default {
                          task_id:info.id,
                          use_time:0,
                          is_finish:0});
+        this.$set(this.isJoin, index, 'member');
         this.$message({
           duration:600,
           message:'加入成功！',

@@ -32,8 +32,8 @@
                 <el-button @click="saveLabel" v-if="isEdit">保存标签</el-button>
                 <el-button @click="saveLabel" v-if="!isEdit">修改标签</el-button>
                 <div>
-                    <el-button @click="nextParagraph(isShowAll)">下一句</el-button>
-                    <el-button @click="lastParagraph(isShowAll)">上一句</el-button>
+                    <el-button @click="nextParagraph(isShowAll)" :disabled="isLast">下一句</el-button>
+                    <el-button @click="lastParagraph(isShowAll)" :disabled="isFirst">上一句</el-button>
                 </div>
             </div>
             <div class="content-right">
@@ -66,6 +66,8 @@
                 radio: '1',
                 isEdit: true,
                 isShowAll:0,//显示未标记句子
+                isFirst: false,
+                isLast: false,
             }
         },
         mounted(){
@@ -75,14 +77,17 @@
             async init(){
                 this.getRate();
                 var info = [];
+                this.resultLabel = '';
                 if(this.isShowAll == 0){
                     // 获取第一条未被标记的段落id
                     info = await findFirstUnfinishedTestParagraph({task_id:this.editInfo.id});
                 }else{
                     info = await findFirstTestParagraph({task_id:this.editInfo.id});
+                    this.resultLabel = info.data[0].test_label;
                 }
                 this.contentInfo = info.data[0].content;
                 this.contentPosition = parseInt(info.data[0].paragraph_position);
+                this.judgeFirstOrLast();
             },
             async getRate(){
                 // 获取所有段落数
@@ -93,6 +98,7 @@
                 this.finishParagraphNum = infoF.data;
                 if(this.allParagraphNum == this.finishParagraphNum){
                     this.$message.success('该任务所有测试句子已标注！');
+                    this.selectShowPart(3);
                 }
             },
             chooseLabel(info){
@@ -113,11 +119,13 @@
                     info = await findNextUnfinishedTestParagraph({task_id:this.editInfo.id,paragraph_position:this.contentPosition});
                 }else{
                     info = await findNextTestParagraph({task_id:this.editInfo.id,paragraph_position:this.contentPosition});
+                    this.resultLabel = info.data[0].test_label;
                 }
                 this.contentInfo = info.data[0].content;
                 this.contentPosition = parseInt(info.data[0].paragraph_position);
-                this.choosedLabel = '';
-                this.radio = '1';
+                this.resultId = info.data.id;
+                this.choosedLabel = this.resultLabel;
+                this.judgeFirstOrLast();
             },
             async lastParagraph(msg){
                 this.resultLabel = '';
@@ -127,9 +135,13 @@
                     info = await findLastUnfinishedTestParagraph({task_id:this.editInfo.id,paragraph_position:this.contentPosition});
                 }else{
                     info = await findLastTestParagraph({task_id:this.editInfo.id,paragraph_position:this.contentPosition});
+                    this.resultLabel = info.data[0].test_label;
                 }
                 this.contentInfo = info.data[0].content;
                 this.contentPosition = parseInt(info.data[0].paragraph_position);
+                this.resultId = info.data.id;
+                this.choosedLabel = this.resultLabel;
+                this.judgeFirstOrLast();
             },
             //选择显示全部还是未标记句子
             handleCommandShow(command) {
@@ -142,6 +154,32 @@
             },
             countTime(){
                 this.selectShowPart(3);
+            },
+            //判断当前句子是否为第一条or最后一条句子
+            async judgeFirstOrLast(){
+                var infoL = [];
+                var infoN = [];
+                if(this.isShowAll == 0){
+                    //只显示未标记的句子
+                    infoL = await findLastUnfinishedTestParagraph({task_id:this.editInfo.id,paragraph_position:this.contentPosition});
+                    infoN = await findNextUnfinishedTestParagraph({task_id:this.editInfo.id,paragraph_position:this.contentPosition});
+                }else{
+                    //显示全部句子
+                    infoL = await findLastTestParagraph({task_id:this.editInfo.id,paragraph_position:this.contentPosition});
+                    infoN = await findNextTestParagraph({task_id:this.editInfo.id,paragraph_position:this.contentPosition});
+                }
+                console.log(infoL);
+                if(infoL.data.length == 0){ //已是第一条
+                console.log(111);
+                    this.isFirst = true;
+                }else{
+                    this.isFirst = false;
+                }
+                if(infoN.data.length == 0){//已是最后一条
+                    this.isLast = true;
+                }else{
+                    this.isLast = false;
+                }
             }
         },
     };
