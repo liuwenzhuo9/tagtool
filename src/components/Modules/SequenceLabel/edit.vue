@@ -272,7 +272,7 @@
                 }else{
                     this.isShowAll = 0;//查看未标记句子
                 }
-                this.init();
+                this.judgeFirstOrLast();
             },
             countTime(){
                 this.selectShowPart(1);
@@ -332,9 +332,7 @@
                                                     user_account:this.userAccount,
                                                     paragraph_position:this.contentPosition});
                 }
-                console.log(infoL);
                 if(infoL.data == 0){ //已是第一条
-                console.log(111);
                     this.isFirst = true;
                 }else{
                     this.isFirst = false;

@@ -30,16 +30,16 @@
                             <el-button style="float: right; padding: 3px 0" type="text" v-if="loginUserAccount && isJoin[index]!='notIn'" :disabled="true">我的任务</el-button>
                         </div>
                         <div class="text item">
-                            发起人：{{item.leader_name}}
+                            <span style="color:#b9adad">发起人：</span>{{item.leader_name}}
                         </div>
                         <div class="text item">
-                            任务简介：{{item.task_intro}}
+                            <span style="color:#b9adad">任务简介：</span>{{item.task_intro}}
                         </div>
                         <div class="text item">
-                            任务报酬：{{item.task_reward}}（共需{{item.member_num}}人）
+                            <span style="color:#b9adad">任务报酬：</span>{{item.task_reward}}（共需{{item.member_num}}人）
                         </div>
                         <div class="text item">
-                            截止时间：{{item.deadline}}
+                            <span style="color:#b9adad">截止时间：</span>{{item.deadline}}
                         </div>
                     </el-card>
                 </el-col>

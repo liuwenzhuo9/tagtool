@@ -2,7 +2,7 @@
   <div class="container">
     <div class = "sideNav">
           <el-menu default-active="1" class="el-menu-vertical-demo" @select="selectShowPart">
-            <el-submenu index="1">
+            <el-submenu index="0">
               <template slot="title">
               <i class="el-icon-location"></i>
               <span>我的任务</span>
@@ -359,7 +359,6 @@ export default {
           },
         // 提交表单，发布任务
           async submitForm(formName) {
-            console.log(this.dynamicTags);
             if(this.dynamicTags.length == 0){
               this.$message.error('请填写任务标签！');
             }else{
@@ -554,48 +553,48 @@ export default {
       // 退出任务
       async exitTask(info){
         this.$confirm('此操作将清空您在此任务中的所有标记记录, 是否继续?', '提示', {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning'
-                })
-                .then(async () => {
-                    try {
-                        const taskId = info.id;
-                        var memb = info.member_account.split(',');
-                        memb.splice(memb.indexOf(this.userAccount),1);
-                        //   更新任务信息表中的member_account字段
-                        updateMemberAccountByTaskId({id:taskId, member_account:memb.toString()});
-                        //   更新用户信息表中的task信息
-                          const userInfo = await findInfoByUserAccount({account:this.userAccount});
-                          var newInvolved = userInfo.data[0].involved_tasks.split(',');
-                          newInvolved.splice(newInvolved.indexOf(taskId.toString()),1);
-                          var newProgress = userInfo.data[0].progress_tasks.split(',');
-                          newProgress.splice(newProgress.indexOf(taskId.toString()),1);
-                          updateJoinTasksByUserAccount({account:this.userAccount,
-                                                        involved_tasks:newInvolved.toString(),
-                                                        progress_tasks:newProgress.toString()
-                                                      });
-                        // 根据任务id和用户account删除tb_label_result中的信息
-                          await deleteLabelByTaskIdAndAccount({account:this.userAccount,
-                                                              task_id:taskId
-                                                              })
-                        //   根据任务id和用户account删除tb_test_result中的信息
-                          // if(info.sds_name){
-                          //     await deleteTestLabelByTaskIdAndAccount({user_account:this.userAccount,
-                          //                                             task_id:taskId
-                          //                                             })
-                          // }
-                        this.$message.success('删除成功！');
-                    } catch(e) {
-                        this.$message.error((e && e.message) ? e.message : '删除失败，请稍后重试')
-                    }
-                })
-                .catch(() => {
-                    this.$message({
-                        type: 'info',
-                        message: '已取消删除'
-                    });          
-                });
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+          })
+          .then(async () => {
+              try {
+                  const taskId = info.id;
+                  var memb = info.member_account.split(',');
+                  memb.splice(memb.indexOf(this.userAccount),1);
+                  //   更新任务信息表中的member_account字段
+                  updateMemberAccountByTaskId({id:taskId, member_account:memb.toString()});
+                  //   更新用户信息表中的task信息
+                    const userInfo = await findInfoByUserAccount({account:this.userAccount});
+                   var newInvolved = userInfo.data[0].involved_tasks.split(',');
+                  newInvolved.splice(newInvolved.indexOf(taskId.toString()),1);
+                    var newProgress = userInfo.data[0].progress_tasks.split(',');
+                    newProgress.splice(newProgress.indexOf(taskId.toString()),1);
+                    updateJoinTasksByUserAccount({account:this.userAccount,
+                                                  involved_tasks:newInvolved.toString(),
+                                                  progress_tasks:newProgress.toString()
+                                                });
+                  // 根据任务id和用户account删除tb_label_result中的信息
+                    await deleteLabelByTaskIdAndAccount({account:this.userAccount,
+                                                        task_id:taskId
+                                                       })
+                  //   根据任务id和用户account删除tb_test_result中的信息
+                    // if(info.sds_name){
+                    //     await deleteTestLabelByTaskIdAndAccount({user_account:this.userAccount,
+                    //                                             task_id:taskId
+                    //                                             })
+                    // }
+                  this.$message.success('删除成功！');
+              } catch(e) {
+                  this.$message.error((e && e.message) ? e.message : '删除失败，请稍后重试')
+              }
+          })
+          .catch(() => {
+            this.$message({
+                type: 'info',
+                message: '已取消删除'
+            });          
+          });
         
       },
       // 删除任务
@@ -607,17 +606,56 @@ export default {
                 })
                 .then(async () => {
                     try {
-                        await deleteTaskInfoByTaskId({id:info.id});
-                        await deleteContentByTaskId({id:info.id});
-                        await deleteLabelByTaskId({task_id:info.id});
-                        // if(info.sds_name!=null && info.sds_name!=''){
-                        //   await deleteTestLabelByTaskId({task_id:info.id});
-                        // }
+                        //查询该任务的发起人和参与者，在对应tb_user中删除该任务id
+                        const peopleInfo = await findTaskById({id:info.id});
+                        var peopleInvolved = [];
+                        peopleInvolved.push(peopleInfo.data[0].leader_account);
+                        const memberArr = peopleInfo.data[0].member_account.split(',');
+                        peopleInvolved = peopleInvolved.concat(memberArr);
+                        // 依次更新每个用户tb_user中的任务信息
+                        for(var i = 0; i<peopleInvolved.length; i++){
+                          const userInfo = await findInfoByUserAccount({account: peopleInvolved[i]});
+                          var finishTask = [];
+                          if(userInfo.data[0].finished_tasks != null && userInfo.data[0].finished_tasks != ''){
+                            finishTask = userInfo.data[0].finished_tasks.split(',');
+                            if(finishTask.indexOf(info.id.toString()) != -1){
+                              finishTask.splice(finishTask.indexOf(info.id.toString()), 1);
+                            }
+                          }
+                          var involvedTask = [];
+                          if(userInfo.data[0].involved_tasks != null && userInfo.data[0].involved_tasks != ''){
+                            involvedTask = userInfo.data[0].involved_tasks.split(',');
+                            if(involvedTask.indexOf(info.id.toString()) != -1){
+                              involvedTask.splice(involvedTask.indexOf(info.id.toString()), 1);
+                            }
+                          }
+                          var issueTask = [];
+                          if(userInfo.data[0].issue_tasks != null && userInfo.data[0].issue_tasks != ''){
+                            issueTask = userInfo.data[0].issue_tasks.split(',');
+                            if(issueTask.indexOf(info.id.toString()) != -1){
+                              issueTask.splice(issueTask.indexOf(info.id.toString()), 1);
+                            }
+                          }
+                          var progressTask = [];
+                          if(userInfo.data[0].progress_tasks != null && userInfo.data[0].progress_tasks != ''){
+                            progressTask = userInfo.data[0].progress_tasks.split(',');
+                            if(progressTask.indexOf(info.id.toString()) != -1){
+                              progressTask.splice(progressTask.indexOf(info.id.toString()), 1);
+                            }
+                          }
+                          await updateTasksByUserAccount({account: peopleInvolved[i],
+                                                          involved_tasks: involvedTask.toString(),
+                                                          finished_tasks: finishTask.toString(),
+                                                          progress_tasks: progressTask.toString(),
+                                                          issue_tasks: issueTask.toString()})
+                        }
+                        await deleteTaskInfoByTaskId({id:info.id});//在tb_task_info中删除任务信息
+                        await deleteContentByTaskId({task_id:info.id});//在tb_task_content中删除任务信息
+                        await deleteLabelByTaskId({task_id:info.id});//在tb_label_result中删除任务信息
                         this.$message.success('删除成功！');
                     } catch(e) {
                         this.$message.error((e && e.message) ? e.message : '请稍后重试')
                     }
-                    this.init();
                 })
                 .catch(() => {
                     this.$message({
