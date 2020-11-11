@@ -8,7 +8,6 @@
               <span>我的任务</span>
               </template>
               <el-menu-item-group>
-              <!-- <template slot="title">分组一</template> -->
               <el-menu-item index="1">未完成的任务</el-menu-item>
               <el-menu-item index="2">已完成的任务</el-menu-item>
               <el-menu-item index="3">已发布的任务</el-menu-item>
@@ -130,7 +129,6 @@
                           :file-list="fileList"
                           >
                           <el-button size="small" type="primary" >上传txt文本</el-button>
-                          <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
                       </el-upload>
                   </el-form-item>
                   <el-form-item label="测试集文件" prop="sds_name" class="uploadPart">
@@ -145,7 +143,6 @@
                                   :file-list="testFileList"
                                   >
                                   <el-button size="small" type="primary" >上传txt文本</el-button>
-                                  <!-- <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div> -->
                               </el-upload>
                   </el-form-item>
                   <el-form-item>
@@ -204,7 +201,6 @@ export default {
             num: 1,
             fileName:'',
             testFileName:'',
-            // fileContent:'',
             splitContent:[],
             spiltTestContent:[],
             rules: {
@@ -223,9 +219,6 @@ export default {
               task_reward: [
                 { required: true, message: '请输入任务报酬', trigger: 'change' }
               ],
-              // task_label: [
-              //   { required: true, message: '请输入任务标签', trigger: 'blur' }
-              // ],
               member_num: [
                 { required: true, message: '请输入人数要求', trigger: 'change' }
               ],
@@ -287,11 +280,7 @@ export default {
                 if(item != null && item != '' && item != undefined ){//输入不能为空
                     const info = await findTaskById({id:item});
                     info.data.map((item) => {
-                        // if(item.is_finished == 1){
-                        //   this.finishedInfo.push(item)
-                        // }else{
                           this.unfinishedTaskInfo.push(item);
-                        // }
                         })
                     }
                 }))
@@ -719,19 +708,6 @@ export default {
         if(info.task_type == "标签标注"){
           this.isLabelInferResult = true;
         }
-          // const infer_res = await findInferInfoByTaskId({task_id:info.id});
-          // var inferLabel = [];
-          // for(var i = 0; i<infer_res.data.length; i++){
-          //   inferLabel.push(infer_res.data[i].infer_result);
-          // }
-          // var urlObject = window.URL || window.webkitURL || window;
-          // var export_blob = new Blob([inferLabel.toString()]);
-          // var save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a")
-          // save_link.href = urlObject.createObjectURL(export_blob);
-          // save_link.download = info.task_name + '.txt';
-          // var ev = document.createEvent("MouseEvents");
-          // ev.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-          // save_link.dispatchEvent(ev);
       },
       // 任务发布者标注测试任务
       async editTest(info) {

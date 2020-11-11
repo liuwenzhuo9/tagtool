@@ -15,6 +15,15 @@
             <p v-if="!isShowAll">当前：显示未标记句子</p>
             <el-divider></el-divider>
             <button @click="countTime">暂停标注</button>
+            <el-card shadow="always" class="tipCard">
+            选中文字内容后，选择你认为正确的标签，点击“添加标签”<br><span style="color:#da2535">快捷键：字母数字键1-7</span>
+            </el-card>
+            <el-card shadow="always" class="tipCard">
+            完成一个句子的标注后，点击“保存标注”<br><span style="color:#da2535">快捷键：S</span>
+            </el-card>
+            <el-card shadow="always" class="tipCard">
+            点击“下一句”,继续标注<br><span style="color:#da2535">快捷键：N</span>
+            </el-card>
         </div>
          <div class="content-title">
              <p class="tips">任务名：{{editInfo.task_name}}----测试任务</p>
@@ -26,7 +35,6 @@
              <div class="paragraphContent1">{{this.contentInfo}}</div>
              <div class="paragraphContent10" v-html="htmlContent">{{this.htmlContent}}</div>
              <el-divider></el-divider>
-             <p class="tips">标注方法：选中文字内容，选择你认为正确的标签</p>
              <p class="tips">可选标签：</p>
                 <el-radio 
                     :key="index" 
@@ -36,7 +44,7 @@
                     :label="item">
                     {{item}}
                 </el-radio>
-                <el-button @click="addLabel">添加标签</el-button>
+                <el-button @click="addLabel" :disabled="!isEdit">添加标签</el-button>
             <div>
                 <el-button @click="saveLabel" v-if="isEdit">保存标注</el-button>
                 <el-button @click="changeLabel" v-if="!isEdit">修改标注</el-button>
@@ -98,10 +106,19 @@
                 isShowAll:0,//显示未标记句子isEdit:false,
                 isFirst: false,
                 isLast: false,
+                flag: true,
             }
         },
         mounted(){
             this.init();
+        },
+        created() {
+            document.addEventListener('keydown', this.handleKeyDown)
+            document.addEventListener('keyup', this.handleKeyUp)
+        },
+        destroyed() {
+            document.removeEventListener('keydown', this.handleKeyDown)
+            document.removeEventListener('keyup', this.handleKeyUp)
         },
         methods:{
             async init(){
@@ -282,9 +299,7 @@
                     infoL = await findLastTestParagraph({task_id:this.editInfo.id,paragraph_position:this.contentPosition});
                     infoN = await findNextTestParagraph({task_id:this.editInfo.id,paragraph_position:this.contentPosition});
                 }
-                console.log(infoL);
                 if(infoL.data.length == 0){ //已是第一条
-                console.log(111);
                     this.isFirst = true;
                 }else{
                     this.isFirst = false;
@@ -294,7 +309,56 @@
                 }else{
                     this.isLast = false;
                 }
-            }
+            },
+            handleKeyDown(e) {
+                var key = window.event.keyCode ? window.event.keyCode : window.event.which
+                if( key === 83 ){
+                    //S键保存标签
+                    if(this.flag)
+                    {
+                        this.saveLabel();
+                        this.flag = false;
+                    }
+                    e.preventDefault() //取消浏览器原有的ctrl+s操作
+                }
+                if( key === 78 ){
+                    //N键下一句
+                    if(this.flag)
+                    {
+                        this.nextParagraph(this.isShowAll);
+                        this.flag = false;
+                    }
+                    e.preventDefault() //取消浏览器原有的ctrl+s操作
+                }
+                if( key === 49 || key === 50 || key === 51 || key === 52 || key === 53 || key === 54 || key === 55){
+                    //字母数字键1-7 保存标签
+                    if(this.flag)
+                    {
+                        this.choosedLabel = this.labelsInfo[key-49];
+                        this.radio = key-49;
+                        this.addLabel();
+                        this.flag = false;
+                    }
+                    e.preventDefault() //取消浏览器原有的ctrl+s操作
+                }
+            },
+            handleKeyUp(e) {
+                // enter
+                var key = window.event.keyCode ? window.event.keyCode : window.event.which
+                if( key === 83 ){
+                    this.flag = true
+                    e.preventDefault()
+                }
+                if( key === 78 ){
+                    this.flag = true
+                    e.preventDefault()
+                }
+                if( key === 49 || key === 50 || key === 51 || key === 52 || key === 53 || key === 54 || key === 55){
+                    //字母数字键1-7 保存标签
+                    this.flag = true
+                    e.preventDefault() //取消浏览器原有的ctrl+s操作
+                }
+            },
         },
     };
 </script>
@@ -356,5 +420,9 @@
     }
     .color6 {
         background-color: #CCFF00;
+    }
+    .tipCard {
+        font-size: 14px;
+        margin: 10px;
     }
 </style>

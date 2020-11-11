@@ -15,6 +15,12 @@
             <p v-if="!isShowAll">当前：显示未标记句子</p>
             <el-divider></el-divider>
             <button @click="countTime">暂停标注</button>
+            <el-card shadow="always" class="tipCard">
+            选择标签后，点击“保存标注”<br><span style="color:#da2535">快捷键：S</span>
+            </el-card>
+            <el-card shadow="always" class="tipCard">
+            点击“下一句”,继续标注<br><span style="color:#da2535">快捷键：N</span>
+            </el-card>
         </div>
 
             <div class="content-title">
@@ -71,6 +77,7 @@
                 isShowAll:0,//显示未标记句子
                 isFirst: false,
                 isLast: false,
+                flag:true,
             }
         },
         mounted(){
@@ -218,18 +225,20 @@
             handleKeyDown(e) {
                 var key = window.event.keyCode ? window.event.keyCode : window.event.which
                 if( key === 83 ){
+                    //S键保存标签
                     if(this.flag)
                     {
-                        this.saveLabel()
-                        this.flag = false
+                        this.saveLabel();
+                        this.flag = false;
                     }
                     e.preventDefault() //取消浏览器原有的ctrl+s操作
                 }
                 if( key === 78 ){
+                    //N键下一句
                     if(this.flag)
                     {
-                        this.nextParagraph(0)
-                        this.flag = false
+                        this.nextParagraph(this.isShowAll);
+                        this.flag = false;
                     }
                     e.preventDefault() //取消浏览器原有的ctrl+s操作
                 }
@@ -304,5 +313,9 @@
     }
     .content-left {
         width: 600px;
+    }
+    .tipCard {
+        font-size: 14px;
+        margin: 10px;
     }
 </style>

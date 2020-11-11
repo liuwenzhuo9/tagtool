@@ -100,7 +100,6 @@ export default {
             showCI: true,
             options: [],//存放可选标签
             maxLabelsNum: '',
-            flag: true,
             // currentPage: 1,
             // pageSize: 5,
             }
