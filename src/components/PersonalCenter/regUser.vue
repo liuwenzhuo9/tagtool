@@ -44,7 +44,7 @@
                               <span>{{item.task_name}}</span>
                               <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.sds_name" @click="editTest(item)">标记测试集</el-button>
                               <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.is_finished == 0" @click="finishTask(item)">结束任务</el-button>
-                              <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.is_finished == 1" @click="inferResult(item)">查看预测结果</el-button>
+                              <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.is_finished == 1 && testFinishArr[index]" @click="inferResult(item)">查看预测结果</el-button>
                               <el-button style="float: right; padding: 3px 0" type="text" @click="deleteTask(item)">删除任务</el-button>
                           </div>
                           <div class="text item">
@@ -174,7 +174,8 @@
 import {insertTaskInfo, findTaskIdByTaskName, findInfoByUserAccount,findTaskById,updateTasksByUserAccount,
         insertTaskContent,updateMemberAccountByTaskId, updateJoinTasksByUserAccount,deleteLabelByTaskIdAndAccount,
         deleteTaskInfoByTaskId,deleteContentByTaskId,deleteLabelByTaskId,
-        findAccountByAccount, updateFinishTasksByUserAccount,updateFinishStateByTaskId,findInferInfoByTaskId, getFormalParagraph, insertInferResult} from '../../unit/fetch';
+        findAccountByAccount, updateFinishTasksByUserAccount,updateFinishStateByTaskId,findInferInfoByTaskId, getFormalParagraph, insertInferResult,
+        findParagraphNumByTaskId, findLabeledTestNumByTaskId} from '../../unit/fetch';
 import labelEdit from '../Modules/LabelAnnotation/edit';
 import sequenceEdit from '../Modules/SequenceLabel/edit';
 import labelTestEdit from '../Modules/LabelAnnotation/testEdit';
@@ -253,6 +254,9 @@ export default {
             },
             fileList:[],
             testFileList:[],
+            newTaskId:'',
+            isTestFinish: true,
+            testFinishArr:[],//存储任务数据集是否完成标注
         }
     },
     mounted(){
@@ -260,116 +264,122 @@ export default {
         this.getName();
     },
     methods:{
-        async getTaskInfo(){
-          this.involvedTasksId = [];
-          this.unfinishedTaskId =[];
-          this.finishedTaskId =[];
-          this.issuedTaksId =[];
-          this.unfinishedTaskInfo = [];
-          this.finishedInfo = [];
-          this.issuedInfo = [];
-          const info = await findInfoByUserAccount({account:this.userAccount});
-          // 如果任务信息不为空，就将任务信息读出存入数组中
-            (info.data[0].involved_tasks!=null&&info.data[0].involved_tasks!="")?this.involvedTasksId = info.data[0].involved_tasks.split(","):this.involvedTasksId =[];
-            (info.data[0].progress_tasks!=null&&info.data[0].progress_tasks!="")?this.unfinishedTaskId = info.data[0].progress_tasks.split(","):this.unfinishedTaskId =[];
-            (info.data[0].finished_tasks!=null&&info.data[0].finished_tasks!="")?this.finishedTaskId = info.data[0].finished_tasks.split(","):this.finishedTaskId =[];
-            (info.data[0].issue_tasks!=null&&info.data[0].issue_tasks!="")?this.issuedTaksId = info.data[0].issue_tasks.split(","):this.issuedTaksId =[];
-          // 获取未完成的任务信息
-            if(this.unfinishedTaskId.length!=0){
-              await Promise.all(this.unfinishedTaskId.map(async (item,index) => {
-                if(item != null && item != '' && item != undefined ){//输入不能为空
-                    const info = await findTaskById({id:item});
-                    info.data.map((item) => {
-                          this.unfinishedTaskInfo.push(item);
-                        })
-                    }
-                }))
-            };
-          // 获取已完成的任务信息
-            if(this.finishedTaskId.length!=0){
-              await Promise.all(this.finishedTaskId.map(async (item,index) => {
-                if(item != null && item != '' && item != undefined ){//输入不能为空
-                    const info = await findTaskById({id:item});
-                    info.data.map((item) => {
-                            this.finishedInfo.push(item);
-                        })
-                    }
-                }))
-            };
-          // 获取已发布的任务信息
-            if(this.issuedTaksId.length!=0){
-              await Promise.all(this.issuedTaksId.map(async (item,index) => {
-                if(item != null && item != '' && item != undefined ){//输入不能为空
-                    const info = await findTaskById({id:item});
-                    info.data.map((item) => {
-                            this.issuedInfo.push(item);
-                        })
-                    }
-                }))
-            };
-        },
-        // 导航栏展示选择
-          async selectShowPart(index){
-              await this.getTaskInfo();
-              this.isEdit = false;
-              var temp = [false, false, false, false, false];
-              temp[index-1] = true;
-              this.menuShow = temp;
-              if(index == 1 || index == 0){
-                this.tasksinfo = this.unfinishedTaskInfo;
-              }
-              if(index == 2){
-                this.tasksinfo = this.finishedInfo;
-              }
-              if(index == 3){
-                this.tasksinfo = this.issuedInfo;
-              }
-              if(this.tasksinfo.length == 0){
-                this.$message({
-                  duration:600,
-                  message:'暂无该类型任务',
-                  type: 'warning'
-                }); 
-              }
-              this.isEdit = false;
-              this.isLabelEdit = false;
-              this.isSequenceEdit = false;
-              this.isLabelTestEdit = false;
-              this.isSequenceTestEdit = false;
-              this.isLabelInferResult = false;
-              this.isSequenceInferResult = false;
-              this.isRePassword = false;
-          },
-          // 获取登录用户的姓名
-          async getName(){
-              const accInfo = this.$store.state.loginuser;
-            const nameInfo = await findAccountByAccount({account:accInfo});
-            this.userName = nameInfo.data.name;
-          },
-        // 提交表单，发布任务
-          async submitForm(formName) {
-            if(this.dynamicTags.length == 0){
-              this.$message.error('请填写任务标签！');
-            }else{
-              if(this.testFileName){
-                // 生成测试集的随机位置
-                var contentLen = this.splitContent.length;
-                var testLen = this.spiltTestContent.length;
-                var arr=[];
-                for(var i=0; i<testLen; i++) {
-                    var arrNum = parseInt(Math.random()*(contentLen+testLen));
-                    if(arr.indexOf(arrNum) != -1){
-                      i--;
-                      continue;
-                    }else {
-                      arr.push(arrNum);
-                    }
+      async getTaskInfo(){
+        this.involvedTasksId = [];
+        this.unfinishedTaskId =[];
+        this.finishedTaskId =[];
+        this.issuedTaksId =[];
+        this.unfinishedTaskInfo = [];
+        this.finishedInfo = [];
+        this.issuedInfo = [];
+        const info = await findInfoByUserAccount({account:this.userAccount});
+        // 如果任务信息不为空，就将任务信息读出存入数组中
+        (info.data[0].involved_tasks!=null&&info.data[0].involved_tasks!="")?this.involvedTasksId = info.data[0].involved_tasks.split(","):this.involvedTasksId =[];
+        (info.data[0].progress_tasks!=null&&info.data[0].progress_tasks!="")?this.unfinishedTaskId = info.data[0].progress_tasks.split(","):this.unfinishedTaskId =[];
+        (info.data[0].finished_tasks!=null&&info.data[0].finished_tasks!="")?this.finishedTaskId = info.data[0].finished_tasks.split(","):this.finishedTaskId =[];
+        (info.data[0].issue_tasks!=null&&info.data[0].issue_tasks!="")?this.issuedTaksId = info.data[0].issue_tasks.split(","):this.issuedTaksId =[];
+        // 获取未完成的任务信息
+        if(this.unfinishedTaskId.length!=0){
+          await Promise.all(this.unfinishedTaskId.map(async (item,index) => {
+            if(item != null && item != '' && item != undefined ){//输入不能为空
+              const info = await findTaskById({id:item});
+              info.data.map((item) => {
+                this.unfinishedTaskInfo.push(item);
+              })
+            }
+          }))
+        };
+        // 获取已完成的任务信息
+        if(this.finishedTaskId.length!=0){
+          await Promise.all(this.finishedTaskId.map(async (item,index) => {
+            if(item != null && item != '' && item != undefined ){//输入不能为空
+              const info = await findTaskById({id:item});
+              info.data.map((item) => {
+                this.finishedInfo.push(item);
+              })
+            }
+          }))
+        };
+        // 获取已发布的任务信息
+        if(this.issuedTaksId.length!=0){
+          this.testFinishArr = [];
+          await Promise.all(this.issuedTaksId.map(async (item,index) => {
+            if(item != null && item != '' && item != undefined ){//输入不能为空
+              const info = await findTaskById({id:item});
+              info.data.map(async (taskItem) => {
+                this.isTestFinish = true;
+                this.issuedInfo.push(taskItem);
+                if(taskItem.sds_name != null && taskItem.sds_name != '' && taskItem.sds_name != undefined){
+                  await this.getRate(taskItem);
                 }
-                arr.sort((a, b)=>{
-                  return a-b;
-                });
-                // 将任务信息插入tb_task_info中
-                var info = await insertTaskInfo(
+               this.testFinishArr.push(this.isTestFinish);
+              })
+            }
+          }))
+        };
+      },
+        // 导航栏展示选择
+      async selectShowPart(index){
+        await this.getTaskInfo();
+        this.isEdit = false;
+        var temp = [false, false, false, false, false];
+        temp[index-1] = true;
+        this.menuShow = temp;
+        if(index == 1 || index == 0){
+          this.tasksinfo = this.unfinishedTaskInfo;
+        }
+        if(index == 2){
+          this.tasksinfo = this.finishedInfo;
+        }
+        if(index == 3){
+          this.tasksinfo = this.issuedInfo;
+        }
+        if(this.tasksinfo.length == 0){
+          this.$message({
+            duration:600,
+            message:'暂无该类型任务',
+            type: 'warning'
+            }); 
+        }
+        this.isEdit = false;
+        this.isLabelEdit = false;
+        this.isSequenceEdit = false;
+        this.isLabelTestEdit = false;
+        this.isSequenceTestEdit = false;
+        this.isLabelInferResult = false;
+        this.isSequenceInferResult = false;
+        this.isRePassword = false;
+      },
+        // 获取登录用户的姓名
+      async getName(){
+          const accInfo = this.$store.state.loginuser;
+          const nameInfo = await findAccountByAccount({account:accInfo});
+          this.userName = nameInfo.data.name;
+      },
+      // 提交表单，发布任务
+      async submitForm(formName) {
+          if(this.dynamicTags.length == 0){
+            this.$message.error('请填写任务标签！');
+          }else{
+            if(this.testFileName){
+              // 生成测试集的随机位置
+              var contentLen = this.splitContent.length;
+              var testLen = this.spiltTestContent.length;
+              var arr=[];
+              for(var i=0; i<testLen; i++) {
+                var arrNum = parseInt(Math.random()*(contentLen+testLen));
+                if(arr.indexOf(arrNum) != -1){
+                  i--;
+                  continue;
+                }else {
+                  arr.push(arrNum);
+                }
+              }
+              arr.sort((a, b)=>{
+                return a-b;
+              });
+              // 将任务信息插入tb_task_info中
+              var info = await insertTaskInfo(
                   {leader_account: this.userAccount,
                   leader_name: this.$store.state.loginname,
                   tfile_name: this.fileName,
@@ -383,8 +393,8 @@ export default {
                   sds_name: this.testFileName,//如果有上传测试集文件，则插入任务信息时，加上测试集文件名
                   sds_pos: arr,
                   });
-              }else{
-                var info = await insertTaskInfo(
+            }else{
+              var info = await insertTaskInfo(
                   {leader_account: this.userAccount,
                   leader_name: this.$store.state.loginname,
                   tfile_name: this.fileName,
@@ -396,47 +406,48 @@ export default {
                   member_num: this.ruleForm.member_num,
                   deadline: this.ruleForm.deadline,
                   });
-              }
-              
-              await this.insertContent();
-
-              // 发布任务后，根据返回的新任务id，更新用户信息表中的任务信息
-              this.issuedTaksId.push(info.data);
-              this.involvedTasksId.push(info.data);
-              await updateTasksByUserAccount({account:this.userAccount,
-                                              issue_tasks:this.issuedTaksId.toString(),
-                                              finished_tasks:this.finishedTaskId.toString(),
-                                              progress_tasks:this.unfinishedTaskId.toString(),
-                                              involved_tasks:this.involvedTasksId.toString()
-                                            });
-              this.dynamicTags = [];
-              this.testFileList = [];
-              this.fileList = [];
-              this.$message.success('任务发布成功！');
-              this.resetForm('ruleForm');
             }
-          },
-        // 发布任务后将任务的段落内容存入tb_task_content中
-          async insertContent(){
-            var type ;
-            this.ruleForm.task_type == "标签标注"? type = 1:type = 0;
-            const info = await findTaskIdByTaskName({task_name:this.ruleForm.task_name});
-            await Promise.all(this.splitContent.map(async (item,index) => {
-                  if(item != null && item != '' && item != undefined ){//输入不能为空
-                      await insertTaskContent({task_id:info.data,
-                                               content:item,
-                                               paragraph_position:index,
-                                               task_name:this.ruleForm.task_name,
-                                               is_test:0,
-                                               task_type:type});
-                      }
-                  }));
+              
+            await this.insertContent();
+
+            // 发布任务后，根据返回的新任务id，更新用户信息表中的任务信息
+            this.issuedTaksId.push(info.data);
+            this.involvedTasksId.push(info.data);
+            await updateTasksByUserAccount({account:this.userAccount,
+                                            issue_tasks:this.issuedTaksId.toString(),
+                                            finished_tasks:this.finishedTaskId.toString(),
+                                            progress_tasks:this.unfinishedTaskId.toString(),
+                                            involved_tasks:this.involvedTasksId.toString()
+                                          });
+            this.dynamicTags = [];
+            this.testFileList = [];
+            this.fileList = [];
+            this.$message.success('任务发布成功！');
+            this.resetForm('ruleForm');
+          }
+      },
+      // 发布任务后将任务的段落内容存入tb_task_content中
+      async insertContent(){
+          var type ;
+          this.ruleForm.task_type == "标签标注"? type = 1:type = 0;
+          const info = await findTaskIdByTaskName({task_name:this.ruleForm.task_name});
+          this.newTaskId = info.data;
+          await Promise.all(this.splitContent.map(async (item,index) => {
+            if(item != null && item != '' && item != undefined ){//输入不能为空
+                await insertTaskContent({task_id:this.newTaskId,
+                                         content:item,
+                                         paragraph_position:index,
+                                         task_name:this.ruleForm.task_name,
+                                         is_test:0,
+                                         task_type:type});
+                  }
+            }));
            // 如果上传了测试集，则将测试集内容存入tb_test_content中
             if(this.spiltTestContent){
               // 将测试段落存入tb_test_content中
               await Promise.all(this.spiltTestContent.map(async (item,index) => {
                   if(item != null && item != '' && item != undefined ){//输入不能为空
-                      await insertTaskContent({task_id:info.data,
+                      await insertTaskContent({task_id:this.newTaskId,
                                                content:item,
                                                paragraph_position:index,
                                                task_name:this.ruleForm.task_name,
@@ -446,32 +457,32 @@ export default {
                   }))
             }
              // 从tb_task_content中获取正式任务句子的信息(包括paragraph_id),从而存入tb_infer_result中
-             const formalInfo = await getFormalParagraph({task_id: info.data});
-             formalInfo.data.map(async(item, index) => {
-               await insertInferResult({task_id: info.data,
+            const formalInfo = await getFormalParagraph({task_id: this.newTaskId});
+            formalInfo.data.map(async(item, index) => {
+              await insertInferResult({task_id:this.newTaskId,
                                         paragraph_id: item.id,
                                         paragraph_position: item.paragraph_position,
                                         task_type: item.task_type,
                                         content: item.content,
                                         })
-             })
-          },
-        resetForm(formName) {
-          this.dynamicTags = [];
-          this.testFileList = [];
-          this.fileList = [];
-          this.$refs[formName].resetFields();
-        },
-        handleClose(tag) {
-          this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
-        },
+             });
+      },
+      // 重置表单
+      resetForm(formName) {
+        this.dynamicTags = [];
+        this.testFileList = [];
+        this.fileList = [];
+        this.$refs[formName].resetFields();
+      },
+      handleClose(tag) {
+        this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
+      },
       showInput() {
         this.inputVisible = true;
         this.$nextTick(_ => {
           this.$refs.saveTagInput.$refs.input.focus();
         });
       },
-
       handleInputConfirm() {
         let inputValue = this.inputValue;
         if (inputValue) {
@@ -515,7 +526,7 @@ export default {
         return this.$confirm(`确定移除 ${ file.name }？`);
       },
       // 上传测试集文件
-       handleSuccessTest(response, file){
+      handleSuccessTest(response, file){
              this.uploadSuccess = true;
             const reader = new FileReader();
             reader.readAsText(file.raw, "UTF-8");
@@ -684,6 +695,7 @@ export default {
                       }));
                       await updateFinishStateByTaskId({id:info.id, is_finished:1});
                       this.$message.success('该任务已结束！');
+                      this.selectShowPart(3);
                     }
                     catch(e){
                       this.$message.error((e && e.message) ? e.message : '请稍后重试')
@@ -707,6 +719,18 @@ export default {
         }
         if(info.task_type == "标签标注"){
           this.isLabelInferResult = true;
+        }
+      },
+      // 获取任务测试句子的标注进度
+      async getRate(info){
+        // 获取所有测试段落数
+        const infoA = await findParagraphNumByTaskId({task_id:info.id, is_test:1});
+        var allParagraphNum = infoA.data;
+        // 获取所有完成的测试段落数
+        const infoF = await findLabeledTestNumByTaskId({task_id:info.id});
+        var finishParagraphNum = infoF.data;
+        if(allParagraphNum != finishParagraphNum){
+           this.isTestFinish = false;
         }
       },
       // 任务发布者标注测试任务

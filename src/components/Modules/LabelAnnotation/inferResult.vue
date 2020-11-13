@@ -1,7 +1,7 @@
 <template>
     <div class = "inferResult">
-        <el-button type="primary" v-if="!showCI" round @click="showListOrPie">查看标注一致性</el-button>
-        <el-button type="primary" v-if="showCI" round @click="showListOrPie">查看标签分类汇总图</el-button>
+        <el-button type="primary" v-if="!showCI" round @click="showListOrRadar">查看标注一致性</el-button>
+        <el-button type="primary" v-if="showCI" round @click="showListOrRadar">查看标签分类汇总图</el-button>
         <el-button type="success" v-if="showCI" round @click="downLoadRes">导出标注结果</el-button>
         <div v-show="!showCI" ref="chart" style="width:1040px;height:376px"></div>
         <div v-if="showCI">
@@ -81,25 +81,13 @@ export default {
         },
     data(){
         return{
-            pieInfo:[
-                // {value: 1, name: '富强'},
-                // {value: 1, name: '民主'},
-                // {value: 1, name: '文明'},
-                // {value: 1, name: '和谐'},
-                // {value: 1, name: '自由'},
-                // {value: 1, name: '平等'},
-                // {value: 1, name: '公正'},
-                // {value: 1, name: '法制'},
-                // {value: 1, name: '爱国'},
-                // {value: 1, name: '敬业'},
-                // {value: 1, name: '诚信'},
-                // {value: 1, name: '友善'},
-            ],
+            radarInfo:[],
             labelsNum: [],
             tableData: [],//预测结果等信息以列表的形式展示
             showCI: true,
             options: [],//存放可选标签
             maxLabelsNum: '',
+            isTestFinished:ture,
             // currentPage: 1,
             // pageSize: 5,
             }
@@ -131,14 +119,12 @@ export default {
                                     ci: item.ci,
                                     confirm: false});
                 }
-                console.log(this.tableData)
                 
             })
-            this.pieInfo = [];
+            this.radarInfo = [];
             for(var j = 0; j<num; j++){
-                this.pieInfo.push({name:this.options[j], max:this.maxLabelsNum});
+                this.radarInfo.push({name:this.options[j], max:this.maxLabelsNum});
             }
-            console.log(this.pieInfo);
             this.getEchartData();
         },
         getEchartData() {
@@ -171,7 +157,7 @@ export default {
                                     color: 'rgba(131,141,158,.1)',
                                 },
                                 },
-                                indicator: this.pieInfo,//name max
+                                indicator: this.radarInfo,//name max
                                 splitArea: {
                                 show: true,
                                 areaStyle: {
@@ -218,30 +204,30 @@ export default {
             })
         },
         async handleSave(index, row) {
-            // console.log(row);
             await updateFinalResultByPosition({task_id: this.editInfo.id, paragraph_position: index, final_result: row.tag});
             this.init();
         },
-        showListOrPie(){
+        showListOrRadar(){
             this.showCI = !this.showCI;
             if(this.showCI){
                 this.getEchartData();
             }
         },
+        //导出标注结果功能
         async downLoadRes(){
-          const infer_res = await findInferInfoByTaskId({task_id:this.editInfo.id});
-          var finalLabel = [];
-          for(var i = 0; i<infer_res.data.length; i++){
-            finalLabel.push(infer_res.data[i].final_result);
-          }
-          var urlObject = window.URL || window.webkitURL || window;
-          var export_blob = new Blob([finalLabel.toString()]);
-          var save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a")
-          save_link.href = urlObject.createObjectURL(export_blob);
-          save_link.download = this.editInfo.task_name + '.txt';
-          var ev = document.createEvent("MouseEvents");
-          ev.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-          save_link.dispatchEvent(ev);
+            const infer_res = await findInferInfoByTaskId({task_id:this.editInfo.id});
+            var finalLabel = [];
+            for(var i = 0; i<infer_res.data.length; i++){
+                finalLabel.push(infer_res.data[i].final_result);
+            }
+            var urlObject = window.URL || window.webkitURL || window;
+            var export_blob = new Blob([finalLabel.toString()]);
+            var save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a")
+            save_link.href = urlObject.createObjectURL(export_blob);
+            save_link.download = this.editInfo.task_name + '.txt';
+            var ev = document.createEvent("MouseEvents");
+            ev.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+            save_link.dispatchEvent(ev);
         },
     }
 }

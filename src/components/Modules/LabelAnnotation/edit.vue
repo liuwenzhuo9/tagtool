@@ -35,10 +35,12 @@
                 </p>
                 <el-divider></el-divider>
                 <p class="tips">可选标签：</p>
-                <el-radio :key="index" v-for="(item,index) in labelsInfo" @change="chooseLabel" v-model="radio" :label="item">{{item}}</el-radio>
-                <el-button @click="saveLabel" v-if="isEdit">保存标签</el-button>
-                <el-button @click="saveLabel" v-if="!isEdit">修改标签</el-button>
+                <el-radio-group v-model="radio" class="chooseLabel">
+                <el-radio :key="index" v-for="(item,index) in labelsInfo" @change="chooseLabel" :label="index">{{item}}</el-radio>
+                </el-radio-group>
                 <div>
+                    <el-button @click="saveLabel" v-if="isEdit">保存标签</el-button>
+                    <el-button @click="saveLabel" v-if="!isEdit">修改标签</el-button>
                     <el-button @click="nextParagraph(isShowAll)" :disabled="isLast">下一句</el-button>
                     <el-button @click="lastParagraph(isShowAll)" :disabled="isFirst">上一句</el-button>
                 </div>
@@ -72,7 +74,7 @@
                 choosedLabel:'',
                 resultLabel:'',
                 resultId:'',
-                radio: '1',
+                radio: 0,
                 isEdit : true,
                 isShowAll:0,//显示未标记句子
                 isFirst: false,
@@ -93,6 +95,7 @@
         },
         methods:{
             async init(){
+                this.choosedLabel = this.labelsInfo[0];
                 this.getRate();
                 var info = [];
                 this.resultLabel = '';
@@ -123,13 +126,13 @@
                         proTask.splice(proTask.indexOf(this.editInfo.id.toString()),1);
                         var finTask = '';
                         if(info.data[0].finished_tasks!=null && info.data[0].finished_tasks!=''){
-                            finTask = info.data[0].finished_tasks.split(',').push(this.editInfo.id);
+                            finTask = info.data[0].finished_tasks + ',' + this.editInfo.id.toString();
                         }else{
                             finTask = this.editInfo.id;
                         };
                         await updateFinishTasksByUserAccount({account:this.userAccount,
                                                             progress_tasks:proTask.toString(),
-                                                            finished_tasks:finTask.toString()
+                                                            finished_tasks:finTask
                                                             });
                         const memberFin = this.editInfo.member_finish + 1;
                         await updateFinishMemberByTaskId({id:this.editInfo.id, member_finish: memberFin});
@@ -159,11 +162,18 @@
                 this.choosedLabel = info;
             },
             async saveLabel(){
-                await updateLabelById({id:this.resultId,label_result:this.choosedLabel});
-                this.resultLabel = this.choosedLabel;
-                this.getRate();
-                this.isEdit = false;
-                this.radio = '1';
+                if(this.choosedLabel == null || this.choosedLabel == ''){
+                    this.$message({
+                        type: 'warning',
+                        message: '未选择标签'
+                    }); 
+                }else{
+                    await updateLabelById({id:this.resultId,label_result:this.choosedLabel});
+                    this.resultLabel = this.choosedLabel;
+                    this.getRate();
+                    this.isEdit = false;
+                    this.radio = '1';
+                }
             },
             async nextParagraph(msg){
                 this.resultLabel = '';
@@ -317,5 +327,9 @@
     .tipCard {
         font-size: 14px;
         margin: 10px;
+    }
+    .el-radio__label {
+        font-size: 22px;
+        padding: 6px;
     }
 </style>

@@ -36,16 +36,17 @@
                 <div class="paragraphContent10" v-html="htmlContent">{{this.htmlContent}}</div>
                 <el-divider></el-divider>
                 <p class="tips">可选标签：</p>
+                <el-radio-group v-model="radio" class="chooseLabel">
                     <el-radio 
                         :key="index" 
                         v-for="(item,index) in labelsInfo" 
-                        @change="chooseLabel" 
-                        v-model="radio" 
+                        @change="chooseLabel"
                         :label="index">
                         {{item}}
-                    </el-radio>
-                    <el-button @click="addLabel" :disabled="!isEdit">添加标签</el-button>
+                    </el-radio>  
+                </el-radio-group>
                 <div>
+                    <el-button @click="addLabel" :disabled="!isEdit">添加标签</el-button>
                     <el-button @click="saveLabel" v-if="isEdit">保存标注</el-button>
                     <el-button @click="changeLabel" v-if="!isEdit">修改标注</el-button>
                     <el-button @click="nextParagraph(isShowAll)" :disabled="isLast">下一句</el-button>
@@ -98,7 +99,7 @@
                 labelsInfo:this.editInfo.task_label.split(','),//存放所有待选标签
                 choosedLabel:'',
                 resultId:'',
-                radio: '0',
+                radio: 0,
                 labelResShow:[],
                 labelResArr:[],
                 isEdit:true,
@@ -121,6 +122,7 @@
         },
         methods:{
             async init(){
+                this.choosedLabel = this.labelsInfo[0];
                 this.getRate();
                 var info = [];
                 var resStr = '';
@@ -155,15 +157,14 @@
                         proTask.splice(proTask.indexOf(this.editInfo.id.toString()),1);
                         var finTask = '';
                         if(info.data[0].finished_tasks!=null && info.data[0].finished_tasks!=''){
-                            finTask = info.data[0].finished_tasks.split(',').push(this.editInfo.id);
+                            finTask = info.data[0].finished_tasks + ',' + this.editInfo.id.toString();
                         }else{
                             finTask = this.editInfo.id;
                         };
                         await updateFinishTasksByUserAccount({account:this.userAccount,
                                                             progress_tasks:proTask.toString(),
-                                                            finished_tasks:finTask.toString()
+                                                            finished_tasks:finTask
                                                             });
-                                                            
                         const memberFin = this.editInfo.member_finish + 1;
                         await updateFinishMemberByTaskId({id:this.editInfo.id, member_finish: memberFin});
                         this.$message.success('恭喜您完成任务！');
@@ -200,14 +201,30 @@
                     selectTxt = window.document.selection.createRange().text;
                 }
                 var selection = selectTxt.toString();
-                var startIndex = Math.min(selectTxt.anchorOffset,selectTxt.focusOffset);
-                var endIndex = Math.max(selectTxt.anchorOffset,selectTxt.focusOffset);
-                this.labelResShow.push('{'+ startIndex + ',' + endIndex + ',“'  + selection + '”,' + this.choosedLabel + '}');
-                this.labelResArr.push(startIndex + '-' + endIndex + '-' + selection + '-' + this.choosedLabel);
-                var temp = [].concat(this.labelResArr);
-                this.sortLabelRes(temp);
-                this.contentToHtml(temp, this.contentInfo);
-                this.radio = '0';
+                if(selection == null || selection == ''){
+                    this.$message({
+                        type: 'warning',
+                        message: '未选择文本'
+                    }); 
+                }else if(this.choosedLabel == null || this.choosedLabel == ''){
+                    this.$message({
+                        type: 'warning',
+                        message: '未选择标签'
+                    }); 
+                }else if(!this.isEdit){
+                    this.$message({
+                        type: 'warning',
+                        message: '请点击“修改标注”后再对句子进行修改'
+                    }); 
+                }else{
+                    var startIndex = Math.min(selectTxt.anchorOffset,selectTxt.focusOffset);
+                    var endIndex = Math.max(selectTxt.anchorOffset,selectTxt.focusOffset);
+                    this.labelResShow.push('{'+ startIndex + ',' + endIndex + ',“'  + selection + '”,' + this.choosedLabel + '}');
+                    this.labelResArr.push(startIndex + '-' + endIndex + '-' + selection + '-' + this.choosedLabel);
+                    var temp = [].concat(this.labelResArr);
+                    this.sortLabelRes(temp);
+                    this.contentToHtml(temp, this.contentInfo);
+                }
             },
             async saveLabel(){
                 await updateLabelById({id:this.resultId,label_result:this.labelResShow.toString()});
@@ -250,7 +267,6 @@
                 }
                 this.contentPosition = Number(info.data.paragraph_position);
                 this.resultId = info.data.id;
-                this.radio = '0';
                 this.isEdit = true;
                 this.judgeFirstOrLast();
             },
@@ -278,7 +294,6 @@
                 }
                 this.contentPosition = Number(info.data.paragraph_position);
                 this.resultId = info.data.id;
-                this.radio = '0';
                 this.isEdit = true;
                 this.judgeFirstOrLast();
             },
@@ -484,4 +499,16 @@
         font-size: 14px;
         margin: 10px;
     }
+    .el-radio__label {
+        font-size: 22px;
+        padding: 6px;
+    }
+    // 希望设置其他区域文本不能被选中
+    // .chooseShow .content-title .tips .content-right {
+    //     -webkit-user-select: none;
+	// 	-moz-user-select: none;
+	// 	-ms-user-select: none;
+	// 	user-select: none;
+    //     -o-user-select:none;
+    // }
 </style>

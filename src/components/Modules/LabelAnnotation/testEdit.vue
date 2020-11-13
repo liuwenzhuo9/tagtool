@@ -34,10 +34,12 @@
                 </p>
                 <el-divider></el-divider>
                 <p class="tips">可选标签：</p>
-                    <el-radio :key="index" v-for="(item,index) in labelsInfo" @change="chooseLabel" v-model="radio" :label="item">{{item}}</el-radio>
-                <el-button @click="saveLabel" v-if="isEdit">保存标签</el-button>
-                <el-button @click="saveLabel" v-if="!isEdit">修改标签</el-button>
+                <el-radio-group v-model="radio" class="chooseLabel">
+                    <el-radio :key="index" v-for="(item,index) in labelsInfo" @change="chooseLabel" :label="item">{{item}}</el-radio>
+                </el-radio-group>
                 <div>
+                    <el-button @click="saveLabel" v-if="isEdit">保存标签</el-button>
+                    <el-button @click="saveLabel" v-if="!isEdit">修改标签</el-button>
                     <el-button @click="nextParagraph(isShowAll)" :disabled="isLast">下一句</el-button>
                     <el-button @click="lastParagraph(isShowAll)" :disabled="isFirst">上一句</el-button>
                 </div>
@@ -45,6 +47,7 @@
             <div class="content-right">
                 <p class="tips">标注结果：{{this.resultLabel}}</p>
             </div>
+            <el-button @click="backToLastStep">返回上一级</el-button>
              <!-- <el-button v-if="this.finishParagraphNum == this.allParagraphNum" @click="exitTest">提交测试集标注结果</el-button> -->
     </div>
 </template>
@@ -69,7 +72,7 @@
                 labelsInfo:this.editInfo.task_label.split(','),
                 choosedLabel:'',
                 resultLabel:'',
-                radio: '1',
+                radio: 0,
                 isEdit: true,
                 isShowAll:0,//显示未标记句子
                 isFirst: false,
@@ -91,6 +94,7 @@
         methods:{
             async init(){
                 this.getRate();
+                this.choosedLabel = this.labelsInfo[0];
                 var info = [];
                 this.resultLabel = '';
                 if(this.isShowAll == 0){
@@ -105,26 +109,36 @@
                 this.judgeFirstOrLast();
             },
             async getRate(){
-                // 获取所有段落数
+                // 获取所有测试段落数
                 const infoA = await findParagraphNumByTaskId({task_id:this.editInfo.id, is_test:1});
                 this.allParagraphNum = infoA.data;
-                // 获取所有完成的段落数
+                // 获取所有完成的测试段落数
                 const infoF = await findLabeledTestNumByTaskId({task_id:this.editInfo.id});
                 this.finishParagraphNum = infoF.data;
-                if(this.allParagraphNum == this.finishParagraphNum){
-                    this.$message.success('该任务所有测试句子已标注！');
-                    this.selectShowPart(3);
-                }
+                // if(this.allParagraphNum == this.finishParagraphNum){
+                //     this.$message.success('该任务所有测试句子已标注！');
+                //     this.selectShowPart(3);
+                // }
+            },
+            backToLastStep(){
+                this.selectShowPart(3);
             },
             chooseLabel(info){
                 this.choosedLabel = info;
             },
             async saveLabel(){
-                const info = await updateRightLabel({task_id:this.editInfo.id,paragraph_position:this.contentPosition,test_label:this.choosedLabel});
-                this.resultLabel = this.choosedLabel;
-                this.getRate();
-                this.isEdit = false;
-                this.radio = '1';
+                if(this.choosedLabel == null || this.choosedLabel == ''){
+                    this.$message({
+                        type: 'warning',
+                        message: '未选择标签'
+                    }); 
+                }else{
+                    const info = await updateRightLabel({task_id:this.editInfo.id,paragraph_position:this.contentPosition,test_label:this.choosedLabel});
+                    this.resultLabel = this.choosedLabel;
+                    this.getRate();
+                    this.isEdit = false;
+                    this.radio = '1';
+                }
             },
             async nextParagraph(msg){
                 this.resultLabel = '';
@@ -254,5 +268,9 @@
     .tipCard {
         font-size: 14px;
         margin: 10px;
+    }
+    .el-radio__label {
+        font-size: 22px;
+        padding: 6px;
     }
 </style>
