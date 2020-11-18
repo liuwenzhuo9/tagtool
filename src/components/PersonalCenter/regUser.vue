@@ -47,19 +47,19 @@
                               <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.is_finished == 1 && testFinishArr[index]" @click="inferResult(item)">查看预测结果</el-button>
                               <el-button style="float: right; padding: 3px 0" type="text" @click="deleteTask(item)">删除任务</el-button>
                           </div>
-                          <div class="text item">
+                          <div class="text_item">
                               发起人：{{item.leader_name}}
                           </div>
-                          <div class="text item">
+                          <div class="text_item">
                               任务简介：{{item.task_intro}}
                           </div>
-                          <div class="text item">
-                              任务类型：{{item.task_type}}
+                          <div class="text_item">
+                              任务类型：{{typeList[item.task_type]}}
                           </div>
-                          <div class="text item">
+                          <div class="text_item">
                               任务报酬：{{item.task_reward}}（共需{{item.member_num}}人）
                           </div>
-                          <div class="text item">
+                          <div class="text_item">
                               截止时间：{{item.deadline}}
                           </div>
                       </el-card>
@@ -68,22 +68,25 @@
           <!-- 发布任务界面 -->
           <div class = "issueTask" v-show="menuShow[3]">
               <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
-                  <el-form-item label="任务名称" prop="task_name" required>
+                  <el-form-item label="任务名称" prop="task_name" size="small" required>
                       <el-input v-model="ruleForm.task_name"></el-input>
                   </el-form-item>
-                  <el-form-item label="任务类型" prop="task_type" required>
+                  <el-form-item label="任务类型" prop="task_type" size="small" required>
                       <el-radio-group v-model="ruleForm.task_type">
-                      <el-radio label="序列标注"></el-radio>
-                      <el-radio label="标签标注"></el-radio>
+                      <el-radio size="mini" label="序列标注" ></el-radio>
+                      <el-radio size="mini" label="单标签标注" ></el-radio>
+                      <el-radio size="mini" label="量级标签标注" ></el-radio>
+                      <el-radio size="mini" label="多层次标签标注" ></el-radio>
+                      <el-radio size="mini" label="多层次量级标签标注" ></el-radio>
                       </el-radio-group>
                   </el-form-item>
-                  <el-form-item label="任务报酬" prop="task_reward" required>
+                  <el-form-item label="任务报酬" prop="task_reward" size="small" required>
                       <el-input v-model="ruleForm.task_reward"></el-input>
                   </el-form-item>
-                  <el-form-item label="任务简介" prop="task_intro" required>
+                  <el-form-item label="任务简介" prop="task_intro" size="small" required>
                       <el-input v-model="ruleForm.task_intro"></el-input>
                   </el-form-item>
-                  <el-form-item label="截止时间" prop="deadline" required>
+                  <el-form-item label="截止时间" prop="deadline" size="small" required>
                     <el-date-picker type="date" 
                                     placeholder="选择日期" 
                                     v-model="ruleForm.deadline" 
@@ -93,11 +96,12 @@
                                     :picker-options="pickerOptions">
                     </el-date-picker>
                   </el-form-item>
-                  <el-form-item label="设置标签" prop="task_label" class="setLabel">
+                  <el-form-item label="设置标签" prop="task_label" class="setLabel" v-if="ruleForm.task_type=='序列标注' || ruleForm.task_type=='单标签标注' || ruleForm.task_type=='量级标签标注'">
                       <el-tag
                           :key="tag"
                           v-for="tag in dynamicTags"
                           closable
+                          size="medium"
                           :disable-transitions="false"
                           @close="handleClose(tag)">
                           {{tag}}
@@ -107,15 +111,79 @@
                           v-if="inputVisible"
                           v-model="inputValue"
                           ref="saveTagInput"
-                          size="small"
                           @keyup.enter.native="handleInputConfirm"
                           @blur="handleInputConfirm"
                           >
                       </el-input>
-                      <el-button v-else class="button-new-tag" size="small" @click="showInput">+ New Label</el-button>
+                      <el-button v-else class="button-new-tag" size="mini" @click="showInput">+ New Label</el-button>
+                  </el-form-item>
+                  <el-form-item label="设置一级标签" prop="task_label" class="setLabel" v-if="ruleForm.task_type=='多层次标签标注' || ruleForm.task_type=='多层次量级标签标注'">
+                      <el-tag
+                          :key="tag"
+                          v-for="tag in dynamicTags"
+                          closable
+                          size="medium"
+                          :disable-transitions="false"
+                          @close="handleClose(tag)">
+                          {{tag}}
+                      </el-tag>
+                      <el-input
+                          class="input-new-tag"
+                          v-if="inputVisible"
+                          v-model="inputValue"
+                          ref="saveTagInput"
+                          @keyup.enter.native="handleInputConfirm"
+                          @blur="handleInputConfirm"
+                          >
+                      </el-input>
+                      <el-button v-else class="button-new-tag" size="mini" @click="showInput">+ New Label</el-button>
+                  </el-form-item>
+                  <el-form-item label="设置二级标签" prop="task_label" v-if="(ruleForm.task_type=='多层次标签标注' || ruleForm.task_type=='多层次量级标签标注') && dynamicTags.length != 0">
+                      <el-button :key="index" v-for="(tag,index) in dynamicTags" @click="openDialog(tag,index)">
+                          <span v-if="dynamicTagsSecond[index].length == 0">{{tag}}</span>
+                          <span v-if="dynamicTagsSecond[index].length != 0">{{tag}}&emsp;:&emsp;{{dynamicTagsSecond[index].toString()}}</span>
+                      </el-button>
+                      <span style="color:#ada8a8">（点击一级标签添加对应二级标签）</span>
+                      <el-dialog
+                        title="输入二级标签"
+                        :visible.sync="dialogVisible"
+                        width="30%"
+                        :before-close="handleCloseDialog">
+                        <p>
+                          <span>一级标签：{{firstLevelTag}}</span>
+                          <span style="color:#ada8a8">（在下列标签内输入二级标签）</span>
+                        </p>
+                        <el-tag
+                          :key="tag"
+                          v-for="tag in dynamicTagsSecond[currentFirstTagIndex]"
+                          closable
+                          size="medium"
+                          :disable-transitions="false"
+                          @close="handleCloseSecond(tag)">
+                          {{tag}}
+                        </el-tag>
+                        <el-input
+                            class="input-new-tag"
+                            v-if="inputVisibleSecond"
+                            v-model="inputValueSecond"
+                            ref="saveTagInputSecond"
+                            @keyup.enter.native="handleInputConfirmSecond"
+                            @blur="handleInputConfirmSecond"
+                            >
+                        </el-input>
+                        <el-button v-else class="button-new-tag" size="mini" @click="showInputSecond">+ New Label</el-button>
+                        <span slot="footer" class="dialog-footer">
+                          <el-button @click="closeDialog">取 消</el-button>
+                          <el-button type="primary" @click="addSencondTag()">确 定</el-button>
+                        </span>
+                      </el-dialog>
+                  </el-form-item>
+                  <el-form-item label="量级粒度" prop="granularity" v-if="ruleForm.task_type=='量级标签标注' || ruleForm.task_type=='多层次量级标签标注'">
+                      <el-input-number v-model="ruleForm.granularity" :precision="2" :step="0.1" :max="10" size="mini"></el-input-number>
+                      <span style="color:#ada8a8">（量级满分为10）</span>
                   </el-form-item>
                   <el-form-item label="所需人数" prop="member_num" required>
-                      <el-input-number v-model="ruleForm.member_num" @change="handleChange" :min="1" :max="10" label="描述文字"></el-input-number>
+                      <el-input-number v-model="ruleForm.member_num" @change="handleChange" :min="1" :max="10" size="mini" label="描述文字"></el-input-number>
                   </el-form-item>
                   <el-form-item label="任务文件" prop="file_name" class="uploadPart">
                       <el-upload
@@ -187,6 +255,7 @@ export default {
     data(){
         return{
             menuShow: [true, false, false, false, false],
+            typeList: ["序列标注", "单标签标注", "量级标签标注", "多层次标签标注", "多层次量级标签标注"],
             ruleForm: {
                         task_name: '',
                         task_type: '',
@@ -194,11 +263,15 @@ export default {
                         task_intro: '',
                         deadline:'',
                         member_num: '',
-                        file_name:''
+                        file_name:'',
+                        granularity:0,
                     },
             dynamicTags: [],
+            dynamicTagsSecond: [],//存放二级标签的数组
             inputVisible: false,
+            inputVisibleSecond: false,
             inputValue: '',
+            inputValueSecond: '',
             num: 1,
             fileName:'',
             testFileName:'',
@@ -257,6 +330,9 @@ export default {
             newTaskId:'',
             isTestFinish: true,
             testFinishArr:[],//存储任务数据集是否完成标注
+            dialogVisible: false,
+            firstLevelTag: '',
+            currentFirstTagIndex: '',
         }
     },
     mounted(){
@@ -361,6 +437,18 @@ export default {
           if(this.dynamicTags.length == 0){
             this.$message.error('请填写任务标签！');
           }else{
+            // 确定任务类型对应编号
+            const typeIndex = this.typeList.indexOf(this.ruleForm.task_type);
+            var taskLabels = '';
+            // 记录标签内容，如果是多层次标签，则遍历一级标签和二级标签数组
+            if(typeIndex == 3 || typeIndex == 4){
+              for(var i = 0; i < this.dynamicTags.length; i++){
+                let group = i==0 ? '{' + this.dynamicTags[i] + ':' + this.dynamicTagsSecond[i].toString() + '}' : ',{' + this.dynamicTags[i] + ':' + this.dynamicTagsSecond[i].toString() + '}';
+                taskLabels += group;
+              }
+            }else{
+              taskLabels = this.dynamicTags;
+            }
             if(this.testFileName){
               // 生成测试集的随机位置
               var contentLen = this.splitContent.length;
@@ -384,14 +472,15 @@ export default {
                   leader_name: this.$store.state.loginname,
                   tfile_name: this.fileName,
                   task_name: this.ruleForm.task_name,
-                  task_type: this.ruleForm.task_type,
+                  task_type: typeIndex,
                   task_reward: this.ruleForm.task_reward,
                   task_intro: this.ruleForm.task_intro,
-                  task_label: this.dynamicTags,
+                  task_label: taskLabels,
                   member_num: this.ruleForm.member_num,
                   deadline: this.ruleForm.deadline,
                   sds_name: this.testFileName,//如果有上传测试集文件，则插入任务信息时，加上测试集文件名
                   sds_pos: arr,
+                  granularity: this.ruleForm.granularity,
                   });
             }else{
               var info = await insertTaskInfo(
@@ -399,12 +488,13 @@ export default {
                   leader_name: this.$store.state.loginname,
                   tfile_name: this.fileName,
                   task_name: this.ruleForm.task_name,
-                  task_type: this.ruleForm.task_type,
+                  task_type: typeIndex,
                   task_reward: this.ruleForm.task_reward,
                   task_intro: this.ruleForm.task_intro,
-                  task_label: this.dynamicTags,
+                  task_label: taskLabels,
                   member_num: this.ruleForm.member_num,
                   deadline: this.ruleForm.deadline,
+                  granularity: this.ruleForm.granularity,
                   });
             }
               
@@ -419,9 +509,6 @@ export default {
                                             progress_tasks:this.unfinishedTaskId.toString(),
                                             involved_tasks:this.involvedTasksId.toString()
                                           });
-            this.dynamicTags = [];
-            this.testFileList = [];
-            this.fileList = [];
             this.$message.success('任务发布成功！');
             this.resetForm('ruleForm');
           }
@@ -476,6 +563,23 @@ export default {
       },
       handleClose(tag) {
         this.dynamicTags.splice(this.dynamicTags.indexOf(tag), 1);
+        this.dynamicTagsSecond.splice(this.dynamicTags.indexOf(tag), 1);
+      },
+      handleCloseSecond(tag) {
+        this.dynamicTagsSecond[this.currentFirstTagIndex].splice(this.dynamicTagsSecond[this.currentFirstTagIndex].indexOf(tag), 1);
+      },
+      handleCloseDialog(done) {
+        this.$confirm('确认关闭？')
+          .then(_ => {
+            done();
+          })
+          .catch(_ => {});
+      },
+      closeDialog(){
+        this.dialogVisible = false;
+      },
+      addSencondTag(info){
+        this.dialogVisible = false;
       },
       showInput() {
         this.inputVisible = true;
@@ -483,13 +587,33 @@ export default {
           this.$refs.saveTagInput.$refs.input.focus();
         });
       },
+      showInputSecond() {
+        this.inputVisibleSecond = true;
+        this.$nextTick(_ => {
+          this.$refs.saveTagInputSecond.$refs.input.focus();
+        });
+      },
+      openDialog(tag, index) {
+        this.dialogVisible = true;
+        this.currentFirstTagIndex = index;
+        this.firstLevelTag = tag;
+      },
       handleInputConfirm() {
         let inputValue = this.inputValue;
         if (inputValue) {
           this.dynamicTags.push(inputValue);
+          this.dynamicTagsSecond.push([]);
         }
         this.inputVisible = false;
         this.inputValue = '';
+      },
+      handleInputConfirmSecond() {
+        let inputValueSecond = this.inputValueSecond;
+        if (inputValueSecond) {
+          this.dynamicTagsSecond[this.currentFirstTagIndex].push(inputValueSecond);
+        }
+        this.inputVisibleSecond = false;
+        this.inputValueSecond = '';
       },
       handleChange(value) {
       },
@@ -736,7 +860,7 @@ export default {
       // 任务发布者标注测试任务
       async editTest(info) {
         this.isEdit=true;
-        if(info.task_type == "序列标注"){
+        if(info.task_type == 0){
           this.isSequenceTestEdit = true;
         }else{
           this.isLabelTestEdit = true;
@@ -755,7 +879,7 @@ export default {
         sequenceTestEdit,
         labelInferResult,
         sequenceInferResult,
-        rePassword
+        rePassword,
       }
 }
 </script>
@@ -803,5 +927,11 @@ export default {
   }
   .el-card{
     height: 223px;
+  }
+  .secondTag {
+    display: block;
+  }
+  .text_item {
+    font-size: 17px;
   }
 </style> 

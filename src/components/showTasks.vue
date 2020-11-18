@@ -73,9 +73,9 @@ export default {
           if(index == 1){
               this.findAllTasks();
           }else if(index == 2){
-              this.findTasksByType("序列标注");
+              this.findTasksByType(0);
           }else{
-              this.findTasksByType("标签标注");
+              this.findTasksByType(1);
           }   
       },
       async findAllTasks(){
@@ -133,8 +133,7 @@ export default {
           updateJoinTasksByUserAccount({account:this.loginUserAccount,
                                     involved_tasks:newInvolved,
                                     progress_tasks:newProgress});
-          var taskType = '';
-          info.task_type == "序列标注"? taskType = 0 : taskType = 1;
+          var taskType = info.task_type;
         // 更新tb_label_result
           const taskContentInfo = await findContentByTaskId({task_id:info.id, is_test:0});
           const testContentInfo = await findContentByTaskId({task_id:info.id, is_test:1});

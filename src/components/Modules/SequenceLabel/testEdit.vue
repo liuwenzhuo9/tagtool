@@ -439,8 +439,8 @@
         font-size: 14px;
         margin: 10px;
     }
-    .el-radio__label {
-        font-size: 22px;
-        padding: 6px;
-    }
+    // .el-radio__label {
+    //     font-size: 22px;
+    //     padding: 6px;
+    // }
 </style>

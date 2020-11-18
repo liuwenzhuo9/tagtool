@@ -499,10 +499,10 @@
         font-size: 14px;
         margin: 10px;
     }
-    .el-radio__label {
-        font-size: 22px;
-        padding: 6px;
-    }
+    // .el-radio__label {
+    //     font-size: 22px;
+    //     padding: 6px;
+    // }
     // 希望设置其他区域文本不能被选中
     // .chooseShow .content-title .tips .content-right {
     //     -webkit-user-select: none;
