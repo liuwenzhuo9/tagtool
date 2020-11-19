@@ -23,32 +23,50 @@
             </el-card>
         </div>
 
-            <div class="content-title">
-                <p class="tips">任务名：{{editInfo.task_name}}</p>
-                <p class="tips">进度：{{this.finishParagraphNum}}/{{this.allParagraphNum}}</p>
+        <div class="content-title">
+            <p class="tips">任务名：{{editInfo.task_name}}</p>
+            <p class="tips">进度：{{this.finishParagraphNum}}/{{this.allParagraphNum}}</p>
+        </div>
+        <div class="content-left">
+            <p class="tips">第{{this.contentPosition+1}}段:</p>
+            <el-divider></el-divider>
+            <p class="paragraphContent">
+                {{this.contentInfo}}
+            </p>
+            <el-divider></el-divider>
+            <p class="tips">选择标签：</p>
+            <el-radio-group v-model="radio" v-if="taskType == 1 || taskType == 2" class="chooseLabel">
+            <el-radio :key="index" v-for="(item,index) in labelsInfo" @change="chooseLabel" :label="index">{{item}}</el-radio>
+            </el-radio-group>
+            <!-- 多层标签选择 -->
+            <div v-if="taskType == 3" class="chooseLabel" > 
+                <el-cascader
+                    :options="options"
+                    v-model="multiLabel"
+                    :props="{ multiple: true, checkStrictly: true }"
+                    clearable></el-cascader>
             </div>
-            <div class="content-left">
-                <p class="tips">第{{this.contentPosition+1}}段:</p>
-                <el-divider></el-divider>
-                <p class="paragraphContent">
-                    {{this.contentInfo}}
-                </p>
-                <el-divider></el-divider>
-                <p class="tips">可选标签：</p>
-                <el-radio-group v-model="radio" class="chooseLabel">
-                <el-radio :key="index" v-for="(item,index) in labelsInfo" @change="chooseLabel" :label="index">{{item}}</el-radio>
-                </el-radio-group>
-                <div>
-                    <el-button @click="saveLabel" v-if="isEdit">保存标签</el-button>
-                    <el-button @click="saveLabel" v-if="!isEdit">修改标签</el-button>
-                    <el-button @click="nextParagraph(isShowAll)" :disabled="isLast">下一句</el-button>
-                    <el-button @click="lastParagraph(isShowAll)" :disabled="isFirst">上一句</el-button>
-                </div>
+
+            <el-slider
+                v-if="taskType == 2 || taskType == 4"
+                v-model="sliderValue"
+                show-input
+                show-stops
+                :step="this.editInfo.granularity"
+                :max="10">
+            </el-slider>
+
+            <div>
+                <el-button @click="saveLabel" v-if="isEdit">保存标签</el-button>
+                <el-button @click="saveLabel" v-if="!isEdit">修改标签</el-button>
+                <el-button @click="nextParagraph(isShowAll)" :disabled="isLast">下一句</el-button>
+                <el-button @click="lastParagraph(isShowAll)" :disabled="isFirst">上一句</el-button>
             </div>
-            <div class="content-right">
-                <p class="tips">标注结果：{{this.resultLabel}}</p>
-            </div>
-            <el-button v-if="this.finishParagraphNum == this.allParagraphNum" @click="finishTask">提交任务</el-button>
+        </div>
+        <div class="content-right">
+            <p class="tips">标注结果：{{this.resultLabel}}</p>
+        </div>
+        <el-button v-if="this.finishParagraphNum == this.allParagraphNum" @click="finishTask">提交任务</el-button>
         
     </div>
 </template>
@@ -67,6 +85,7 @@
             return {
                 allParagraphNum:'',
                 finishParagraphNum:'',
+                taskType:this.editInfo.task_type,
                 userAccount:this.$store.state.loginuser,
                 contentInfo:'',
                 contentPosition:'',
@@ -80,6 +99,12 @@
                 isFirst: false,
                 isLast: false,
                 flag:true,
+                sliderValue:0,
+                firstLevelTag:[],//多层次标签的第一层标签
+                secondLevelTag:[],//多层次标签的第二层标签
+
+                options: [],
+                multiLabel:'',
             }
         },
         mounted(){
@@ -96,6 +121,25 @@
         methods:{
             async init(){
                 this.choosedLabel = this.labelsInfo[0];
+                // 多层次标签存入对应的一级标签和二级标签数组中
+                if(this.taskType == 3 || this.taskType == 4){
+                    this.options = [];
+                    var regex = /\{[^\}]+\}/g;
+                    var multiTag = this.editInfo.task_label.match(regex);
+                    for(var i = 0; i<multiTag.length; i++){
+                        var tempArr = multiTag[i].substring(1,multiTag[i].length-1).split(':');
+                        this.firstLevelTag.push(tempArr[0]);
+                        const secondArr = tempArr[1].split(',');
+                        this.secondLevelTag.push(secondArr);
+                        var childList = [];
+                        for(var j = 0; j<secondArr.length; j++){
+                            let list = {value: secondArr[j], label: secondArr[j]};
+                            childList.push(list);
+                        }
+                        var fatherList = {value: tempArr[0], label: tempArr[0], children: childList};
+                        this.options.push(fatherList);
+                    }
+                }
                 this.getRate();
                 var info = [];
                 this.resultLabel = '';
@@ -168,11 +212,26 @@
                         message: '未选择标签'
                     }); 
                 }else{
-                    await updateLabelById({id:this.resultId,label_result:this.choosedLabel});
-                    this.resultLabel = this.choosedLabel;
+                    if(this.taskType == 1){
+                        await updateLabelById({id:this.resultId,label_result:this.choosedLabel});
+                        this.resultLabel = this.choosedLabel;
+                    }else if(this.taskType == 2){
+                        var labelRes = this.choosedLabel + ',' + this.sliderValue;
+                        await updateLabelById({id:this.resultId,label_result:labelRes});
+                        this.resultLabel = '标签-' + this.choosedLabel + ',量级-' + this.sliderValue;
+                    }else if(this.taskType == 3){
+                        var labelRes = '';
+                        this.resultLabel = '';
+                        for(var i = 0; i<this.multiLabel.length; i++){
+                            labelRes += i==0 ? '{' + this.multiLabel[i][0] + ',' + this.multiLabel[i][1] + '}' : ',{' + this.multiLabel[i][0] + ',' + this.multiLabel[i][1] + '}';
+                            this.resultLabel += i==0 ? '{' + this.multiLabel[i][0] + ',' + this.multiLabel[i][1] + '}' : ',{' + this.multiLabel[i][0] + ',' + this.multiLabel[i][1] + '}'
+                        }  
+                        await updateLabelById({id:this.resultId,label_result:labelRes});
+                    }
                     this.getRate();
                     this.isEdit = false;
                     this.radio = '1';
+                    this.sliderValue = 0;
                 }
             },
             async nextParagraph(msg){
@@ -189,12 +248,30 @@
                     info = await findNextParagraph({task_id:this.editInfo.id,
                                                     user_account:this.userAccount,
                                                     paragraph_position:this.contentPosition});
-                    this.resultLabel = info.data.label_result;
+                    if(this.taskType == 1){
+                        this.resultLabel = info.data.label_result;
+                        this.choosedLabel = this.resultLabel;
+                    }else if(this.taskType == 2 && info.data.label_result != '' && info.data.label_result != null){
+                        let temp = info.data.label_result.split(',');
+                        this.choosedLabel = temp[0];
+                        this.sliderValue = parseInt(temp[1]);
+                        this.resultLabel = '标签-' + this.choosedLabel + ',量级-' + this.sliderValue;
+                    }else if(this.taskType == 3){
+                        this.resultLabel = info.data.label_result;
+                        if(this.resultLabel != null && this.resultLabel != null){
+                            var regex = /\{[^\}]+\}/g;
+                            var multiTag = this.resultLabel.match(regex);
+                            this.multiLabel = [];
+                            for(var i = 0; i<multiTag.length; i++){
+                                var tempArr = multiTag[i].substring(1,multiTag[i].length-1).split(',');
+                                this.multiLabel.push(tempArr);
+                            }
+                        }
+                    }
                 }
                 this.contentInfo = info.message;
                 this.contentPosition = Number(info.data.paragraph_position);
                 this.resultId = info.data.id;
-                this.choosedLabel = this.resultLabel;
                 this.judgeFirstOrLast();
             },
             async lastParagraph(msg){
@@ -211,11 +288,29 @@
                     info = await findLastParagraph({task_id:this.editInfo.id,
                                                     user_account:this.userAccount,
                                                     paragraph_position:this.contentPosition});
-                    this.resultLabel = info.data.label_result;
+                    if(this.taskType == 1){
+                        this.resultLabel = info.data.label_result;
+                        this.choosedLabel = this.resultLabel;
+                    }else if(this.taskType == 2 && info.data.label_result != '' && info.data.label_result != null){
+                        let temp = info.data.label_result.split(',');
+                        this.choosedLabel = temp[0];
+                        this.sliderValue = parseInt(temp[1]);
+                        this.resultLabel = '标签-' + this.choosedLabel + ',量级-' + this.sliderValue;
+                    }else if(this.taskType == 3){
+                        this.resultLabel = info.data.label_result;
+                        if(this.resultLabel != null && this.resultLabel != null){
+                            var regex = /\{[^\}]+\}/g;
+                            var multiTag = this.resultLabel.match(regex);
+                            this.multiLabel = [];
+                            for(var i = 0; i<multiTag.length; i++){
+                                var tempArr = multiTag[i].substring(1,multiTag[i].length-1).split(',');
+                                this.multiLabel.push(tempArr);
+                            }
+                        }
+                    }
                 }
                 this.contentInfo = info.message;
                 this.contentPosition = Number(info.data.paragraph_position);
-                this.choosedLabel = this.resultLabel;
                 this.resultId = info.data.id;
                 this.judgeFirstOrLast();
             },
@@ -286,9 +381,7 @@
                                                     user_account:this.userAccount,
                                                     paragraph_position:this.contentPosition});
                 }
-                console.log(infoL);
                 if(infoL.data == 0){ //已是第一条
-                console.log(111);
                     this.isFirst = true;
                 }else{
                     this.isFirst = false;
@@ -332,4 +425,7 @@
     //     font-size: 22px;
     //     padding: 6px;
     // }
+    .chooseLabel {
+        margin: 10px;
+    }
 </style>
