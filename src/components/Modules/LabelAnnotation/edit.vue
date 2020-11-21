@@ -36,7 +36,7 @@
             <el-divider></el-divider>
             <p class="tips">选择标签：</p>
             <el-radio-group v-model="radio" v-if="taskType == 1 || taskType == 2" class="chooseLabel">
-            <el-radio :key="index" v-for="(item,index) in labelsInfo" @change="chooseLabel" :label="index">{{item}}</el-radio>
+            <el-radio :key="index" v-for="(item,index) in labelsInfo" @change="chooseLabel" :label="item">{{item}}</el-radio>
             </el-radio-group>
             <!-- 多层标签选择 -->
             <div v-if="taskType == 3" class="chooseLabel" > 
@@ -46,7 +46,7 @@
                     :props="{ multiple: true, checkStrictly: true }"
                     clearable></el-cascader>
             </div>
-
+            <!-- 量级选择 -->
             <el-slider
                 v-if="taskType == 2 || taskType == 4"
                 v-model="sliderValue"
@@ -204,6 +204,7 @@
             },
             chooseLabel(info){
                 this.choosedLabel = info;
+                console.log(this.choosedLabel)
             },
             async saveLabel(){
                 if(this.choosedLabel == null || this.choosedLabel == ''){
@@ -216,7 +217,7 @@
                         await updateLabelById({id:this.resultId,label_result:this.choosedLabel});
                         this.resultLabel = this.choosedLabel;
                     }else if(this.taskType == 2){
-                        var labelRes = this.choosedLabel + ',' + this.sliderValue;
+                        var labelRes = this.choosedLabel + ':' + this.sliderValue;
                         await updateLabelById({id:this.resultId,label_result:labelRes});
                         this.resultLabel = '标签-' + this.choosedLabel + ',量级-' + this.sliderValue;
                     }else if(this.taskType == 3){
@@ -252,7 +253,7 @@
                         this.resultLabel = info.data.label_result;
                         this.choosedLabel = this.resultLabel;
                     }else if(this.taskType == 2 && info.data.label_result != '' && info.data.label_result != null){
-                        let temp = info.data.label_result.split(',');
+                        let temp = info.data.label_result.split(':');
                         this.choosedLabel = temp[0];
                         this.sliderValue = parseInt(temp[1]);
                         this.resultLabel = '标签-' + this.choosedLabel + ',量级-' + this.sliderValue;
@@ -292,7 +293,7 @@
                         this.resultLabel = info.data.label_result;
                         this.choosedLabel = this.resultLabel;
                     }else if(this.taskType == 2 && info.data.label_result != '' && info.data.label_result != null){
-                        let temp = info.data.label_result.split(',');
+                        let temp = info.data.label_result.split(':');
                         this.choosedLabel = temp[0];
                         this.sliderValue = parseInt(temp[1]);
                         this.resultLabel = '标签-' + this.choosedLabel + ',量级-' + this.sliderValue;

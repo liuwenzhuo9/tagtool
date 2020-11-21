@@ -180,7 +180,7 @@
                         await updateRightLabel({task_id:this.editInfo.id,paragraph_position:this.contentPosition,test_label:this.choosedLabel});
                         this.resultLabel = this.choosedLabel;
                     }else if(this.taskType == 2){
-                        var labelRes = this.choosedLabel + ',' + this.sliderValue;
+                        var labelRes = this.choosedLabel + ':' + this.sliderValue;
                         await updateRightLabel({task_id:this.editInfo.id,paragraph_position:this.contentPosition,test_label:labelRes});
                         this.resultLabel = '标签-' + this.choosedLabel + ',量级-' + this.sliderValue;
                     }else if(this.taskType == 3){
@@ -210,7 +210,7 @@
                         this.resultLabel = info.data[0].test_label;
                         this.choosedLabel = this.resultLabel;
                     }else if(this.taskType == 2 && info.data[0].test_label != '' && info.data[0].test_label != null){
-                        let temp = info.data[0].test_label.split(',');
+                        let temp = info.data[0].test_label.split(':');
                         this.choosedLabel = temp[0];
                         this.sliderValue = parseInt(temp[1]);
                         this.resultLabel = '标签-' + this.choosedLabel + ',量级-' + this.sliderValue;
@@ -244,7 +244,7 @@
                         this.resultLabel = info.data[0].test_label;
                         this.choosedLabel = this.resultLabel;
                     }else if(this.taskType == 2 && info.data[0].test_label != '' && info.data[0].test_label != null){
-                        let temp = info.data[0].test_label.split(',');
+                        let temp = info.data[0].test_label.split(':');
                         this.choosedLabel = temp[0];
                         this.sliderValue = parseInt(temp[1]);
                         this.resultLabel = '标签-' + this.choosedLabel + ',量级-' + this.sliderValue;
