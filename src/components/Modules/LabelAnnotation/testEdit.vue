@@ -46,7 +46,7 @@
                     clearable></el-cascader>
             </div>
             <el-slider
-                v-if="taskType == 2 || taskType == 4"
+                v-if="taskType == 2"
                 v-model="sliderValue"
                 show-input
                 show-stops
@@ -118,7 +118,7 @@
             async init(){
                 this.choosedLabel = this.labelsInfo[0];
                 // 多层次标签存入对应的一级标签和二级标签数组中
-                if(this.taskType == 3 || this.taskType == 4){
+                if(this.taskType == 3){
                     this.options = [];
                     var regex = /\{[^\}]+\}/g;
                     var multiTag = this.editInfo.task_label.match(regex);

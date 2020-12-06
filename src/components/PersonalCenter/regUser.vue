@@ -255,7 +255,7 @@ export default {
     data(){
         return{
             menuShow: [true, false, false, false, false],
-            typeList: ["序列标注", "单标签标注", "量级标签标注", "多层次标签标注", "多层次量级标签标注"],
+            typeList: ["序列标注", "单标签标注", "量级标签标注", "多层次标签标注"],
             ruleForm: {
                         task_name: '',
                         task_type: '',
@@ -498,7 +498,7 @@ export default {
                   });
             }
               
-            await this.insertContent();
+            await this.insertContent(typeIndex);
 
             // 发布任务后，根据返回的新任务id，更新用户信息表中的任务信息
             this.issuedTaksId.push(info.data);
@@ -513,10 +513,8 @@ export default {
             this.resetForm('ruleForm');
           }
       },
-      // 发布任务后将任务的段落内容存入tb_task_content中
-      async insertContent(){
-          var type ;
-          this.ruleForm.task_type == "标签标注"? type = 1:type = 0;
+      // 发布任务后将任务的段落内容存入tb_task_content 和 tb_infer_result中
+      async insertContent(typeInfo){
           const info = await findTaskIdByTaskName({task_name:this.ruleForm.task_name});
           this.newTaskId = info.data;
           await Promise.all(this.splitContent.map(async (item,index) => {
@@ -526,7 +524,7 @@ export default {
                                          paragraph_position:index,
                                          task_name:this.ruleForm.task_name,
                                          is_test:0,
-                                         task_type:type});
+                                         task_type:typeInfo});
                   }
             }));
            // 如果上传了测试集，则将测试集内容存入tb_test_content中
@@ -539,7 +537,7 @@ export default {
                                                paragraph_position:index,
                                                task_name:this.ruleForm.task_name,
                                                is_test:1,
-                                               task_type:type});
+                                               task_type:typeInfo});
                       }
                   }))
             }
@@ -549,7 +547,7 @@ export default {
               await insertInferResult({task_id:this.newTaskId,
                                         paragraph_id: item.id,
                                         paragraph_position: item.paragraph_position,
-                                        task_type: item.task_type,
+                                        task_type: typeInfo,
                                         content: item.content,
                                         })
              });
@@ -838,10 +836,9 @@ export default {
         this.editInfo = info;
         const infer_res = await findInferInfoByTaskId({task_id:info.id});
         this.isEdit = true;
-        if(info.task_type == "序列标注"){
+        if(info.task_type == 0){
           this.isSequenceInferResult = true;
-        }
-        if(info.task_type == "标签标注"){
+        }else{
           this.isLabelInferResult = true;
         }
       },
