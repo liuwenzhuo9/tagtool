@@ -79,7 +79,6 @@ export default {
           }   
       },
       async findAllTasks(){
-        //   console.log(this.loginUserName)
             const lastTasksinfo = this.tasksinfo;
                 try{
                     this.tasksinfo = [];

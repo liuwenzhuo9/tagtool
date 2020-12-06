@@ -190,7 +190,6 @@
             },
             chooseLabel(info){
                 this.choosedLabel = info;
-                console.log(info);
             },
             async addLabel(){
                 if (window.getSelection) {

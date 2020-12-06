@@ -67,7 +67,6 @@ export default {
                 })
                 this.addBIO(splitSentence,this.startIndex,this.endIndex,type);
                 this.allSentences = this.allSentences.concat(splitSentence);
-                console.log(this.allSentences);
                 }
             }))
             this.textarea = '';

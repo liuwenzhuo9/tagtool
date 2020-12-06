@@ -80,7 +80,6 @@
                             account: row.account,
                             role: row.role,
                         });
-                        console.log(info)
                         await deleteUser({
                             account: row.account
                         })

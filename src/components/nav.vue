@@ -93,7 +93,6 @@ import { getCookie,delCookie,loginOut } from '../unit/fetch'
             this.$store.commit('setActiveIndex',5);
             this.$router.push('/personal');
           }catch(e){
-            // console.log('error')
             this.$message.error((e && e.message) ? e.message : '登出失败，请稍后重试');
           }
           })();

@@ -22,7 +22,6 @@ export default {
     methods: {
         async init(){
             const info  = await findInferInfoByTaskId({task_id: this.editInfo.id});
-            console.log(info.data);
         },
     }
 }

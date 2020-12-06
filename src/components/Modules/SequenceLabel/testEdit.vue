@@ -122,7 +122,6 @@
         },
         methods:{
             async init(){
-                console.log(22);
                 this.choosedLabel = this.labelsInfo[0];
                 this.getRate();
                 var info = [];

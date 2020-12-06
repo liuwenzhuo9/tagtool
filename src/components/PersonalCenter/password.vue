@@ -94,7 +94,6 @@
                         this.$store.commit('setActiveIndex',5)
                     }
                 }catch(e){
-                    // console.log('error')
                     this.$i18n.locale === 'zh' ? this.$message.error((e && e.message) ? e.message : '登陆失败，请稍后重试') : this.$message.error((e && e.message) ? e.message : 'Login error, Please try again later!');
                 }
             })();

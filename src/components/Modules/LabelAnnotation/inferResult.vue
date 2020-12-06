@@ -3,7 +3,11 @@
         <el-button type="primary" v-if="!showCI" round @click="showListOrRadar">查看标注一致性</el-button>
         <el-button type="primary" v-if="showCI" round @click="showListOrRadar">查看标签分类汇总图</el-button>
         <el-button type="success" v-if="showCI" round @click="downLoadRes">导出标注结果</el-button>
-        <div v-show="!showCI" ref="chart" style="width:1040px;height:700px"></div>
+        <div v-show="!showCI && taskType!=2" ref="chart" style="width:1040px;height:700px"></div>
+        <el-row v-show="!showCI && taskType ==2">
+            <el-col :span="12"><div ref="chart1" style="width:500px;height:500px"></div></el-col>
+            <el-col :span="12"><div ref="chart2" style="width:500px;height:500px"></div></el-col>
+        </el-row>
         <div v-if="showCI">
             <el-table
                 :data="tableData"
@@ -115,6 +119,8 @@ export default {
         return{
             radarInfo:[],
             labelsNum: [],
+            labelsScore: [],//记录标签总分
+            labelsAverageScore: [],//记录标签平均分
             tableData: [],//预测结果等信息以列表的形式展示
             showCI: true,
             options: [],//存放可选标签
@@ -176,6 +182,8 @@ export default {
             const num = this.options.length;
             for(var i = 0; i<num; i++){
                 this.labelsNum[i] = 0;
+                this.labelsScore[i] = 0;
+                this.labelsAverageScore[i] = 0;
             }
             info.data.map((item, index) =>{
                 // 如果final_result存在，则在列表中显示final_result；否则显示infer_result
@@ -197,7 +205,10 @@ export default {
                                     orderScore: parseFloat(tagArr[1]).toFixed(2),
                                     ci: parseFloat(item.ci).toFixed(2),
                                     confirm: true});
-                        // this.labelsNum[this.options.indexOf(tagArr[0])]++;
+                        const tagIndex = this.options.indexOf(tagArr[0]);
+                        this.labelsNum[tagIndex]++;
+                        this.labelsScore[tagIndex] += parseFloat(tagArr[1]);
+                        this.labelsScore[tagIndex].toFixed(2);
                         // this.maxLabelsNum = Math.max(this.labelsNum[this.options.indexOf(tagArr[0])], this.maxLabelsNum);
                     }
                     if(this.taskType == 3){
@@ -264,6 +275,11 @@ export default {
                 }
                 this.getEchartData();
             }else if(this.taskType == 2){
+                for(var i = 0 ; i<this.labelsScore.length; i++){
+                    if(this.labelsNum[i] != 0){
+                        this.labelsAverageScore[i] = this.labelsScore[i]/this.labelsNum[i];
+                    }
+                }
                 this.getEchartDataOrder();
             }else if(this.taskType == 3){
                 for(var i = 0; i<this.firstLevelNum.length; i++){
@@ -288,7 +304,7 @@ export default {
                             legend: {
                                 right: 10,
                                 // data: ['当前部门', '集团大盘']
-                                data: ['当前部门']
+                                // data: ['当前部门']
                             },
                             radar: {
                                 // shape: 'circle',
@@ -438,30 +454,55 @@ export default {
         },
         // 展现单个句子量级标签结果的柱状图
         getEchartDataOrder() {
-            const chart = this.$refs.chart
-            if (chart) {
-                const myChart = this.$echarts.init(chart)
+            const chart1 = this.$refs.chart1
+            if (chart1) {
+                const myChart = this.$echarts.init(chart1)
                 const option = {
                     legend: {},
                     tooltip: {},
-                    dataset: {
-                        source: [
-                            ['product', '2015', '2016', '2017'],
-                           ['Matcha Latte', 43.3, 85.8, 93.7],
-                            ['Milk Tea', 83.1, 73.4, 55.1],
-                            ['Cheese Cocoa', 86.4, 65.2, 82.5],
-                            ['Walnut Brownie', 72.4, 53.9, 39.1]
-                        ]
+                    title: {
+                        text: '标签数量统计',
+                        left: 'center'
                     },
-                    xAxis: {type: 'category'},
-                    yAxis: {},
-                    // Declare several bar series, each will be mapped
-                    // to a column of dataset.source by default.
-                    series: [
-                        {type: 'bar'},
-                        {type: 'bar'},
-                        {type: 'bar'}
-                    ]
+                    xAxis: {
+                        type: 'category',
+                        data: this.options
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [{
+                        data: this.labelsNum,
+                        type: 'line'
+                    }]
+                    
+                }
+                    myChart.setOption(option);
+                    window.addEventListener("resize", function() {
+                    myChart.resize()
+                    })
+            }
+            const chart2 = this.$refs.chart2
+            if (chart2) {
+                const myChart = this.$echarts.init(chart2)
+                const option = {
+                    legend: {},
+                    tooltip: {},
+                    title: {
+                        text: '标签平均分统计',
+                        left: 'center'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: this.options
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [{
+                        data: this.labelsAverageScore,
+                        type: 'line'
+                    }]
                     
                 }
                 myChart.setOption(option);
@@ -519,4 +560,10 @@ export default {
 </script>
 
 <style scoped>
+  .el-row {
+    margin-bottom: 20px;
+  }
+  .el-col {
+    border-radius: 4px;
+  }
 </style>

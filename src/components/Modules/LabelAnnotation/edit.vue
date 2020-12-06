@@ -205,7 +205,6 @@
             },
             chooseLabel(info){
                 this.choosedLabel = info;
-                console.log(this.choosedLabel)
             },
             async saveLabel(){
                 if(this.choosedLabel == null || this.choosedLabel == ''){
