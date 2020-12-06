@@ -665,7 +665,7 @@ export default {
       // 切换到标记的组件
       labelFun(info){
         this.isEdit=true;
-        if(info.task_type == "序列标注"){
+        if(info.task_type == 0){
           this.isSequenceEdit = true;
         }else{
           this.isLabelEdit = true;

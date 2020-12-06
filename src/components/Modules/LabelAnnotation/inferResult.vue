@@ -30,23 +30,8 @@
                 label="内容"
                 width="600">
                 <template slot-scope="scope">
-                    <span style="margin-left: 10px" slot="reference"  @click="openDialog">{{ scope.row.content }}</span>
-                    <el-dialog
-                    title="提示"
-                    :visible.sync="dialogVisible"
-                    width="30%"
-                    :before-close="handleClose">
-                    <div ref="orderChart" style="width:1040px;height:700px"></div>
-                    <!-- <span>这是一段信息</span>
-                    <span slot="footer" class="dialog-footer">
-                        <el-button @click="dialogVisible = false">取 消</el-button>
-                        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
-                    </span> -->
-                    </el-dialog>
+                    <span style="margin-left: 10px" slot="reference"  @click="dialogVisible = true">{{ scope.row.content }}</span>
                 </template>
-
-                
-
                 </el-table-column>
                 <!-- 单标签和量级标签的标签显示 -->
                 <el-table-column
@@ -453,7 +438,7 @@ export default {
         },
         // 展现单个句子量级标签结果的柱状图
         getEchartDataOrder() {
-            const chart = this.$refs.orderChart
+            const chart = this.$refs.chart
             if (chart) {
                 const myChart = this.$echarts.init(chart)
                 const option = {
@@ -506,6 +491,9 @@ export default {
             if(this.showCI && this.taskType == 1){
                 this.getEchartData();
             }
+            if(this.showCI && this.taskType == 2){
+                this.getEchartDataOrder();
+            }
             if(this.showCI && this.taskType == 3){
                 this.getEchartDataMulti();
             }
@@ -526,19 +514,6 @@ export default {
             ev.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
             save_link.dispatchEvent(ev);
         },
-        // 关闭dialog
-        handleClose(done) {
-            this.$confirm('确认关闭？')
-            .then(_ => {
-                done();
-            })
-            .catch(_ => {});
-        },
-        // 打开dialog
-        openDialog(){
-            this.dialogVisible = true;
-            this.getEchartDataOrder();
-        }
     }
 }
 </script>

@@ -41,7 +41,7 @@
                         :key="index" 
                         v-for="(item,index) in labelsInfo" 
                         @change="chooseLabel"
-                        :label="index">
+                        :label="item">
                         {{item}}
                     </el-radio>  
                 </el-radio-group>
@@ -82,7 +82,6 @@
     import { findParagraphNumByTaskId, findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph, findFirstParagraph,updateLabelById,
             findNextUnfinishedParagraph, findLastUnfinishedParagraph, findLastParagraph,findNextParagraph, findLabelResultById,findFirstUnfinishedTestParagraph,
             findInfoByUserAccount,updateFinishTasksByUserAccount,updateFinishMemberByTaskId} from '../../../unit/fetch';
-    import testEdit from './testEdit';
     export default {
         props: {
             editInfo: Object,
@@ -191,6 +190,7 @@
             },
             chooseLabel(info){
                 this.choosedLabel = info;
+                console.log(info);
             },
             async addLabel(){
                 if (window.getSelection) {
@@ -425,9 +425,6 @@
                 }
             },
         },
-        components:{
-            testEdit,
-        }
     };
 </script>
 

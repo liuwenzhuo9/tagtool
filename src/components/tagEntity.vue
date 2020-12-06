@@ -158,6 +158,7 @@ export default {
                 var tagContent = {content:item.content, startIdx: startIndex, endIdx: endIndex, id:item.id};
                 this.dynamicTagsPre.push(tagContent);
              }
+             console.log(this.dynamicTagsPre);
         })
         this.dynamicTags = this.dynamicTags.concat(this.dynamicTagsPre);//存储预标记的内容
       },

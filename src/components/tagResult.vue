@@ -53,7 +53,8 @@ export default {
             this.allSentences = [];
             await Promise.all(sentencesInfo.data.map(async (item)=>{
                 var splitSentence = item.content.split('');
-                splitSentence.pop();
+                // splitSentence.pop();
+                splitSentence.push(" ");
                 this.startIndex = [];
                 this.endIndex = [];
                 if(item.is_marked == 0){
@@ -66,6 +67,7 @@ export default {
                 })
                 this.addBIO(splitSentence,this.startIndex,this.endIndex,type);
                 this.allSentences = this.allSentences.concat(splitSentence);
+                console.log(this.allSentences);
                 }
             }))
             this.textarea = '';
