@@ -35,13 +35,14 @@
             </p>
             <el-divider></el-divider>
             <p class="tips">选择标签：</p>
-            <el-radio-group v-model="radio" v-if="taskType == 1 || taskType == 2" class="chooseLabel">
+            <el-radio-group v-model="radio" v-if="taskType == 1 || taskType == 2" class="changeLabel">
             <!-- 单标签选择 -->
-            <el-radio :key="index" v-for="(item,index) in labelsInfo" @change="chooseLabel" :label="item">{{item}}</el-radio>
+            <el-radio :key="index" v-for="(item,index) in labelsInfo" @change="changeLabel" :label="item">{{item}}</el-radio>
             </el-radio-group>
             <!-- 多层标签选择 -->
             <div v-if="taskType == 3" class="chooseLabel" > 
                 <el-cascader
+                    @change="changeMultiLabel"
                     :options="options"
                     v-model="multiLabel"
                     :props="{ multiple: true, checkStrictly: true }"
@@ -62,12 +63,13 @@
                 <el-button @click="saveLabel" v-if="!isEdit">修改标签</el-button>
                 <el-button @click="nextParagraph(isShowAll)" :disabled="isLast">下一句</el-button>
                 <el-button @click="lastParagraph(isShowAll)" :disabled="isFirst">上一句</el-button>
+                <el-button v-if="this.finishParagraphNum == this.allParagraphNum" @click="finishTask">提交任务</el-button>
             </div>
         </div>
-        <div class="content-right">
+        <div class="content-right" v-if="taskType < 3">
             <p class="tips">标注结果：{{this.resultLabel}}</p>
         </div>
-        <el-button v-if="this.finishParagraphNum == this.allParagraphNum" @click="finishTask">提交任务</el-button>
+        <div v-if="taskType == 3" ref="chart" style="width:400px;height:400px"></div>
         
     </div>
 </template>
@@ -106,6 +108,10 @@
 
                 options: [],
                 multiLabel:'',
+
+                multiLengendData: [],//存放多层次标签
+                firstLevelData: [],//饼状图中第一层呈现数据，显示当前选中的标签
+                secondLevelData: [],//饼状图中第二层呈现数据，显示当前选中的标签
             }
         },
         mounted(){
@@ -151,7 +157,7 @@
                 }else{
                     info = await findFirstParagraph({task_id:this.editInfo.id,
                                                      user_account:this.userAccount});
-                    this.resultLabel = info.data.label_result;
+                    this.showLabeledRes(info);
                 }
                 this.resultId = info.data.id;
                 this.contentInfo = info.message;
@@ -203,8 +209,11 @@
                 const infoF = await findFinishParagraphNumByTaskId({task_id:this.editInfo.id,user_account:this.userAccount});
                 this.finishParagraphNum = infoF.data;
             },
-            chooseLabel(info){
+            changeLabel(info){
                 this.choosedLabel = info;
+            },
+            changeMultiLabel(info){
+                this.turnMultiTagToPie(info, 0)
             },
             async saveLabel(){
                 if(this.choosedLabel == null || this.choosedLabel == ''){
@@ -221,13 +230,7 @@
                         await updateLabelById({id:this.resultId,label_result:labelRes});
                         this.resultLabel = '标签-' + this.choosedLabel + ',量级-' + this.sliderValue;
                     }else if(this.taskType == 3){
-                        var labelRes = '';
-                        this.resultLabel = '';
-                        for(var i = 0; i<this.multiLabel.length; i++){
-                            labelRes += i==0 ? '{' + this.multiLabel[i][0] + ',' + this.multiLabel[i][1] + '}' : ',{' + this.multiLabel[i][0] + ',' + this.multiLabel[i][1] + '}';
-                            this.resultLabel += i==0 ? '{' + this.multiLabel[i][0] + ',' + this.multiLabel[i][1] + '}' : ',{' + this.multiLabel[i][0] + ',' + this.multiLabel[i][1] + '}'
-                        }  
-                        await updateLabelById({id:this.resultId,label_result:labelRes});
+                        this.turnMultiTagToPie(this.multiLabel, 1)
                     }
                     this.getRate();
                     this.isEdit = false;
@@ -249,26 +252,7 @@
                     info = await findNextParagraph({task_id:this.editInfo.id,
                                                     user_account:this.userAccount,
                                                     paragraph_position:this.contentPosition});
-                    if(this.taskType == 1){
-                        this.resultLabel = info.data.label_result;
-                        this.choosedLabel = this.resultLabel;
-                    }else if(this.taskType == 2 && info.data.label_result != '' && info.data.label_result != null){
-                        let temp = info.data.label_result.split(':');
-                        this.choosedLabel = temp[0];
-                        this.sliderValue = parseInt(temp[1]);
-                        this.resultLabel = '标签-' + this.choosedLabel + ',量级-' + this.sliderValue;
-                    }else if(this.taskType == 3){
-                        this.resultLabel = info.data.label_result;
-                        if(this.resultLabel != null && this.resultLabel != null){
-                            var regex = /\{[^\}]+\}/g;
-                            var multiTag = this.resultLabel.match(regex);
-                            this.multiLabel = [];
-                            for(var i = 0; i<multiTag.length; i++){
-                                var tempArr = multiTag[i].substring(1,multiTag[i].length-1).split(',');
-                                this.multiLabel.push(tempArr);
-                            }
-                        }
-                    }
+                    this.showLabeledRes(info);
                 }
                 this.contentInfo = info.message;
                 this.contentPosition = Number(info.data.paragraph_position);
@@ -289,33 +273,87 @@
                     info = await findLastParagraph({task_id:this.editInfo.id,
                                                     user_account:this.userAccount,
                                                     paragraph_position:this.contentPosition});
-                    if(this.taskType == 1){
-                        this.resultLabel = info.data.label_result;
-                        this.choosedLabel = this.resultLabel;
-                    }else if(this.taskType == 2 && info.data.label_result != '' && info.data.label_result != null){
-                        let temp = info.data.label_result.split(':');
-                        this.choosedLabel = temp[0];
-                        this.sliderValue = parseInt(temp[1]);
-                        this.resultLabel = '标签-' + this.choosedLabel + ',量级-' + this.sliderValue;
-                    }else if(this.taskType == 3){
-                        this.resultLabel = info.data.label_result;
-                        if(this.resultLabel != null && this.resultLabel != null){
-                            var regex = /\{[^\}]+\}/g;
-                            var multiTag = this.resultLabel.match(regex);
-                            this.multiLabel = [];
-                            for(var i = 0; i<multiTag.length; i++){
-                                var tempArr = multiTag[i].substring(1,multiTag[i].length-1).split(',');
-                                this.multiLabel.push(tempArr);
-                            }
-                        }
-                    }
+                    this.showLabeledRes(info);
                 }
                 this.contentInfo = info.message;
                 this.contentPosition = Number(info.data.paragraph_position);
                 this.resultId = info.data.id;
                 this.judgeFirstOrLast();
             },
-            
+            // 展现多层次标签结果的饼图
+            getEchartDataMulti() {
+                const chart = this.$refs.chart
+                if (chart) {
+                    const myChart = this.$echarts.init(chart)
+                    const option = {
+
+                        tooltip: {
+                            trigger: 'item'
+                        },
+                        // legend: {
+                        //     orient: 'vertical',
+                        //     left: 10,
+                        //     data: this.multiLengendData
+                        // },
+                        series: [
+                            {
+                                type: 'pie',
+                                selectedMode: 'single',
+                                radius: [0, '30%'],
+
+                                label: {
+                                    position: 'inner'
+                                },
+                                labelLine: {
+                                    show: false
+                                },
+                                data: this.firstLevelData
+                            },
+                            {
+                                type: 'pie',
+                                radius: ['40%', '55%'],
+                                label: {
+                                    position: 'inner',
+                                    rich: {
+                                        a: {
+                                            color: '#999',
+                                            lineHeight: 22,
+                                            align: 'center'
+                                        },
+                                        hr: {
+                                            borderColor: '#aaa',
+                                            width: '100%',
+                                            borderWidth: 0.5,
+                                            height: 0
+                                        },
+                                        b: {
+                                            fontSize: 16,
+                                            lineHeight: 33
+                                        },
+                                        per: {
+                                            color: '#eee',
+                                            backgroundColor: '#334455',
+                                            padding: [2, 4],
+                                            borderRadius: 2
+                                        }
+                                    }
+                                },
+                                data: this.secondLevelData
+                            }
+                        ]    
+                        
+                    }
+                    myChart.setOption(option);
+                    window.addEventListener("resize", function() {
+                    myChart.resize()
+                    })
+                }
+                this.$on('hook:destroyed',()=>{
+                    window.removeEventListener("resize", function() {
+                    myChart.resize();
+                    });
+                })
+            },
             //选择显示全部还是未标记句子
             handleCommandShow(command) {
               if( command == 1){
@@ -328,6 +366,7 @@
             countTime(){
                 this.selectShowPart(1);
             },
+            //设置快捷键
             handleKeyDown(e) {
                 var key = window.event.keyCode ? window.event.keyCode : window.event.which
                 if( key === 83 ){
@@ -349,6 +388,7 @@
                     e.preventDefault() //取消浏览器原有的ctrl+s操作
                 }
             },
+            //监听按键松开
             handleKeyUp(e) {
                 // enter
                 var key = window.event.keyCode ? window.event.keyCode : window.event.which
@@ -392,6 +432,51 @@
                 }else{
                     this.isLast = false;
                 }
+            },
+            //显示全部句子时，表达已经标记的句子结果
+            showLabeledRes(info){
+                if(this.taskType == 1){
+                    this.resultLabel = info.data.label_result;
+                    this.choosedLabel = this.resultLabel;
+                }else if(this.taskType == 2 && info.data.label_result != '' && info.data.label_result != null){
+                    let temp = info.data.label_result.split(':');
+                    this.choosedLabel = temp[0];
+                    this.sliderValue = parseInt(temp[1]);
+                    this.resultLabel = '标签-' + this.choosedLabel + ',量级-' + this.sliderValue;
+                }else if(this.taskType == 3){
+                    this.firstLevelData = [];
+                    this.secondLevelData = [];
+                    this.multiLengendData = [];
+                    this.multiLabel = [];
+                    this.resultLabel = info.data.label_result;
+                    if(this.resultLabel != null && this.resultLabel != ''){
+                        var regex = /\{[^\}]+\}/g;
+                        var multiTag = this.resultLabel.match(regex);
+                        for(var i = 0; i<multiTag.length; i++){
+                            var tempArr = multiTag[i].substring(1,multiTag[i].length-1).split(',');
+                            this.multiLabel.push(tempArr);
+                        }
+                    }
+                    this.turnMultiTagToPie(this.multiLabel, 0);
+                }
+            },
+            //将多层次标签结果转化为饼图数据，如果type为1，则将标签结果存入数据库
+            async turnMultiTagToPie(label, type){
+                console.log(222);
+                this.firstLevelData = [];
+                this.secondLevelData = [];
+                this.multiLengendData = [];
+                var res = '';
+                for(var i = 0; i<label.length; i++){
+                    this.firstLevelData.push({value: 1, name: label[i][0]});
+                    this.secondLevelData.push({value: 1, name: label[i][1]});
+                    this.multiLengendData = this.multiLengendData.concat(label[i]);
+                    res += i==0 ? '{' + label[i][0] + ',' + label[i][1] + '}' : ',{' + label[i][0] + ',' + label[i][1] + '}';
+                }
+                if(type == 1){
+                    await updateLabelById({id:this.resultId,label_result:res});
+                }
+                this.getEchartDataMulti();
             }
         },
         components: {

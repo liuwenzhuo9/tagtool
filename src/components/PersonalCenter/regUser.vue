@@ -77,7 +77,6 @@
                       <el-radio size="mini" label="单标签标注" ></el-radio>
                       <el-radio size="mini" label="量级标签标注" ></el-radio>
                       <el-radio size="mini" label="多层次标签标注" ></el-radio>
-                      <el-radio size="mini" label="多层次量级标签标注" ></el-radio>
                       </el-radio-group>
                   </el-form-item>
                   <el-form-item label="任务报酬" prop="task_reward" size="small" required>
@@ -117,7 +116,7 @@
                       </el-input>
                       <el-button v-else class="button-new-tag" size="mini" @click="showInput">+ New Label</el-button>
                   </el-form-item>
-                  <el-form-item label="设置一级标签" prop="task_label" class="setLabel" v-if="ruleForm.task_type=='多层次标签标注' || ruleForm.task_type=='多层次量级标签标注'">
+                  <el-form-item label="设置一级标签" prop="task_label" class="setLabel" v-if="ruleForm.task_type=='多层次标签标注'">
                       <el-tag
                           :key="tag"
                           v-for="tag in dynamicTags"
@@ -138,7 +137,7 @@
                       </el-input>
                       <el-button v-else class="button-new-tag" size="mini" @click="showInput">+ New Label</el-button>
                   </el-form-item>
-                  <el-form-item label="设置二级标签" prop="task_label" v-if="(ruleForm.task_type=='多层次标签标注' || ruleForm.task_type=='多层次量级标签标注') && dynamicTags.length != 0">
+                  <el-form-item label="设置二级标签" prop="task_label" v-if="ruleForm.task_type=='多层次标签标注' && dynamicTags.length != 0">
                       <el-button :key="index" v-for="(tag,index) in dynamicTags" @click="openDialog(tag,index)">
                           <span v-if="dynamicTagsSecond[index].length == 0">{{tag}}</span>
                           <span v-if="dynamicTagsSecond[index].length != 0">{{tag}}&emsp;:&emsp;{{dynamicTagsSecond[index].toString()}}</span>
@@ -434,15 +433,20 @@ export default {
       },
       // 提交表单，发布任务
       async submitForm(formName) {
+        // 确定任务类型对应编号
+          const typeIndex = this.typeList.indexOf(this.ruleForm.task_type);
           if(this.dynamicTags.length == 0){
             this.$message.error('请填写任务标签！');
+          }else if(typeIndex == 3 && this.dynamicTagsSecond[0].length == 0){
+            this.$message.error('请填写二级标签！');
+          }else if(typeIndex == 2 && this.ruleForm.granularity == 0){
+            this.$message.error('请填写量级粒度！');
           }else{
-            // 确定任务类型对应编号
-            const typeIndex = this.typeList.indexOf(this.ruleForm.task_type);
             var taskLabels = '';
             // 记录标签内容，如果是多层次标签，则遍历一级标签和二级标签数组
-            if(typeIndex == 3 || typeIndex == 4){
+            if(typeIndex == 3){
               for(var i = 0; i < this.dynamicTags.length; i++){
+                // console.log(this.dynamicTags);
                 let group = i==0 ? '{' + this.dynamicTags[i] + ':' + this.dynamicTagsSecond[i].toString() + '}' : ',{' + this.dynamicTags[i] + ':' + this.dynamicTagsSecond[i].toString() + '}';
                 taskLabels += group;
               }
@@ -596,19 +600,35 @@ export default {
         this.currentFirstTagIndex = index;
         this.firstLevelTag = tag;
       },
+      // 添加序列标签、单标签和一级标签
       handleInputConfirm() {
         let inputValue = this.inputValue;
-        if (inputValue) {
-          this.dynamicTags.push(inputValue);
-          this.dynamicTagsSecond.push([]);
+        //判断输入的标签是否含有“,”
+        if (inputValue.split(',').length == 1) {
+          if(this.dynamicTags.indexOf(inputValue) == -1){
+            this.dynamicTags.push(inputValue);
+            this.dynamicTagsSecond.push([]);
+          }else{
+            this.$message.error('请勿输入重复标签');
+          }
+        }else if(inputValue.split(',').length > 1){
+          this.$message.error('标签中不能包含“,”，请重新输入标签！');
         }
         this.inputVisible = false;
         this.inputValue = '';
       },
+      //添加二级标签
       handleInputConfirmSecond() {
         let inputValueSecond = this.inputValueSecond;
-        if (inputValueSecond) {
-          this.dynamicTagsSecond[this.currentFirstTagIndex].push(inputValueSecond);
+        //判断输入的标签是否含有“,”
+        if ( inputValueSecond.split(',').length == 1) {
+          if(this.dynamicTagsSecond[this.currentFirstTagIndex].indexOf(inputValueSecond) == -1){
+            this.dynamicTagsSecond[this.currentFirstTagIndex].push(inputValueSecond);
+          }else{
+            this.$message.error('请勿输入重复标签');
+          }
+        }else if(inputValueSecond.split(',').length > 1) {
+          this.$message.error('标签中不能包含“,”，请重新输入标签！');
         }
         this.inputVisibleSecond = false;
         this.inputValueSecond = '';

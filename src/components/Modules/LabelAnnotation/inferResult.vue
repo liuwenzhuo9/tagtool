@@ -163,7 +163,7 @@ export default {
                     var tempArr = multiTag[i].substring(1,multiTag[i].length-1).split(':');
                     this.firstLevelTag.push(tempArr[0]);
                     this.firstLevelNum.push(0);
-                    this.multiLengendData.push(tempArr[0])
+                    this.multiLengendData.push(tempArr[0]);
                     const secondArr = tempArr[1].split(',');
                     this.secondLevelTag.push(secondArr);
                     var childList = [];
@@ -285,7 +285,7 @@ export default {
                 for(var i = 0; i<this.firstLevelNum.length; i++){
                     this.firstLevelData.push({value: this.firstLevelNum[i], name: this.firstLevelTag[i]});
                     for(var j = 0; j<this.secondLevelTag[i].length; j++){
-                        this.secondLevelData.push({value: this.secondLevelNum[i][j], name: this.secondLevelTag[i][j]})
+                        this.secondLevelData.push({value: this.secondLevelNum[i][j], name: this.secondLevelTag[i][j]});
                     }
                 }
                 this.getEchartDataMulti();
