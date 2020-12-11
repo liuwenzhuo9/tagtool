@@ -9,7 +9,7 @@ import {insertTaskContent, deleteContentByTaskId, findContentByTaskId,findParagr
         findLastUnfinishedTestParagraph, findFirstTestParagraph,findNextTestParagraph, findLastTestParagraph, getTestLabelByTaskId, getFormalParagraph} from './taskContent'
 import {insertTaskInfo, findUnfinishedTasks, findTasksByTasksType, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, 
         updateMemberAccountByTaskId, findTaskIdByTaskName, updateFinishStateByTaskId} from './tasksInfo'
-import {insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateJoinTasksByUserAccount,updateFinishTasksByUserAccount, updateScoreByUserAccount,deleteUser} from './user'
+import {insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateJoinTasksByUserAccount,updateFinishTasksByUserAccount,deleteUser} from './userInfo'
 import {insertLabelResult, updateLabelById, deleteLabelByAccount, deleteLabelByTaskId, deleteLabelByTaskIdAndAccount,findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph, findLastUnfinishedParagraph,
         findNextUnfinishedParagraph,findFirstParagraph, findLastParagraph,findNextParagraph,findLabelResultById,inferLabelResult} from './labelResult'
 import {insertLabelTime, getLabelTimeByAccount, updateLabelTime, deleteLabelTime, updateIsFinishInTime, getLabelTimeByTaskId} from './time';
@@ -24,7 +24,7 @@ export {insertEntityIndex, deleteEntityBySentenceId, getEntityIndexBySentenceId,
         insertTaskContent, deleteContentByTaskId, findContentByTaskId,findParagraphNumByTaskId,findContentByParagraphId,findLabeledTestNumByTaskId,updateRightLabel,findFirstUnfinishedTestParagraph,findNextUnfinishedTestParagraph,
         findLastUnfinishedTestParagraph,findFirstTestParagraph,findNextTestParagraph, findLastTestParagraph,getTestLabelByTaskId, getFormalParagraph,
         insertTaskInfo, findUnfinishedTasks, findTasksByTasksType, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, updateMemberAccountByTaskId, findTaskIdByTaskName,updateFinishStateByTaskId,
-        insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateJoinTasksByUserAccount, updateFinishTasksByUserAccount,updateScoreByUserAccount,deleteUser,
+        insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateJoinTasksByUserAccount, updateFinishTasksByUserAccount,deleteUser,
         insertLabelResult, updateLabelById, deleteLabelByAccount, deleteLabelByTaskId, deleteLabelByTaskIdAndAccount,findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph,findLastUnfinishedParagraph,
         findNextUnfinishedParagraph,findFirstParagraph, findLastParagraph,findNextParagraph, findLabelResultById,inferLabelResult,
         insertLabelTime, getLabelTimeByAccount, updateLabelTime, deleteLabelTime, updateIsFinishInTime, getLabelTimeByTaskId,

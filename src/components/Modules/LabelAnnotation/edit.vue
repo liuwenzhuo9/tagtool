@@ -23,12 +23,12 @@
             </el-card>
         </div>
 
-        <div class="content-title">
-            <p class="tips">任务名：{{editInfo.task_name}}</p>
-            <p class="tips">进度：{{this.finishParagraphNum}}/{{this.allParagraphNum}}</p>
-        </div>
+        <el-row class="elRow">
+            <el-col :span="8"><div>{{editInfo.task_name}}</div></el-col>
+            <el-col :span="8"><div>进度：{{this.finishParagraphNum}}/{{this.allParagraphNum}}</div></el-col>
+            <el-col :span="8"><div>第{{this.contentPosition+1}}段:</div></el-col>
+        </el-row>
         <div class="content-left">
-            <p class="tips">第{{this.contentPosition+1}}段:</p>
             <el-divider></el-divider>
             <p class="paragraphContent">
                 {{this.contentInfo}}
@@ -65,11 +65,12 @@
                 <el-button @click="lastParagraph(isShowAll)" :disabled="isFirst">上一句</el-button>
                 <el-button v-if="this.finishParagraphNum == this.allParagraphNum" @click="finishTask">提交任务</el-button>
             </div>
+            
+            <div class="content-right" v-if="taskType < 3">
+                <p class="tips">标注结果：{{this.resultLabel}}</p>
+            </div>
+            <div v-if="taskType == 3" ref="chart" style="width:400px;height:400px"></div>
         </div>
-        <div class="content-right" v-if="taskType < 3">
-            <p class="tips">标注结果：{{this.resultLabel}}</p>
-        </div>
-        <div v-if="taskType == 3" ref="chart" style="width:400px;height:400px"></div>
         
     </div>
 </template>
@@ -486,9 +487,6 @@
 </script>
 
 <style lang='scss'>
-    .content-title{
-        display: inline-block;
-    }
     .chooseShow{
         float: right;
         width: 280px;
@@ -513,5 +511,9 @@
     // }
     .chooseLabel {
         margin: 10px;
+    }
+    .elRow {
+        width: 700px;
+        height: 25px;
     }
 </style>

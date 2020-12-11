@@ -56,13 +56,3 @@ export function deleteUser(info) {
         }
     });
 }
-
-export function updateScoreByUserAccount(info) {
-    let url = `${hostname}/updateScoreByUserAccount${objToQueryString(info)}`;
-    return executeFetch(url,{
-        method:'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    });
-}
