@@ -56,3 +56,33 @@ export function deleteUser(info) {
         }
     });
 }
+
+export function updatePointsByAccount(info) {
+    let url = `${hostname}/updatePointsByAccount${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+
+export function updatePowerByAccount(info) {
+    let url = `${hostname}/updatePowerByAccount${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+
+export function findTopUserOnLabelType(info) {
+    let url = `${hostname}/findTopUserOnLabelType${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
