@@ -49,7 +49,7 @@
 
 <script>
 import {findUnfinishedTasks, findTasksByTasksType,findTaskById,updateMemberAccountByTaskId,findInfoByUserAccount,updateJoinTasksByUserAccount,
-        findContentByTaskId,insertLabelResult, insertLabelTime}from '../unit/fetch';
+        findContentByTaskId,insertLabelResult, insertLabelTime, insertUserPoints}from '../unit/fetch';
 export default {
     data(){
         return{
@@ -137,26 +137,34 @@ export default {
           const taskContentInfo = await findContentByTaskId({task_id:info.id, is_test:0});
           const testContentInfo = await findContentByTaskId({task_id:info.id, is_test:1});
           var taskArr = Array.from(taskContentInfo.data);
+          var sds = [];
           if(info.sds_name != null){
               const testArr = Array.from(testContentInfo.data);
-              var sds = info.sds_pos.split(',');
+              sds = info.sds_pos.split(',');
               var len = sds.length;
               for(var i = 0; i<len; i++){
                     taskArr.splice(sds[i],0,testArr[i]);
                 }
           }
           taskArr.map((item, index) => {
+              var istest = 0;
+              if(info.sds_name != null && sds.indexOf(index.toString())!=-1){
+                istest = 1;
+              }
               insertLabelResult({task_id:info.id,
                                 paragraph_id:item.id,
                                 paragraph_position:index,
                                 user_account:this.loginUserAccount,
-                                task_type:taskType})
-                });
+                                task_type:taskType,
+                                is_test: istest})
+          });
         // 更新tb_time
         insertLabelTime({account:this.loginUserAccount,
                          task_id:info.id,
                          use_time:0,
                          is_finish:0});
+        // 更新tb_user_points，将用户账号、任务类型、积分操作类型
+        insertUserPoints({account: this.loginUserAccount,task_id: info.id,task_type: info.task_type,operation_type: 1});
         this.$set(this.isJoin, index, 'member');
         this.$message({
           duration:600,

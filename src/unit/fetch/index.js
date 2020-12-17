@@ -11,11 +11,12 @@ import {insertTaskInfo, findUnfinishedTasks, findTasksByTasksType, findTaskById,
         updateMemberAccountByTaskId, findTaskIdByTaskName, updateFinishStateByTaskId} from './tasksInfo'
 import {insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateJoinTasksByUserAccount,updateFinishTasksByUserAccount,deleteUser,updatePointsByAccount,updatePowerByAccount,findTopUserOnLabelType} from './userInfo'
 import {insertLabelResult, updateLabelById, deleteLabelByAccount, deleteLabelByTaskId, deleteLabelByTaskIdAndAccount,findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph, findLastUnfinishedParagraph,
-        findNextUnfinishedParagraph,findFirstParagraph, findLastParagraph,findNextParagraph,findLabelResultById,inferLabelResult} from './labelResult'
+        findNextUnfinishedParagraph,findFirstParagraph, findLastParagraph,findNextParagraph,findLabelResultById,inferLabelResult,findLabelResultByIsTest} from './labelResult'
 import {insertLabelTime, getLabelTimeByAccount, updateLabelTime, deleteLabelTime, updateIsFinishInTime, getLabelTimeByTaskId} from './time';
 import {insertInferResult, deleteInferResultByTaskId, updateInferLabelBySentenceId, updateCIBySentenceId, updateFinalResultBySentenceId, updateInferResultByPosition, updateCIByPosition,
         updateFinalResultByPosition,findInferInfoByTaskId,findInferInfoBySentenceId,findInferInfoByPosition} from './inferResult'
-import {insertUserPoints,deleteUserPointsByTaskId, deleteUserPointsByAccount,findPointsByTaskId,findPointsByAccount,updatePointsByTaskIdAndAccount} from './userPoints'
+import {insertUserPoints,deleteUserPointsByTaskId, deleteUserPointsByAccount,findPointsByTaskId,findPointsByAccount,updatePointsByTaskIdAndAccount,updatePointsAndInfoByTaskId} from './userPoints'
+import {insertInviteInfo, updateIsJoinByInviteeAndTaskId, deleteInviteByTaskId, findInviteInfoByInviteeAndIsJoin, findInviteInfoByInviterAndTaskId} from './inviteInfo'
 
 export {insertEntityIndex, deleteEntityBySentenceId, getEntityIndexBySentenceId, deleteEntityByEntityId, insertEntity, deleteEntity, findEntityById, findIdByEntity,
         updateLengthByEntityId, getAllEntity, insertSentence, deleteSentence, findSentenceById, findIdBySentence, updateSentenceMarkById, updateSentenceContentById, 
@@ -27,11 +28,12 @@ export {insertEntityIndex, deleteEntityBySentenceId, getEntityIndexBySentenceId,
         insertTaskInfo, findUnfinishedTasks, findTasksByTasksType, findTaskById, findMemberAccountByTaskId, deleteTaskInfoByTaskId, updateFinishMemberByTaskId, updateMemberAccountByTaskId, findTaskIdByTaskName,updateFinishStateByTaskId,
         insertUserInfo, findInfoByUserAccount, updateTasksByUserAccount, updateJoinTasksByUserAccount, updateFinishTasksByUserAccount,deleteUser,updatePointsByAccount,updatePowerByAccount,findTopUserOnLabelType,
         insertLabelResult, updateLabelById, deleteLabelByAccount, deleteLabelByTaskId, deleteLabelByTaskIdAndAccount,findFinishParagraphNumByTaskId,findFirstUnfinishedParagraph,findLastUnfinishedParagraph,
-        findNextUnfinishedParagraph,findFirstParagraph, findLastParagraph,findNextParagraph, findLabelResultById,inferLabelResult,
+        findNextUnfinishedParagraph,findFirstParagraph, findLastParagraph,findNextParagraph, findLabelResultById,inferLabelResult,findLabelResultByIsTest,
         insertLabelTime, getLabelTimeByAccount, updateLabelTime, deleteLabelTime, updateIsFinishInTime, getLabelTimeByTaskId,
         insertInferResult, deleteInferResultByTaskId, updateInferLabelBySentenceId, updateCIBySentenceId, updateFinalResultBySentenceId, updateInferResultByPosition, updateCIByPosition,
         updateFinalResultByPosition,findInferInfoByTaskId,findInferInfoBySentenceId,findInferInfoByPosition,
-        insertUserPoints,deleteUserPointsByTaskId, deleteUserPointsByAccount,findPointsByTaskId,findPointsByAccount,updatePointsByTaskIdAndAccount
+        insertUserPoints,deleteUserPointsByTaskId, deleteUserPointsByAccount,findPointsByTaskId,findPointsByAccount,updatePointsByTaskIdAndAccount,updatePointsAndInfoByTaskId,
+        insertInviteInfo, updateIsJoinByInviteeAndTaskId, deleteInviteByTaskId, findInviteInfoByInviteeAndIsJoin, findInviteInfoByInviterAndTaskId
       } 
 
 //封装cookie

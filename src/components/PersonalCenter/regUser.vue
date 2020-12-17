@@ -80,7 +80,7 @@
                       </el-radio-group>
                   </el-form-item>
                   <el-form-item label="任务报酬" prop="task_reward" size="small" required>
-                      <el-input v-model="ruleForm.task_reward"></el-input>
+                      <el-input v-model="ruleForm.task_reward" placeholder="保证报酬大于参与人数的十倍"></el-input>
                   </el-form-item>
                   <el-form-item label="任务简介" prop="task_intro" size="small" required>
                       <el-input v-model="ruleForm.task_intro"></el-input>
@@ -242,7 +242,7 @@ import {insertTaskInfo, findTaskIdByTaskName, findInfoByUserAccount,findTaskById
         insertTaskContent,updateMemberAccountByTaskId, updateJoinTasksByUserAccount,deleteLabelByTaskIdAndAccount,
         deleteTaskInfoByTaskId,deleteContentByTaskId,deleteLabelByTaskId,
         findAccountByAccount, updateFinishTasksByUserAccount,updateFinishStateByTaskId,findInferInfoByTaskId, getFormalParagraph, insertInferResult,
-        findParagraphNumByTaskId, findLabeledTestNumByTaskId} from '../../unit/fetch';
+        findParagraphNumByTaskId, findLabeledTestNumByTaskId, deleteUserPointsByTaskId, deleteUserPointsByAccount, updatePointsByAccount} from '../../unit/fetch';
 import labelEdit from '../Modules/LabelAnnotation/edit';
 import sequenceEdit from '../Modules/SequenceLabel/edit';
 import labelTestEdit from '../Modules/LabelAnnotation/testEdit';
@@ -433,88 +433,101 @@ export default {
       },
       // 提交表单，发布任务
       async submitForm(formName) {
+        const reward = this.ruleForm.task_reward * 1;
+        const peoNum = this.ruleForm.member_num * 1;
+        const userInfo = await findInfoByUserAccount({account:this.userAccount});
+        const points = userInfo.data[0].points;
         // 确定任务类型对应编号
           const typeIndex = this.typeList.indexOf(this.ruleForm.task_type);
-          if(this.dynamicTags.length == 0){
-            this.$message.error('请填写任务标签！');
-          }else if(typeIndex == 3 && this.dynamicTagsSecond[0].length == 0){
-            this.$message.error('请填写二级标签！');
-          }else if(typeIndex == 2 && this.ruleForm.granularity == 0){
-            this.$message.error('请填写量级粒度！');
+          // 判断任务报酬大于人数的十倍，且自身剩余积分足够支付该任务报酬；
+          if(reward < peoNum *10){
+            this.$message.error('请调整积分报酬！');
+          }else if(points < reward){
+            this.$message.error('您的积分不足发布任务！');
           }else{
-            var taskLabels = '';
-            // 记录标签内容，如果是多层次标签，则遍历一级标签和二级标签数组
-            if(typeIndex == 3){
-              for(var i = 0; i < this.dynamicTags.length; i++){
-                // console.log(this.dynamicTags);
-                let group = i==0 ? '{' + this.dynamicTags[i] + ':' + this.dynamicTagsSecond[i].toString() + '}' : ',{' + this.dynamicTags[i] + ':' + this.dynamicTagsSecond[i].toString() + '}';
-                taskLabels += group;
-              }
+            if(this.dynamicTags.length == 0){
+              this.$message.error('请填写任务标签！');
+            }else if(typeIndex == 3 && this.dynamicTagsSecond[0].length == 0){
+              this.$message.error('请填写二级标签！');
+            }else if(typeIndex == 2 && this.ruleForm.granularity == 0){
+              this.$message.error('请填写量级粒度！');
             }else{
-              taskLabels = this.dynamicTags;
-            }
-            if(this.testFileName){
-              // 生成测试集的随机位置
-              var contentLen = this.splitContent.length;
-              var testLen = this.spiltTestContent.length;
-              var arr=[];
-              for(var i=0; i<testLen; i++) {
-                var arrNum = parseInt(Math.random()*(contentLen+testLen));
-                if(arr.indexOf(arrNum) != -1){
-                  i--;
-                  continue;
-                }else {
-                  arr.push(arrNum);
+              var taskLabels = '';
+              // 记录标签内容，如果是多层次标签，则遍历一级标签和二级标签数组
+              if(typeIndex == 3){
+                for(var i = 0; i < this.dynamicTags.length; i++){
+                  // console.log(this.dynamicTags);
+                  let group = i==0 ? '{' + this.dynamicTags[i] + ':' + this.dynamicTagsSecond[i].toString() + '}' : ',{' + this.dynamicTags[i] + ':' + this.dynamicTagsSecond[i].toString() + '}';
+                  taskLabels += group;
                 }
+              }else{
+                taskLabels = this.dynamicTags;
               }
-              arr.sort((a, b)=>{
-                return a-b;
-              });
-              // 将任务信息插入tb_task_info中
-              var info = await insertTaskInfo(
-                  {leader_account: this.userAccount,
-                  leader_name: this.$store.state.loginname,
-                  tfile_name: this.fileName,
-                  task_name: this.ruleForm.task_name,
-                  task_type: typeIndex,
-                  task_reward: this.ruleForm.task_reward,
-                  task_intro: this.ruleForm.task_intro,
-                  task_label: taskLabels,
-                  member_num: this.ruleForm.member_num,
-                  deadline: this.ruleForm.deadline,
-                  sds_name: this.testFileName,//如果有上传测试集文件，则插入任务信息时，加上测试集文件名
-                  sds_pos: arr,
-                  granularity: this.ruleForm.granularity,
-                  });
-            }else{
-              var info = await insertTaskInfo(
-                  {leader_account: this.userAccount,
-                  leader_name: this.$store.state.loginname,
-                  tfile_name: this.fileName,
-                  task_name: this.ruleForm.task_name,
-                  task_type: typeIndex,
-                  task_reward: this.ruleForm.task_reward,
-                  task_intro: this.ruleForm.task_intro,
-                  task_label: taskLabels,
-                  member_num: this.ruleForm.member_num,
-                  deadline: this.ruleForm.deadline,
-                  granularity: this.ruleForm.granularity,
-                  });
-            }
-              
-            await this.insertContent(typeIndex);
+              if(this.testFileName){
+                // 生成测试集的随机位置
+                var contentLen = this.splitContent.length;
+                var testLen = this.spiltTestContent.length;
+                var arr=[];
+                for(var i=0; i<testLen; i++) {
+                  var arrNum = parseInt(Math.random()*(contentLen+testLen));
+                  if(arr.indexOf(arrNum) != -1){
+                    i--;
+                    continue;
+                  }else {
+                    arr.push(arrNum);
+                  }
+                }
+                arr.sort((a, b)=>{
+                  return a-b;
+                });
+                // 将任务信息插入tb_task_info中
+                var info = await insertTaskInfo(
+                    {leader_account: this.userAccount,
+                    leader_name: this.$store.state.loginname,
+                    tfile_name: this.fileName,
+                    task_name: this.ruleForm.task_name,
+                    task_type: typeIndex,
+                    task_reward: reward,//将字符串转为数值类型
+                    task_intro: this.ruleForm.task_intro,
+                    task_label: taskLabels,
+                    member_num: this.ruleForm.member_num,
+                    deadline: this.ruleForm.deadline,
+                    sds_name: this.testFileName,//如果有上传测试集文件，则插入任务信息时，加上测试集文件名
+                    sds_pos: arr,
+                    granularity: this.ruleForm.granularity,
+                    });
+              }else{
+                var info = await insertTaskInfo(
+                    {leader_account: this.userAccount,
+                    leader_name: this.$store.state.loginname,
+                    tfile_name: this.fileName,
+                    task_name: this.ruleForm.task_name,
+                    task_type: typeIndex,
+                    task_reward: reward,//将字符串转为数值类型
+                    task_intro: this.ruleForm.task_intro,
+                    task_label: taskLabels,
+                    member_num: this.ruleForm.member_num,
+                    deadline: this.ruleForm.deadline,
+                    granularity: this.ruleForm.granularity,
+                    });
+              }
+                
+              await this.insertContent(typeIndex);
 
-            // 发布任务后，根据返回的新任务id，更新用户信息表中的任务信息
-            this.issuedTaksId.push(info.data);
-            this.involvedTasksId.push(info.data);
-            await updateTasksByUserAccount({account:this.userAccount,
-                                            issue_tasks:this.issuedTaksId.toString(),
-                                            finished_tasks:this.finishedTaskId.toString(),
-                                            progress_tasks:this.unfinishedTaskId.toString(),
-                                            involved_tasks:this.involvedTasksId.toString()
-                                          });
-            this.$message.success('任务发布成功！');
-            this.resetForm('ruleForm');
+              // 发布任务后，根据返回的新任务id，更新用户信息表中的任务信息，同时更新tb_user_points和tb_user_info
+              this.issuedTaksId.push(info.data);
+              this.involvedTasksId.push(info.data);
+              await updateTasksByUserAccount({account:this.userAccount,
+                                              issue_tasks:this.issuedTaksId.toString(),
+                                              finished_tasks:this.finishedTaskId.toString(),
+                                              progress_tasks:this.unfinishedTaskId.toString(),
+                                              involved_tasks:this.involvedTasksId.toString()
+                                            });
+              await updatePointsByAccount({account: this.userAccount, points: points - reward});
+              await insertUserPoints({account: this.userAccount ,task_id: info.data, task_type: typeIndex,operation_type: 2});
+              this.$message.success('任务发布成功！');
+              this.resetForm('ruleForm');
+            }
           }
       },
       // 发布任务后将任务的段落内容存入tb_task_content 和 tb_infer_result中
@@ -716,16 +729,13 @@ export default {
                                                   involved_tasks:newInvolved.toString(),
                                                   progress_tasks:newProgress.toString()
                                                 });
-                  // 根据任务id和用户account删除tb_label_result中的信息
+                  // 根据任务id和用户account删除tb_label_result和tb_user_points中的信息
                     await deleteLabelByTaskIdAndAccount({account:this.userAccount,
                                                         task_id:taskId
-                                                       })
-                  //   根据任务id和用户account删除tb_test_result中的信息
-                    // if(info.sds_name){
-                    //     await deleteTestLabelByTaskIdAndAccount({user_account:this.userAccount,
-                    //                                             task_id:taskId
-                    //                                             })
-                    // }
+                                                       });
+                    await deleteUserPointsByAccount({account:this.userAccount,
+                                                     task_id:taskId
+                                                    });
                   this.$message.success('删除成功！');
               } catch(e) {
                   this.$message.error((e && e.message) ? e.message : '删除失败，请稍后重试')
@@ -794,6 +804,7 @@ export default {
                         await deleteTaskInfoByTaskId({id:info.id});//在tb_task_info中删除任务信息
                         await deleteContentByTaskId({task_id:info.id});//在tb_task_content中删除任务信息
                         await deleteLabelByTaskId({task_id:info.id});//在tb_label_result中删除任务信息
+                        await deleteUserPointsByTaskId({task_id: info.id});//在tb_user_points中删除任务信息
                         this.$message.success('删除成功！');
                     } catch(e) {
                         this.$message.error((e && e.message) ? e.message : '请稍后重试')

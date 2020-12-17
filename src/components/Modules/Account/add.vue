@@ -59,6 +59,7 @@
                         await insertUserInfo({
                             account: this.form.account,
                             name: this.form.name,
+                            points: 100
                         });
                         this.initAccount();
                         this.changeAddAccount();

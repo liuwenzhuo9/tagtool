@@ -132,3 +132,12 @@ export function inferLabelResult(info) {
         }
     });
 }
+export function findLabelResultByIsTest(info) {
+    let url = `${hostname}/findLabelResultByIsTest${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}

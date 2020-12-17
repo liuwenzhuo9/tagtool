@@ -55,3 +55,12 @@ export function updatePointsByTaskIdAndAccount(info) {
         }
     });
 }
+export function updatePointsAndInfoByTaskId(info) {
+    let url = `${hostname}/updatePointsAndInfoByTaskId${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}

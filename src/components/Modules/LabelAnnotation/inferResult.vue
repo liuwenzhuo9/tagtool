@@ -106,7 +106,7 @@
 </template>
 
 <script>
-import {findInferInfoByTaskId, updateFinalResultByPosition} from '../../../unit/fetch';
+import {findInferInfoByTaskId, updateFinalResultByPosition, updatePointsAndInfoByTaskId} from '../../../unit/fetch';
 export default {
     mounted(){
         this.init();
@@ -542,6 +542,7 @@ export default {
         //导出标注结果功能
         async downLoadRes(){
             const infer_res = await findInferInfoByTaskId({task_id:this.editInfo.id, type: this.inferType});
+            updatePointsAndInfoByTaskId({task_id: this.editInfo.id});
             var finalLabel = [];
             for(var i = 0; i<infer_res.data.length; i++){
                 finalLabel.push(infer_res.data[i].final_result);
