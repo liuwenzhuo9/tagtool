@@ -18,19 +18,33 @@
                     <i class="el-icon-document"></i>
                     <span slot="title">标签标注任务</span>
                 </el-menu-item>
+                <el-menu-item index="4">
+                    <i class="el-icon-document"></i>
+                    <span slot="title">受邀任务</span>
+                </el-menu-item>
                 </el-menu>
             </el-col>
         </div>
         <div class = "taskInfo">
                 <el-col :span="8" v-for="(item, index) in tasksinfo" :key="index" >
                     <el-card class="box-card">
-                        <div slot="header" class="clearfix">
+                        <div slot="header" class="clearfix" v-if="!isInvite">
                             <span>{{item.task_name}}</span>
                             <el-button style="float: right; padding: 3px 0" type="text" v-if="loginUserAccount && isJoin[index]=='notIn'" @click="joinTask(item, index)">加入任务</el-button>
                             <el-button style="float: right; padding: 3px 0" type="text" v-if="loginUserAccount && isJoin[index]!='notIn'" :disabled="true">我的任务</el-button>
                         </div>
+                        <div slot="header" class="clearfix" v-if="isInvite">
+                            <span>{{item.task_name}}</span>
+                            <el-button style="float: right; padding: 3px 0" type="text" v-if="inviteState[index]==0" @click="joinTask(item, index)">加入任务</el-button>
+                            <el-button style="float: right; padding: 3px 0" type="text" v-if="inviteState[index]==0" @click="refuseInvite(item, index)">拒绝加入</el-button>
+                            <el-button style="float: right; padding: 3px 0" type="text" v-if="inviteState[index]==1" :disabled="true">我的任务</el-button>
+                            <el-button style="float: right; padding: 3px 0" type="text" v-if="inviteState[index]==2" :disabled="true">已拒绝</el-button>
+                        </div>
                         <div class="text item">
                             <span style="color:#b9adad">发起人：</span>{{item.leader_name}}
+                        </div>
+                        <div class="text item" v-if="isInvite">
+                            <span style="color:#b9adad">任务类型：</span>{{typeName[item.task_type]}}
                         </div>
                         <div class="text item">
                             <span style="color:#b9adad">任务简介：</span>{{item.task_intro}}
@@ -49,15 +63,18 @@
 
 <script>
 import {findUnfinishedTasks, findTasksByTasksType,findTaskById,updateMemberAccountByTaskId,findInfoByUserAccount,updateJoinTasksByUserAccount,
-        findContentByTaskId,insertLabelResult, insertLabelTime, insertUserPoints}from '../unit/fetch';
+        findContentByTaskId,insertLabelResult, insertLabelTime, insertUserPoints, findInviteInfoByInvitee,updateIsJoinByInviteeAndTaskId}from '../unit/fetch';
 export default {
     data(){
         return{
             tasksinfo:[],
             isJoin:[],//判断用户是否加入或发布该任务
+            inviteState: [],//记录被邀请用户的is_join状态
             loginUserAccount:'',
             // loginUserName:this.$store.state.loginname,
             istest:true,
+            isInvite: false,
+            typeName: ["序列标注","单标签标注","量级标签标注","多层次标签标注"],
         }
     },
     mounted(){
@@ -69,14 +86,18 @@ export default {
     },
     methods: {
       selectShowPart(index) {
+          this.isInvite = false;
           this.tasksinfo = [];
           if(index == 1){
               this.findAllTasks();
           }else if(index == 2){
               this.findTasksByType(0);
-          }else{
+          }else if(index == 3){
               this.findTasksByType(1);
-          }   
+          }else{
+              this.findInvitedTasks();
+              this.isInvite = true;
+          }
       },
       async findAllTasks(){
             const lastTasksinfo = this.tasksinfo;
@@ -117,6 +138,17 @@ export default {
                     this.tasksinfo = [...lastTasksinfo];
                     this.$message.error((e && e.message) ? e.message : '获取任务错误，请稍后重试');
                 }
+      },
+      async findInvitedTasks(){
+          const inviteInfo = await findInviteInfoByInvitee({invitee:this.loginUserAccount});
+          this.inviteState = [];
+          this.tasksinfo = [];
+          inviteInfo.data.map(async (item) => {
+              const info = await findTaskById({id: item.task_id});
+              console.log(info.data[0])
+              this.tasksinfo.push(info.data[0]);
+              this.inviteState.push(item.is_join);
+          })
       },
       async joinTask(info,index){
           var newMember = info.member_account;
@@ -165,13 +197,23 @@ export default {
                          is_finish:0});
         // 更新tb_user_points，将用户账号、任务类型、积分操作类型
         insertUserPoints({account: this.loginUserAccount,task_id: info.id,task_type: info.task_type,operation_type: 1});
-        this.$set(this.isJoin, index, 'member');
+        if(this.isInvite){
+            this.$set(this.inviteState, index, 1);
+            await updateIsJoinByInviteeAndTaskId({task_id: info.id, invitee: this.loginUserAccount, is_join: 1});
+        }else{
+            this.$set(this.isJoin, index, 'member');
+        }
         this.$message({
           duration:600,
           message:'加入成功！',
           type: 'success'
         });
       },
+      async refuseInvite(info, index){
+          
+          this.$set(this.inviteState, index, 2);
+          await updateIsJoinByInviteeAndTaskId({task_id: info.id, invitee: this.loginUserAccount, is_join: 2});
+      }
     }
 }
 </script>

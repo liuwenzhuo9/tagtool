@@ -64,3 +64,12 @@ export function updatePointsAndInfoByTaskId(info) {
         }
     });
 }
+export function findPowerByAccountAndTaskId(info) {
+    let url = `${hostname}/findPowerByAccountAndTaskId${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}

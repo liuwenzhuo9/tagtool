@@ -37,13 +37,15 @@
                           <!-- 已完成的任务 -->
                           <div slot="header" class="clearfix" v-if="menuShow[1]">
                               <span>{{item.task_name}}</span>
-                              <el-button style="float: right; padding: 3px 0" type="text">任务详情</el-button>
+                              <!-- <el-button style="float: right; padding: 3px 0" type="text" @click="viewInfo(item, 0)">查看任务详情</el-button> -->
+                              <el-button style="float: right; padding: 3px 0" type="text" @click="downLoadResult(item)">下载标记结果</el-button>
                           </div>
                           <!-- 已发布的任务 -->
                           <div slot="header" class="clearfix" v-if="menuShow[2]">
                               <span>{{item.task_name}}</span>
                               <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.sds_name" @click="editTest(item)">标记测试集</el-button>
                               <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.is_finished == 0" @click="finishTask(item)">结束任务</el-button>
+                              <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.is_finished == 0" @click="viewInfo(item, 1)">查看任务详情</el-button>
                               <el-button style="float: right; padding: 3px 5px" type="text" v-if="item.is_finished == 1 && testFinishArr[index]" @click="inferResult(item)">查看预测结果</el-button>
                               <el-button style="float: right; padding: 3px 0" type="text" @click="deleteTask(item)">删除任务</el-button>
                           </div>
@@ -232,6 +234,8 @@
           <sequenceTestEdit v-if="isSequenceTestEdit" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
           <labelInferResult v-if="isLabelInferResult" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
           <sequenceInferResult v-if="isSequenceInferResult" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
+          <leaderView v-if="isLeaderView" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
+          <parterView v-if="isParterView" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
         </div>
   </div>
     
@@ -242,7 +246,8 @@ import {insertTaskInfo, findTaskIdByTaskName, findInfoByUserAccount,findTaskById
         insertTaskContent,updateMemberAccountByTaskId, updateJoinTasksByUserAccount,deleteLabelByTaskIdAndAccount,
         deleteTaskInfoByTaskId,deleteContentByTaskId,deleteLabelByTaskId,
         findAccountByAccount, updateFinishTasksByUserAccount,updateFinishStateByTaskId,findInferInfoByTaskId, getFormalParagraph, insertInferResult,
-        findParagraphNumByTaskId, findLabeledTestNumByTaskId, deleteUserPointsByTaskId, deleteUserPointsByAccount, updatePointsByAccount} from '../../unit/fetch';
+        findParagraphNumByTaskId, findLabeledTestNumByTaskId, deleteUserPointsByTaskId, deleteUserPointsByAccount, updatePointsByAccount,
+        findPowerByAccountAndTaskId, updatePointsAndInfoByTaskId} from '../../unit/fetch';
 import labelEdit from '../Modules/LabelAnnotation/edit';
 import sequenceEdit from '../Modules/SequenceLabel/edit';
 import labelTestEdit from '../Modules/LabelAnnotation/testEdit';
@@ -250,6 +255,8 @@ import sequenceTestEdit from '../Modules/SequenceLabel/testEdit';
 import labelInferResult  from '../Modules/LabelAnnotation/inferResult';
 import sequenceInferResult  from '../Modules/SequenceLabel/inferResult';
 import rePassword from './password';
+import leaderView from '../Modules/TaskInfo/leaderView';
+import parterView from '../Modules/TaskInfo/parterView';
 export default {
     data(){
         return{
@@ -315,6 +322,8 @@ export default {
             isLabelInferResult:false,
             isSequenceInferResult:false,
             isRePassword:false,
+            isLeaderView:false,
+            isParterView:false,
             editInfo:'',
             userAccount:this.$store.state.loginuser,
             userName:'',
@@ -424,6 +433,8 @@ export default {
         this.isLabelInferResult = false;
         this.isSequenceInferResult = false;
         this.isRePassword = false;
+        this.isLeaderView = false;
+        this.isParterView = false;
       },
         // 获取登录用户的姓名
       async getName(){
@@ -865,7 +876,6 @@ export default {
       // 导出结果
       async inferResult(info){
         this.editInfo = info;
-        const infer_res = await findInferInfoByTaskId({task_id:info.id});
         this.isEdit = true;
         if(info.task_type == 0){
           this.isSequenceInferResult = true;
@@ -899,6 +909,50 @@ export default {
         this.isEdit=true;
         this.isRePassword = true;
       },
+      viewInfo(info, type){
+        this.isEdit=true;
+        this.editInfo = info;
+        if(type == 1){
+          this.isLeaderView = true;
+        }else{
+          this.isParterView = true;
+        }
+      },
+      // 判断是否符合导出结果的条件
+      async downLoadResult(info) {
+        console.log(this.userAccount);
+        console.log(info.id);
+        const powerInfo = await findPowerByAccountAndTaskId({account: this.userAccount, task_id: info.id});
+        console.log(powerInfo)
+        const payPoints = info.task_reward/info.member_num*2;
+        const userInfo = await findInfoByUserAccount({account:this.userAccount});
+        if(userInfo.data[0].points < payPoints){
+          this.$message.error('您的积分不足！');
+        }else if(powerInfo.data[0].power < 0.6){
+          this.$message.error('您的正确率过低');
+        }else if(powerInfo.data[0].complete_rate < 0.8){
+          this.$message.error('您的完成度过低');
+        }else{
+          this.downLoadRes(info);
+        }
+      },
+      //导出标注结果功能
+        async downLoadRes(item){
+            const infer_res = await findInferInfoByTaskId({task_id:item.id, type: 0});
+            updatePointsAndInfoByTaskId({task_id: item.id});
+            var finalLabel = [];
+            for(var i = 0; i<infer_res.data.length; i++){
+                finalLabel.push(infer_res.data[i].final_result);
+            }
+            var urlObject = window.URL || window.webkitURL || window;
+            var export_blob = new Blob([finalLabel.toString()]);
+            var save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a")
+            save_link.href = urlObject.createObjectURL(export_blob);
+            save_link.download = item.task_name + '.txt';
+            var ev = document.createEvent("MouseEvents");
+            ev.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+            save_link.dispatchEvent(ev);
+        },
     },
     components: {
         labelEdit,
@@ -908,6 +962,8 @@ export default {
         labelInferResult,
         sequenceInferResult,
         rePassword,
+        leaderView,
+        parterView
       }
 }
 </script>

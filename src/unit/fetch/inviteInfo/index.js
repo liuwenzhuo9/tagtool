@@ -46,3 +46,21 @@ export function findInviteInfoByInviterAndTaskId(info) {
         }
     });
 }
+export function findInviteInfoByInviteeAndTaskId(info) {
+    let url = `${hostname}/findInviteInfoByInviteeAndTaskId${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}
+export function findInviteInfoByInvitee(info) {
+    let url = `${hostname}/findInviteInfoByInvitee${objToQueryString(info)}`;
+    return executeFetch(url,{
+        method:'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+}

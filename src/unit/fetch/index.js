@@ -15,8 +15,8 @@ import {insertLabelResult, updateLabelById, deleteLabelByAccount, deleteLabelByT
 import {insertLabelTime, getLabelTimeByAccount, updateLabelTime, deleteLabelTime, updateIsFinishInTime, getLabelTimeByTaskId} from './time';
 import {insertInferResult, deleteInferResultByTaskId, updateInferLabelBySentenceId, updateCIBySentenceId, updateFinalResultBySentenceId, updateInferResultByPosition, updateCIByPosition,
         updateFinalResultByPosition,findInferInfoByTaskId,findInferInfoBySentenceId,findInferInfoByPosition} from './inferResult'
-import {insertUserPoints,deleteUserPointsByTaskId, deleteUserPointsByAccount,findPointsByTaskId,findPointsByAccount,updatePointsByTaskIdAndAccount,updatePointsAndInfoByTaskId} from './userPoints'
-import {insertInviteInfo, updateIsJoinByInviteeAndTaskId, deleteInviteByTaskId, findInviteInfoByInviteeAndIsJoin, findInviteInfoByInviterAndTaskId} from './inviteInfo'
+import {insertUserPoints,deleteUserPointsByTaskId, deleteUserPointsByAccount,findPointsByTaskId,findPointsByAccount,updatePointsByTaskIdAndAccount,updatePointsAndInfoByTaskId,findPowerByAccountAndTaskId} from './userPoints'
+import {insertInviteInfo, updateIsJoinByInviteeAndTaskId, deleteInviteByTaskId, findInviteInfoByInviteeAndIsJoin, findInviteInfoByInviterAndTaskId, findInviteInfoByInviteeAndTaskId, findInviteInfoByInvitee} from './inviteInfo'
 
 export {insertEntityIndex, deleteEntityBySentenceId, getEntityIndexBySentenceId, deleteEntityByEntityId, insertEntity, deleteEntity, findEntityById, findIdByEntity,
         updateLengthByEntityId, getAllEntity, insertSentence, deleteSentence, findSentenceById, findIdBySentence, updateSentenceMarkById, updateSentenceContentById, 
@@ -32,8 +32,8 @@ export {insertEntityIndex, deleteEntityBySentenceId, getEntityIndexBySentenceId,
         insertLabelTime, getLabelTimeByAccount, updateLabelTime, deleteLabelTime, updateIsFinishInTime, getLabelTimeByTaskId,
         insertInferResult, deleteInferResultByTaskId, updateInferLabelBySentenceId, updateCIBySentenceId, updateFinalResultBySentenceId, updateInferResultByPosition, updateCIByPosition,
         updateFinalResultByPosition,findInferInfoByTaskId,findInferInfoBySentenceId,findInferInfoByPosition,
-        insertUserPoints,deleteUserPointsByTaskId, deleteUserPointsByAccount,findPointsByTaskId,findPointsByAccount,updatePointsByTaskIdAndAccount,updatePointsAndInfoByTaskId,
-        insertInviteInfo, updateIsJoinByInviteeAndTaskId, deleteInviteByTaskId, findInviteInfoByInviteeAndIsJoin, findInviteInfoByInviterAndTaskId
+        insertUserPoints,deleteUserPointsByTaskId, deleteUserPointsByAccount,findPointsByTaskId,findPointsByAccount,updatePointsByTaskIdAndAccount,updatePointsAndInfoByTaskId,findPowerByAccountAndTaskId,
+        insertInviteInfo, updateIsJoinByInviteeAndTaskId, deleteInviteByTaskId, findInviteInfoByInviteeAndIsJoin, findInviteInfoByInviterAndTaskId, findInviteInfoByInviteeAndTaskId, findInviteInfoByInvitee
       } 
 
 //封装cookie
