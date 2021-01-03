@@ -25,56 +25,56 @@
             点击“下一句”,继续标注<br><span style="color:#da2535">快捷键：N</span>
             </el-card>
         </div>
-             <div class="content-title">
-                <p class="tips">任务名：{{editInfo.task_name}}</p>
-                <p class="tips">进度：{{this.finishParagraphNum}}/{{this.allParagraphNum}}</p>
+        <div class="content-title">
+            <p class="tips">任务名：{{editInfo.task_name}}</p>
+            <p class="tips">进度：{{this.finishParagraphNum}}/{{this.allParagraphNum}}</p>
+        </div>
+        <div class="content-left">
+            <p class="tips">第{{this.contentPosition+1}}段:</p>
+            <el-divider></el-divider>
+            <div >{{this.contentInfo}}</div>
+            <!-- <div class="paragraphContent1" >{{this.contentInfo}}</div> -->
+            <!-- <div class="paragraphContent10" v-html="htmlContent">{{this.htmlContent}}</div> -->
+            <el-divider></el-divider>
+            <p class="tips">可选标签：</p>
+            <el-radio-group v-model="radio" class="chooseLabel">
+                <el-radio 
+                    :key="index" 
+                    v-for="(item,index) in labelsInfo" 
+                    @change="chooseLabel"
+                    :label="item">
+                    {{item}}
+                </el-radio>  
+            </el-radio-group>
+            <div>
+                <el-button @click="addLabel" :disabled="!isEdit">添加标签</el-button>
+                <el-button @click="saveLabel" v-if="isEdit">保存标注</el-button>
+                <el-button @click="changeLabel" v-if="!isEdit">修改标注</el-button>
+                <el-button @click="nextParagraph(isShowAll)" :disabled="isLast">下一句</el-button>
+                <el-button @click="lastParagraph(isShowAll)" :disabled="isFirst">上一句</el-button>
             </div>
-            <div class="content-left">
-                <p class="tips">第{{this.contentPosition+1}}段:</p>
-                <el-divider></el-divider>
-                <div class="paragraphContent1" >{{this.contentInfo}}</div>
-                <div class="paragraphContent10" v-html="htmlContent">{{this.htmlContent}}</div>
-                <el-divider></el-divider>
-                <p class="tips">可选标签：</p>
-                <el-radio-group v-model="radio" class="chooseLabel">
-                    <el-radio 
-                        :key="index" 
-                        v-for="(item,index) in labelsInfo" 
-                        @change="chooseLabel"
-                        :label="item">
-                        {{item}}
-                    </el-radio>  
-                </el-radio-group>
-                <div>
-                    <el-button @click="addLabel" :disabled="!isEdit">添加标签</el-button>
-                    <el-button @click="saveLabel" v-if="isEdit">保存标注</el-button>
-                    <el-button @click="changeLabel" v-if="!isEdit">修改标注</el-button>
-                    <el-button @click="nextParagraph(isShowAll)" :disabled="isLast">下一句</el-button>
-                    <el-button @click="lastParagraph(isShowAll)" :disabled="isFirst">上一句</el-button>
-                </div>
-            </div>
-            <div class="content-right" v-if="isEdit">
-                <p class="tips">标注结果：</p>
-                <el-tag
-                    :key="tag"
-                    v-for="tag in labelResShow"
-                    closable
-                    :disable-transitions="false"
-                    @close="handleClose(tag)">
-                    {{tag}}
-                </el-tag>
-            </div>
-            <div class="content-right" v-else>
-                <p class="tips">标注结果：</p>
-                <el-tag
-                    :key="tag"
-                    v-for="tag in labelResShow"
-                    :disable-transitions="false">
-                    {{tag}}
-                </el-tag>
-            </div>
-            <el-button v-if="this.finishParagraphNum == this.allParagraphNum" @click="finishTask">提交任务</el-button>
-        
+        </div>
+        <div class="content-right" v-if="isEdit">
+            <p class="tips">标注结果：</p>
+            <el-tag
+                :key="tag"
+                v-for="tag in labelResShow"
+                closable
+                :disable-transitions="false"
+                @close="handleClose(tag)">
+                {{tag}}
+            </el-tag>
+        </div>
+        <div class="content-right" v-else>
+            <p class="tips">标注结果：</p>
+            <el-tag
+                :key="tag"
+                v-for="tag in labelResShow"
+                :disable-transitions="false">
+                {{tag}}
+            </el-tag>
+        </div>
+        <el-button v-if="this.finishParagraphNum == this.allParagraphNum" @click="finishTask">提交任务</el-button>
     </div>
 </template>
 
@@ -135,9 +135,9 @@
                     resStr = info.data.label_result;
                 }
                 this.contentInfo = info.message;
-                this.htmlContent = this.contentInfo;
+                // this.htmlContent = this.contentInfo;
                 if(resStr != '' && resStr != null){
-                    this.labelStrToArr(resStr);
+                    this.labelResShow = resStr.split(',');
                 }
                 this.contentPosition = Number(info.data.paragraph_position);
                 this.resultId = info.data.id;
@@ -218,11 +218,7 @@
                 }else{
                     var startIndex = Math.min(selectTxt.anchorOffset,selectTxt.focusOffset);
                     var endIndex = Math.max(selectTxt.anchorOffset,selectTxt.focusOffset);
-                    this.labelResShow.push('{'+ startIndex + ',' + endIndex + ',“'  + selection + '”,' + this.choosedLabel + '}');
-                    this.labelResArr.push(startIndex + '-' + endIndex + '-' + selection + '-' + this.choosedLabel);
-                    var temp = [].concat(this.labelResArr);
-                    this.sortLabelRes(temp);
-                    this.contentToHtml(temp, this.contentInfo);
+                    this.labelResShow.push(startIndex + '-' + endIndex + '-'  + selection + '-' + this.choosedLabel);
                 }
             },
             async saveLabel(){
@@ -237,15 +233,10 @@
             handleClose(tag) {
                 var index = this.labelResShow.indexOf(tag);
                 this.labelResShow.splice(index, 1);
-                this.labelResArr.splice(index, 1);
-                var temp = [].concat(this.labelResArr);
-                this.sortLabelRes(temp);
-                this.contentToHtml(temp, this.contentInfo);
             },
             async nextParagraph(msg){
                 var info = [];
                 this.labelResShow = [];
-                this.labelResArr = [];
                 var resStr = '';
                 if(msg == 0){
                     //只显示未标记的句子
@@ -260,9 +251,9 @@
                     resStr = info.data.label_result;
                 }
                 this.contentInfo = info.message;
-                this.htmlContent = this.contentInfo;
+                // this.htmlContent = this.contentInfo;
                 if(resStr != '' && resStr != null){
-                    this.labelStrToArr(resStr);
+                    this.labelResShow = resStr.split(',');
                 }
                 this.contentPosition = Number(info.data.paragraph_position);
                 this.resultId = info.data.id;
@@ -272,7 +263,6 @@
             async lastParagraph(msg){
                 var info = [];
                 this.labelResShow = [];
-                this.labelResArr = [];
                 var resStr = '';
                 if(msg == 0){
                     //只显示未标记的句子
@@ -287,9 +277,9 @@
                     resStr = info.data.label_result;
                 }
                 this.contentInfo = info.message;
-                this.htmlContent = this.contentInfo;
+                // this.htmlContent = this.contentInfo;
                 if(resStr != '' && resStr != null){
-                    this.labelStrToArr(resStr);
+                    this.labelResShow = resStr.split(',');
                 }
                 this.contentPosition = Number(info.data.paragraph_position);
                 this.resultId = info.data.id;
@@ -315,33 +305,21 @@
                 })
             },
             // 将contentInfo渲染成html格式
-            contentToHtml(arr, content) {
-                if(arr.length == 0){
-                    this.htmlContent = this.contentInfo;
-                }else{
-                    this.htmlContent = '';
-                    for(var i = 0; i < arr.length; i++){
-                        var temp = arr[i].split('-');
-                        var tagIndex = this.labelsInfo.indexOf(temp[3]);
-                        content = content.substring(0, temp[0]) + '<span class = "color' + tagIndex +
-                        '" title = "' + temp[3] + '">' + content.substring(temp[0], temp[1]) + '</span>' +
-                        content.substring(temp[1], content.length);
-                    }
-                    this.htmlContent = content;
-                }
-            },
-            //将获取的一段话的标签字符串转为数组
-            labelStrToArr(resStr){
-                var regex = /\{[^\}]+\}/g;
-                this.labelResShow = resStr.match(regex);
-                for(var i = 0; i<this.labelResShow.length; i++){
-                    var tagArr = this.labelResShow[i].substring(1,this.labelResShow[i].length-1).split(',');
-                    this.labelResArr.push(tagArr[0] + '-' + tagArr[1] + '-' + tagArr[2].substring(1,tagArr[2].length-1) + '-' + tagArr[3]);
-                }
-                var temp = [].concat(this.labelResArr);
-                this.sortLabelRes(temp);
-                this.contentToHtml(temp, this.contentInfo);
-            },
+            // contentToHtml(arr, content) {
+            //     if(arr.length == 0){
+            //         this.htmlContent = this.contentInfo;
+            //     }else{
+            //         this.htmlContent = '';
+            //         for(var i = 0; i < arr.length; i++){
+            //             var temp = arr[i].split('-');
+            //             var tagIndex = this.labelsInfo.indexOf(temp[3]);
+            //             content = content.substring(0, temp[0]) + '<span class = "color' + tagIndex +
+            //             '" title = "' + temp[3] + '">' + content.substring(temp[0], temp[1]) + '</span>' +
+            //             content.substring(temp[1], content.length);
+            //         }
+            //         this.htmlContent = content;
+            //     }
+            // },
             //判断当前句子是否为第一条or最后一条句子
             async judgeFirstOrLast(){
                 var infoL = [];
@@ -446,13 +424,13 @@
         // opacity:0.5;
         // color: #CCFF00;
     }
-    .paragraphContent1{
-        // font-weight: 700;
-        // font-size: 150%;
-        position: absolute;
-        z-index:1;
-        opacity:0.5;
-    }
+    // .paragraphContent1{
+    //     // font-weight: 700;
+    //     // font-size: 150%;
+    //     position: absolute;
+    //     z-index:1;
+    //     opacity:0.5;
+    // }
     .content-left {
         width: 600px;
         position: relative;

@@ -244,6 +244,10 @@
                 this.isEdit = true;
                 var info = [];
                 if(msg == 0){
+                    this.multiLabel = [];
+                    this.multiLengendData = [];
+                    this.firstLevelData = [];
+                    this.secondLevelTag = [];
                     //只显示未标记的句子
                     info = await findNextUnfinishedParagraph({task_id:this.editInfo.id,
                                                               user_account:this.userAccount,
@@ -259,12 +263,17 @@
                 this.contentPosition = Number(info.data.paragraph_position);
                 this.resultId = info.data.id;
                 this.judgeFirstOrLast();
+                this.getRate();
             },
             async lastParagraph(msg){
                 this.resultLabel = '';
                 this.isEdit = true;
                 var info = [];
                 if(msg == 0){
+                    this.firstLevelData = [];
+                    this.secondLevelTag = [];
+                    this.multiLabel = [];
+                    this.multiLengendData = [];
                     //只显示未标记的句子
                     info = await findLastUnfinishedParagraph({task_id:this.editInfo.id,
                                                               user_account:this.userAccount,
@@ -280,6 +289,7 @@
                 this.contentPosition = Number(info.data.paragraph_position);
                 this.resultId = info.data.id;
                 this.judgeFirstOrLast();
+                this.getRate();
             },
             // 展现多层次标签结果的饼图
             getEchartDataMulti() {

@@ -37,7 +37,7 @@
                           <!-- 已完成的任务 -->
                           <div slot="header" class="clearfix" v-if="menuShow[1]">
                               <span>{{item.task_name}}</span>
-                              <!-- <el-button style="float: right; padding: 3px 0" type="text" @click="viewInfo(item, 0)">查看任务详情</el-button> -->
+                              <el-button style="float: right; padding: 3px 0" type="text" @click="viewInfo(item, 0)">查看错误标注的句子</el-button>
                               <el-button style="float: right; padding: 3px 0" type="text" @click="downLoadResult(item)">下载标记结果</el-button>
                           </div>
                           <!-- 已发布的任务 -->
@@ -934,6 +934,7 @@ export default {
           this.$message.error('您的完成度过低');
         }else{
           this.downLoadRes(info);
+          await updatePointsByAccount({account: this.userAccount, points: userInfo.data[0].points - payPoints});
         }
       },
       //导出标注结果功能

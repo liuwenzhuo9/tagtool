@@ -192,7 +192,7 @@ export default {
                         this.tableData.push({index: index+1, 
                                     content: item.content, 
                                     tag: item.final_result, 
-                                    ci: item.ci,
+                                    ci: parseFloat(item.ci).toFixed(2),
                                     confirm: true});
                         this.labelsNum[this.options.indexOf(item.final_result)]++;
                         this.maxLabelsNum = Math.max(this.labelsNum[this.options.indexOf(item.final_result)], this.maxLabelsNum);

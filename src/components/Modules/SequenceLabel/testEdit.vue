@@ -32,8 +32,9 @@
          <div class="content-left">
              <div class="tips">第{{this.contentPosition+1}}段内容:</div>
              <el-divider></el-divider>
-             <div class="paragraphContent1">{{this.contentInfo}}</div>
-             <div class="paragraphContent10" v-html="htmlContent">{{this.htmlContent}}</div>
+             <div>{{this.contentInfo}}</div>
+             <!-- <div class="paragraphContent1">{{this.contentInfo}}</div> -->
+             <!-- <div class="paragraphContent10" v-html="htmlContent">{{this.htmlContent}}</div> -->
              <el-divider></el-divider>
              <p class="tips">可选标签：</p>
              <el-radio-group v-model="radio" class="chooseLabel">
@@ -41,7 +42,7 @@
                     :key="index" 
                     v-for="(item,index) in labelsInfo" 
                     @change="chooseLabel"
-                    :label="index">
+                    :label="item">
                     {{item}}
                 </el-radio>
             </el-radio-group>
@@ -93,7 +94,7 @@
                 finishParagraphNum:'',
                 userAccount:this.$store.state.loginuser,
                 contentInfo:'',
-                htmlContent:'',
+                // htmlContent:'',
                 contentPosition:'',
                 labelsInfo:this.editInfo.task_label.split(','),
                 choosedLabel:'',
@@ -134,9 +135,10 @@
                     resStr = info.data[0].test_label;
                 }
                 this.contentInfo = info.data[0].content;
-                this.htmlContent = this.contentInfo;
+                // this.htmlContent = this.contentInfo;
                 if(resStr != '' && resStr != null){
-                    this.labelStrToArr(resStr);
+                    // this.labelStrToArr(resStr);
+                    this.labelResShow = resStr.split(',');
                 }
                 this.contentPosition = Number(info.data[0].paragraph_position);
                 this.resultId = info.data.id;
@@ -188,11 +190,7 @@
                 }else{
                     var startIndex = Math.min(selectTxt.anchorOffset,selectTxt.focusOffset);
                     var endIndex = Math.max(selectTxt.anchorOffset,selectTxt.focusOffset);
-                    this.labelResShow.push('{'+ startIndex + ',' + endIndex + ',“'  + selection + '”,' + this.choosedLabel + '}');
-                    this.labelResArr.push(startIndex + '-' + endIndex + '-' + selection + '-' + this.choosedLabel);
-                    var temp = [].concat(this.labelResArr);
-                    this.sortLabelRes(temp);
-                    this.contentToHtml(temp, this.contentInfo);
+                    this.labelResShow.push(startIndex + '-' + endIndex + '-'  + selection + '-' + this.choosedLabel);
                 }
                 this.choosedLabel = '';
             },
@@ -207,10 +205,6 @@
             handleClose(tag) {
                 var index = this.labelResShow.indexOf(tag);
                 this.labelResShow.splice(index, 1);
-                this.labelResArr.splice(index, 1);
-                var temp = [].concat(this.labelResArr);
-                this.sortLabelRes(temp);
-                this.contentToHtml(temp, this.contentInfo);
             },
             async nextParagraph(msg){
                 this.isEdit = true;
@@ -225,9 +219,10 @@
                     resStr = info.data[0].test_label;
                 }
                 this.contentInfo = info.data[0].content;
-                this.htmlContent = this.contentInfo;
+                // this.htmlContent = this.contentInfo;
                 if(resStr != '' && resStr != null){
-                    this.labelStrToArr(resStr);
+                    // this.labelStrToArr(resStr);
+                    this.labelResShow = resStr.split(',');
                 }
                 this.contentPosition = parseInt(info.data[0].paragraph_position);
                 this.resultId = info.data.id;
@@ -246,9 +241,10 @@
                     resStr = info.data[0].test_label;
                 }
                 this.contentInfo = info.data[0].content;
-                this.htmlContent = this.contentInfo;
+                // this.htmlContent = this.contentInfo;
                 if(resStr != '' && resStr != null){
-                    this.labelStrToArr(resStr);
+                    // this.labelStrToArr(resStr);
+                    this.labelResShow = resStr.split(',');
                 }
                 this.contentPosition = parseInt(info.data[0].paragraph_position);
                 this.resultId = info.data.id;
@@ -273,33 +269,33 @@
                 })
             },
             // 将contentInfo渲染成html格式
-            contentToHtml(arr, content) {
-                if(arr.length == 0){
-                    this.htmlContent = this.contentInfo;
-                }else{
-                    this.htmlContent = '';
-                    for(var i = 0; i < arr.length; i++){
-                        var temp = arr[i].split('-');
-                        var tagIndex = this.labelsInfo.indexOf(temp[3]);
-                        content = content.substring(0, temp[0]) + '<span class = "color' + tagIndex +
-                        '" title = "' + temp[3] + '">' + content.substring(temp[0], temp[1]) + '</span>' +
-                        content.substring(temp[1], content.length);
-                    }
-                    this.htmlContent = content;
-                }
-            },
+            // contentToHtml(arr, content) {
+            //     if(arr.length == 0){
+            //         this.htmlContent = this.contentInfo;
+            //     }else{
+            //         this.htmlContent = '';
+            //         for(var i = 0; i < arr.length; i++){
+            //             var temp = arr[i].split('-');
+            //             var tagIndex = this.labelsInfo.indexOf(temp[3]);
+            //             content = content.substring(0, temp[0]) + '<span class = "color' + tagIndex +
+            //             '" title = "' + temp[3] + '">' + content.substring(temp[0], temp[1]) + '</span>' +
+            //             content.substring(temp[1], content.length);
+            //         }
+            //         this.htmlContent = content;
+            //     }
+            // },
             // 将获取的一段话的标签字符串转为数组
-            labelStrToArr(resStr){
-                var regex = /\{[^\}]+\}/g;
-                this.labelResShow = resStr.match(regex);
-                for(var i = 0; i<this.labelResShow.length; i++){
-                    var tagArr = this.labelResShow[i].substring(1,this.labelResShow[i].length-1).split(',');
-                    this.labelResArr.push(tagArr[0] + '-' + tagArr[1] + '-' + tagArr[2].substring(1,tagArr[2].length-1) + '-' + tagArr[3]);
-                }
-                var temp = [].concat(this.labelResArr);
-                this.sortLabelRes(temp);
-                this.contentToHtml(temp, this.contentInfo);
-            },
+            // labelStrToArr(resStr){
+            //     var regex = /\{[^\}]+\}/g;
+            //     this.labelResShow = resStr.match(regex);
+            //     for(var i = 0; i<this.labelResShow.length; i++){
+            //         var tagArr = this.labelResShow[i].substring(1,this.labelResShow[i].length-1).split(',');
+            //         this.labelResArr.push(tagArr[0] + '-' + tagArr[1] + '-' + tagArr[2].substring(1,tagArr[2].length-1) + '-' + tagArr[3]);
+            //     }
+            //     var temp = [].concat(this.labelResArr);
+            //     this.sortLabelRes(temp);
+            //     this.contentToHtml(temp, this.contentInfo);
+            // },
             //判断当前句子是否为第一条or最后一条句子
             async judgeFirstOrLast(){
                 var infoL = [];

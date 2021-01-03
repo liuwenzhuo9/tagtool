@@ -105,6 +105,9 @@
                 for(var i = 0; i<inviteInfo.data.length; i++){
                     var userState = 0;
                     const iAccount = inviteInfo.data[i].account;
+                    if(iAccount == this.editInfo.leader_account){
+                        continue;
+                    }
                     if(this.userAccount.indexOf(iAccount) != -1){
                         userState = 3;
                     }else{
