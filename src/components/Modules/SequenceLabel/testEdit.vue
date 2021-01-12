@@ -195,6 +195,7 @@
                 this.choosedLabel = '';
             },
             async saveLabel(){
+                this.sortLabelRes(this.labelResShow);
                 await updateRightLabel({task_id:this.editInfo.id,paragraph_position:this.contentPosition,test_label:this.labelResShow.toString()});
                 this.getRate();
                 this.isEdit = false;

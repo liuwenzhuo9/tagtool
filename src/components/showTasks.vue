@@ -35,10 +35,10 @@
                         </div>
                         <div slot="header" class="clearfix" v-if="isInvite">
                             <span>{{item.task_name}}</span>
-                            <el-button style="float: right; padding: 3px 0" type="text" v-if="inviteState[index]==0" @click="joinTask(item, index)">加入任务</el-button>
-                            <el-button style="float: right; padding: 3px 0" type="text" v-if="inviteState[index]==0" @click="refuseInvite(item, index)">拒绝加入</el-button>
-                            <el-button style="float: right; padding: 3px 0" type="text" v-if="inviteState[index]==1" :disabled="true">我的任务</el-button>
-                            <el-button style="float: right; padding: 3px 0" type="text" v-if="inviteState[index]==2" :disabled="true">已拒绝</el-button>
+                            <el-button style="float: right; padding: 3px 5px" type="text" v-if="inviteState[index]==0" @click="joinTask(item, index)">加入任务</el-button>
+                            <el-button style="float: right; padding: 3px 5px" type="text" v-if="inviteState[index]==0" @click="refuseInvite(item, index)">拒绝加入</el-button>
+                            <el-button style="float: right; padding: 3px 5px" type="text" v-if="inviteState[index]==1" :disabled="true">我的任务</el-button>
+                            <el-button style="float: right; padding: 3px 5px" type="text" v-if="inviteState[index]==2" :disabled="true">已拒绝</el-button>
                         </div>
                         <div class="text item">
                             <span style="color:#b9adad">发起人：</span>{{item.leader_name}}

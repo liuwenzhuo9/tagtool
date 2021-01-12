@@ -166,7 +166,8 @@
                 const keyInfo = await findInferInfoByTaskId({task_id: this.editInfo.id, type: 0});
                 keyInfo.data.map((item, index) =>{
                     // ！！！！！！！！！！！！！！！！！this.keyRes.push(item.final_result);！！！！！！正确的 现在用infer_result测试
-                    this.keyRes.push(item.infer_result);
+                    // this.keyRes.push(item.infer_result);
+                    this.keyRes.push(item.final_result);
                     this.contentArr.push(item.content);
                 })
                 this.findDiffLabelRes(this.taskType);
@@ -193,6 +194,8 @@
                                                     isTest: "监督数据"});
                             }else if(this.taskType == 3){
                                 this.multiTagToTable(this.testLabelRes[i], this.testKeyRes[i], this.testContentArr[i], "监督数据");
+                            }else if(this.taskType == 0){
+                            
                             }else{
                                 this.showInfo.push({content: this.testContentArr[i], userRes: this.testLabelRes[i], keyRes: this.testKeyRes[i], isTest: "监督数据"});
                             }
@@ -208,7 +211,6 @@
                     }
                     // 如果标注结果不一致或为空，则将该句子的内容、标注结果、真实结果存入showInfo中
                     if(this.labelRes[i] == null || this.labelRes[i] == '' || !this.compareLabelRes(this.labelRes[i], this.keyRes[i], type, false, this.contentArr[i].length)){
-                        this.showInfo.push({content: this.contentArr[i], userRes: this.labelRes[i], keyRes: this.keyRes[i], isTest: "正式任务"});
                         if(this.taskType == 2){
                             this.showInfo.push({content: this.contentArr[i], 
                                                 userResTag: this.labelRes[i].split(':')[0], 
@@ -218,6 +220,8 @@
                                                 isTest: "正式任务"});
                         }else if(this.taskType == 3){
                             this.multiTagToTable(this.labelRes[i], this.keyRes[i], this.contentArr[i], "正式任务");
+                        }else if(this.taskType == 0){
+
                         }else{
                             this.showInfo.push({content: this.contentArr[i], userRes: this.labelRes[i], keyRes: this.keyRes[i], isTest: "正式任务"});
                         }

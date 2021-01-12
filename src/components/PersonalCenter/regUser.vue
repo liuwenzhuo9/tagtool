@@ -222,12 +222,12 @@
           </div>
           <!-- 个人信息界面 -->
           <div class="selfInfo" v-show="menuShow[4]">
-              <el-link :underline="false" class="rePassword"  @click="toRePassWord('form')">修改密码</el-link>
+            <selfInfo :selectShowPart = "selectShowPart"/>
+              <!-- <el-link :underline="false" class="rePassword"  @click="toRePassWord('form')">修改密码</el-link> -->
           </div>
         </div>
         
         <div v-if="isEdit" class="right-content">
-          <rePassword v-if="isRePassword" />
           <labelEdit v-if="isLabelEdit" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
           <sequenceEdit v-if="isSequenceEdit" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
           <labelTestEdit v-if="isLabelTestEdit" :editInfo="editInfo" :selectShowPart = "selectShowPart"/>
@@ -254,9 +254,9 @@ import labelTestEdit from '../Modules/LabelAnnotation/testEdit';
 import sequenceTestEdit from '../Modules/SequenceLabel/testEdit';
 import labelInferResult  from '../Modules/LabelAnnotation/inferResult';
 import sequenceInferResult  from '../Modules/SequenceLabel/inferResult';
-import rePassword from './password';
 import leaderView from '../Modules/TaskInfo/leaderView';
 import parterView from '../Modules/TaskInfo/parterView';
+import selfInfo from '../Modules/PersonalInfo/info';
 export default {
     data(){
         return{
@@ -905,10 +905,6 @@ export default {
         }
         this.editInfo = info;
       },
-      toRePassWord(){
-        this.isEdit=true;
-        this.isRePassword = true;
-      },
       viewInfo(info, type){
         this.isEdit=true;
         this.editInfo = info;
@@ -962,9 +958,9 @@ export default {
         sequenceTestEdit,
         labelInferResult,
         sequenceInferResult,
-        rePassword,
         leaderView,
-        parterView
+        parterView,
+        selfInfo
       }
 }
 </script>
